@@ -1,0 +1,1792 @@
+<!doctype html>
+<html lang="pt-BR" class="h-full">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Scout Goalball</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="/_sdk/element_sdk.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+  <style>
+    * { font-family: 'Outfit', sans-serif; }
+    .btn-touch {
+      min-height: 48px;
+      min-width: 48px;
+      touch-action: manipulation;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+      transition: all 0.2s;
+    }
+    .btn-primary:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(37, 99, 235, 0.4);
+    }
+    .btn-primary:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    .btn-danger {
+      background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+    }
+    .btn-danger:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(220, 38, 38, 0.4);
+    }
+    .btn-success {
+      background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+    }
+    .btn-success:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(22, 163, 74, 0.4);
+    }
+    .btn-warning {
+      background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    }
+    .btn-warning:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(245, 158, 11, 0.4);
+    }
+    .card {
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    }
+    .nav-btn {
+      transition: all 0.2s;
+    }
+    .nav-btn.active {
+      background: #2563eb;
+      color: white;
+    }
+    .target-grid {
+      display: grid;
+      grid-template-columns: repeat(9, 1fr);
+      gap: 4px;
+    }
+    .target-btn {
+      aspect-ratio: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      border-radius: 8px;
+      transition: all 0.2s;
+    }
+    .target-btn.selected {
+      background: #2563eb !important;
+      color: white;
+      transform: scale(1.1);
+    }
+    .formation-display {
+      position: relative;
+      width: 100%;
+      height: 200px;
+      background: linear-gradient(180deg, #1e3a5f 0%, #2d5a87 100%);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .formation-player {
+      position: absolute;
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: white;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 600;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+    .player-number {
+      font-size: 18px;
+      font-weight: 800;
+      color: #1e3a5f;
+    }
+    .history-item {
+      border-left: 4px solid #2563eb;
+      transition: all 0.2s;
+    }
+    .history-item:hover {
+      background: #f8fafc;
+    }
+    .multi-select-btn {
+      transition: all 0.15s;
+    }
+    .multi-select-btn.selected {
+      background: #2563eb !important;
+      color: white !important;
+      border-color: #2563eb !important;
+    }
+    .scoreboard {
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+      border-radius: 16px;
+      padding: 20px;
+    }
+    .score-number {
+      font-size: 64px;
+      font-weight: 800;
+      line-height: 1;
+    }
+    .phase-indicator {
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.7; }
+    }
+    .tab-content {
+      display: none;
+    }
+    .tab-content.active {
+      display: block;
+    }
+  </style>
+  <style>body { box-sizing: border-box; }</style>
+  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+ </head>
+ <body class="h-full bg-gradient-to-br from-slate-100 to-slate-200">
+  <div id="app" class="h-full overflow-auto"><!-- Header -->
+   <header class="bg-gradient-to-r from-blue-700 to-blue-900 text-white p-4 sticky top-0 z-50 shadow-lg">
+    <h1 id="appTitle" class="text-2xl font-bold text-center">Scout Goalball</h1>
+   </header><!-- Navigation -->
+   <nav class="bg-white shadow-md p-2 sticky top-16 z-40 overflow-x-auto">
+    <div class="flex gap-2 min-w-max px-2"><button onclick="showTab('config')" class="nav-btn btn-touch px-4 py-2 rounded-full font-medium text-sm active" data-tab="config">⚙️ Config</button> <button onclick="showTab('lineup')" class="nav-btn btn-touch px-4 py-2 rounded-full font-medium text-sm" data-tab="lineup">👥 Escalação</button> <button onclick="showTab('game')" class="nav-btn btn-touch px-4 py-2 rounded-full font-medium text-sm" data-tab="game">🎯 Jogo</button> <button onclick="showTab('history')" class="nav-btn btn-touch px-4 py-2 rounded-full font-medium text-sm" data-tab="history">📋 Histórico</button> <button onclick="showTab('report')" class="nav-btn btn-touch px-4 py-2 rounded-full font-medium text-sm" data-tab="report">📊 Relatório</button>
+    </div>
+   </nav>
+   <main class="p-4 pb-24 max-w-4xl mx-auto"><!-- CONFIG TAB -->
+    <div id="tab-config" class="tab-content active space-y-6"><!-- Team Names -->
+     <div class="card p-6">
+      <h2 class="text-xl font-bold text-slate-800 mb-4">🏆 Configuração do Jogo</h2>
+      <div class="space-y-4">
+       <div><label class="block text-sm font-medium text-slate-600 mb-2">Competição</label> <input type="text" id="competitionName" class="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:border-blue-500 focus:outline-none text-lg" placeholder="Nome da competição" onchange="saveConfig()">
+       </div>
+       <div><label class="block text-sm font-medium text-slate-600 mb-2">Local da Partida</label> <input type="text" id="matchLocation" class="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:border-blue-500 focus:outline-none text-lg" placeholder="Local" onchange="saveConfig()">
+       </div>
+       <div><label class="block text-sm font-medium text-slate-600 mb-2">Data</label> <input type="date" id="matchDate" class="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:border-blue-500 focus:outline-none text-lg" onchange="saveConfig()">
+       </div>
+       <div><label class="block text-sm font-medium text-slate-600 mb-2">Nome da Minha Equipe</label> <input type="text" id="myTeamName" class="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:border-blue-500 focus:outline-none text-lg" placeholder="Minha Equipe" onchange="saveConfig()">
+       </div>
+       <div><label class="block text-sm font-medium text-slate-600 mb-2">Nome da Equipe Adversária</label> <input type="text" id="oppTeamName" class="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:border-blue-500 focus:outline-none text-lg" placeholder="Adversário" onchange="saveConfig()">
+       </div>
+      </div>
+     </div><!-- My Team Players -->
+     <div class="card p-6">
+      <h2 class="text-xl font-bold text-slate-800 mb-4">👕 Atletas - Minha Equipe</h2>
+      <div id="myTeamPlayers" class="grid grid-cols-2 gap-3"><!-- Generated dynamically -->
+      </div>
+     </div><!-- Opponent Team Players -->
+     <div class="card p-6">
+      <h2 class="text-xl font-bold text-slate-800 mb-4">👥 Atletas - Adversário</h2>
+      <div class="flex items-center gap-3 mb-4"><label class="relative inline-flex items-center cursor-pointer"> <input type="checkbox" id="trackOpponent" class="sr-only peer" onchange="toggleOpponentTracking()">
+        <div class="w-14 h-7 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-blue-600"></div></label> <span class="text-sm font-medium text-slate-700">Cadastrar atletas adversários</span>
+      </div>
+      <div id="oppTeamPlayers" class="grid grid-cols-2 gap-3 hidden"><!-- Generated dynamically -->
+      </div>
+     </div><!-- Game Phase -->
+     <div class="card p-6">
+      <h2 class="text-xl font-bold text-slate-800 mb-4">⏱️ Fase do Jogo</h2>
+      <div class="grid grid-cols-2 gap-3"><button onclick="setPhase('1st')" class="btn-touch py-4 rounded-xl font-bold text-white btn-primary phase-btn" data-phase="1st">1º Tempo</button> <button onclick="setPhase('2nd')" class="btn-touch py-4 rounded-xl font-bold bg-slate-300 text-slate-700 phase-btn" data-phase="2nd">2º Tempo</button> <button onclick="setPhase('ot1')" class="btn-touch py-4 rounded-xl font-bold bg-slate-300 text-slate-700 phase-btn" data-phase="ot1">Prorrog. 1º</button> <button onclick="setPhase('ot2')" class="btn-touch py-4 rounded-xl font-bold bg-slate-300 text-slate-700 phase-btn" data-phase="ot2">Prorrog. 2º</button> <button onclick="setPhase('penalties')" class="btn-touch py-4 rounded-xl font-bold bg-slate-300 text-slate-700 phase-btn col-span-2" data-phase="penalties">Pênaltis</button>
+      </div>
+      <div id="goldenGoalIndicator" class="hidden mt-4 p-3 bg-yellow-100 border-2 border-yellow-400 rounded-xl text-center"><span class="text-yellow-800 font-bold">⚡ GOLDEN GOAL ATIVO</span>
+      </div>
+     </div>
+    </div><!-- LINEUP TAB -->
+    <div id="tab-lineup" class="tab-content space-y-6"><!-- Formation Display -->
+     <div class="card p-6">
+      <h2 class="text-xl font-bold text-slate-800 mb-4">📐 Formação em V</h2>
+      <div class="formation-display mb-4">
+       <div id="playerLeftWing" class="formation-player" style="left: 15%; top: 60%;"><span class="text-xs text-slate-500">Ala E</span> <span class="player-number">-</span>
+       </div>
+       <div id="playerPivot" class="formation-player" style="left: 50%; top: 20%; transform: translateX(-50%);"><span class="text-xs text-slate-500">Pivô</span> <span class="player-number">-</span>
+       </div>
+       <div id="playerRightWing" class="formation-player" style="right: 15%; top: 60%;"><span class="text-xs text-slate-500">Ala D</span> <span class="player-number">-</span>
+       </div>
+      </div>
+     </div><!-- Position Selectors -->
+     <div class="card p-6">
+      <h2 class="text-xl font-bold text-slate-800 mb-4">🔄 Definir Escalação</h2>
+      <div class="space-y-4">
+       <div><label class="block text-sm font-medium text-slate-600 mb-2">Ala Esquerda (Recuado)</label> <select id="selectLeftWing" class="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:border-blue-500 focus:outline-none text-lg" onchange="updateFormation()"> <option value="">Selecionar...</option> </select>
+       </div>
+       <div><label class="block text-sm font-medium text-slate-600 mb-2">Pivô (Avançado)</label> <select id="selectPivot" class="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:border-blue-500 focus:outline-none text-lg" onchange="updateFormation()"> <option value="">Selecionar...</option> </select>
+       </div>
+       <div><label class="block text-sm font-medium text-slate-600 mb-2">Ala Direita (Recuado)</label> <select id="selectRightWing" class="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:border-blue-500 focus:outline-none text-lg" onchange="updateFormation()"> <option value="">Selecionar...</option> </select>
+       </div>
+      </div>
+     </div><!-- Bench -->
+     <div class="card p-6">
+      <h2 class="text-xl font-bold text-slate-800 mb-4">🪑 Banco</h2>
+      <div id="benchPlayers" class="flex flex-wrap gap-3"><span class="text-slate-500">Nenhum atleta no banco</span>
+      </div>
+     </div><!-- Substitutions -->
+     <div class="card p-6">
+      <h2 class="text-xl font-bold text-slate-800 mb-4">🔄 Substituições</h2>
+      <div class="grid grid-cols-2 gap-4 mb-4">
+       <div class="text-center p-3 bg-blue-50 rounded-xl">
+        <div class="text-sm text-slate-600">
+         Regulamentar
+        </div>
+        <div id="mySubsReg" class="text-2xl font-bold text-blue-600">
+         0/4
+        </div>
+       </div>
+       <div class="text-center p-3 bg-orange-50 rounded-xl">
+        <div class="text-sm text-slate-600">
+         Prorrogação
+        </div>
+        <div id="mySubsOT" class="text-2xl font-bold text-orange-600">
+         0/1
+        </div>
+       </div>
+      </div>
+      <div class="space-y-3">
+       <div><label class="block text-sm font-medium text-slate-600 mb-2">Sai (OUT)</label> <select id="subOut" class="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:border-blue-500 focus:outline-none"> <option value="">Selecionar atleta...</option> </select>
+       </div>
+       <div><label class="block text-sm font-medium text-slate-600 mb-2">Entra (IN)</label> <select id="subIn" class="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:border-blue-500 focus:outline-none"> <option value="">Selecionar do banco...</option> </select>
+       </div><button onclick="makeSubstitution('my')" id="btnMySub" class="btn-touch w-full py-4 rounded-xl font-bold text-white btn-primary">Confirmar Substituição</button>
+      </div>
+     </div><!-- Opponent Substitutions -->
+     <div class="card p-6">
+      <h2 class="text-xl font-bold text-slate-800 mb-4">🔄 Substituições Adversário</h2>
+      <div class="grid grid-cols-2 gap-4 mb-4">
+       <div class="text-center p-3 bg-red-50 rounded-xl">
+        <div class="text-sm text-slate-600">
+         Regulamentar
+        </div>
+        <div id="oppSubsReg" class="text-2xl font-bold text-red-600">
+         0/4
+        </div>
+       </div>
+       <div class="text-center p-3 bg-orange-50 rounded-xl">
+        <div class="text-sm text-slate-600">
+         Prorrogação
+        </div>
+        <div id="oppSubsOT" class="text-2xl font-bold text-orange-600">
+         0/1
+        </div>
+       </div>
+      </div><button onclick="makeSubstitution('opp')" id="btnOppSub" class="btn-touch w-full py-4 rounded-xl font-bold text-white btn-danger">+ Substituição Adversário</button>
+     </div>
+    </div><!-- GAME TAB -->
+    <div id="tab-game" class="tab-content space-y-6"><!-- Scoreboard -->
+     <div class="scoreboard">
+      <div class="flex items-center justify-between mb-4">
+       <div class="text-center flex-1">
+        <div id="scoreMyTeamName" class="text-white text-sm font-medium truncate px-2">
+         Minha Equipe
+        </div>
+        <div id="scoreMyTeam" class="score-number text-blue-400">
+         0
+        </div>
+       </div>
+       <div class="text-white text-2xl font-bold px-4">
+        ×
+       </div>
+       <div class="text-center flex-1">
+        <div id="scoreOppTeamName" class="text-white text-sm font-medium truncate px-2">
+         Adversário
+        </div>
+        <div id="scoreOppTeam" class="score-number text-red-400">
+         0
+        </div>
+       </div>
+      </div>
+      <div id="currentPhaseDisplay" class="text-center text-white text-sm bg-white/10 rounded-lg py-2 phase-indicator">
+       1º Tempo
+      </div>
+     </div><!-- Quick Goals -->
+     <div class="card p-6">
+      <h2 class="text-xl font-bold text-slate-800 mb-4">⚽ Gols Rápidos</h2>
+      <div class="grid grid-cols-2 gap-4"><button onclick="quickGoal('my')" class="btn-touch py-6 rounded-xl font-bold text-white btn-success text-lg">+ GOL<br><span id="quickGoalMyName" class="text-sm opacity-80">Minha Equipe</span></button> <button onclick="quickGoal('opp')" class="btn-touch py-6 rounded-xl font-bold text-white btn-danger text-lg">+ GOL<br><span id="quickGoalOppName" class="text-sm opacity-80">Adversário</span></button>
+      </div>
+     </div><!-- Timeouts -->
+     <div class="card p-6">
+      <h2 class="text-xl font-bold text-slate-800 mb-4">⏸️ Timeouts</h2>
+      <div class="grid grid-cols-2 gap-4">
+       <div class="space-y-3">
+        <div id="myTimeoutDisplay" class="text-center p-3 bg-blue-50 rounded-xl">
+         <div class="text-xs text-slate-600">
+          Reg: <span id="myTOReg">0/4</span>
+         </div>
+         <div class="text-xs text-slate-600">
+          OT: <span id="myTOOT">0/1</span>
+         </div>
+        </div><button onclick="callTimeout('my')" id="btnMyTO" class="btn-touch w-full py-3 rounded-xl font-bold text-white btn-primary">Timeout</button>
+       </div>
+       <div class="space-y-3">
+        <div id="oppTimeoutDisplay" class="text-center p-3 bg-red-50 rounded-xl">
+         <div class="text-xs text-slate-600">
+          Reg: <span id="oppTOReg">0/4</span>
+         </div>
+         <div class="text-xs text-slate-600">
+          OT: <span id="oppTOOT">0/1</span>
+         </div>
+        </div><button onclick="callTimeout('opp')" id="btnOppTO" class="btn-touch w-full py-3 rounded-xl font-bold text-white btn-danger">Timeout</button>
+       </div>
+      </div>
+     </div><!-- Turn Recording -->
+     <div class="card p-6">
+      <h2 class="text-xl font-bold text-slate-800 mb-4">🎯 Registrar Turno</h2><!-- Step 1: Attacking Team -->
+      <div id="turnStep1" class="space-y-4">
+       <h3 class="font-semibold text-slate-700">Passo 1: Quem está atacando?</h3>
+       <div class="grid grid-cols-2 gap-4"><button onclick="setAttackingTeam('my')" class="btn-touch py-4 rounded-xl font-bold text-white btn-primary" id="btnAttackMy">Minha Equipe</button> <button onclick="setAttackingTeam('opp')" class="btn-touch py-4 rounded-xl font-bold text-white btn-danger" id="btnAttackOpp">Adversário</button>
+       </div>
+      </div><!-- Step 2: Attack Details -->
+      <div id="turnStep2" class="hidden space-y-4">
+       <div class="flex justify-between items-center">
+        <h3 class="font-semibold text-slate-700">Passo 2: Detalhes do Ataque</h3>
+        <div class="flex gap-2">
+         <button onclick="editLastTurn()" id="btnEditLast" class="text-blue-500 font-medium text-sm hidden">✎ Editar último</button> <button onclick="cancelTurn()" class="text-red-500 font-medium">✕ Cancelar</button>
+        </div>
+       </div><!-- Attacker Selection (My Team Only) -->
+       <div id="attackerSelection" class="hidden"><label class="block text-sm font-medium text-slate-600 mb-2">Atacante</label>
+        <div id="attackerButtons" class="flex flex-wrap gap-2"><!-- Generated dynamically -->
+        </div>
+       </div><!-- Throw Type -->
+       <div><label class="block text-sm font-medium text-slate-600 mb-2">Tipo de Arremesso</label>
+        <div class="grid grid-cols-2 gap-2"><button onclick="selectThrowType('lisa')" class="btn-touch py-3 rounded-xl border-2 border-slate-200 font-medium throw-type-btn">Lisa</button> <button onclick="selectThrowType('quicada')" class="btn-touch py-3 rounded-xl border-2 border-slate-200 font-medium throw-type-btn">Quicada</button>
+        </div>
+       </div><!-- Ball Height/Type -->
+       <div><label class="block text-sm font-medium text-slate-600 mb-2">Altura/Característica</label>
+        <div class="grid grid-cols-2 gap-2"><button onclick="selectBallHeight('alta')" class="btn-touch py-2 rounded-xl border-2 border-slate-200 text-sm font-medium ball-height-btn">Bola alta</button> <button onclick="selectBallHeight('lisa')" class="btn-touch py-2 rounded-xl border-2 border-slate-200 text-sm font-medium ball-height-btn">Bola lisa</button> <button onclick="selectBallHeight('efeito')" class="btn-touch py-2 rounded-xl border-2 border-slate-200 text-sm font-medium ball-height-btn">C/ efeito</button> <button onclick="selectBallHeight('alvo_quicada')" class="btn-touch py-2 rounded-xl border-2 border-slate-200 text-sm font-medium ball-height-btn">Alvo quicada</button> <button onclick="selectBallHeight('alvo_lisa')" class="btn-touch py-2 rounded-xl border-2 border-slate-200 text-sm font-medium ball-height-btn">Alvo lisa</button> <button onclick="selectBallHeight('alvo_efeito')" class="btn-touch py-2 rounded-xl border-2 border-slate-200 text-sm font-medium ball-height-btn">Alvo c/ efeito</button> <button onclick="selectBallHeight('fora')" class="btn-touch py-2 rounded-xl border-2 border-slate-200 text-sm font-medium ball-height-btn col-span-2">Bola pra fora</button>
+        </div>
+       </div><!-- Target -->
+       <div><label class="block text-sm font-medium text-slate-600 mb-2">Alvo</label>
+        <div class="target-grid"><button onclick="selectTarget('1')" class="target-btn bg-slate-100 target-btn-sel">1</button> <button onclick="selectTarget('2')" class="target-btn bg-slate-100 target-btn-sel">2</button> <button onclick="selectTarget('2/3')" class="target-btn bg-slate-100 target-btn-sel">2/3</button> <button onclick="selectTarget('3')" class="target-btn bg-slate-100 target-btn-sel">3</button> <button onclick="selectTarget('meio')" class="target-btn bg-slate-200 target-btn-sel">M</button> <button onclick="selectTarget('4')" class="target-btn bg-slate-100 target-btn-sel">4</button> <button onclick="selectTarget('4/5')" class="target-btn bg-slate-100 target-btn-sel">4/5</button> <button onclick="selectTarget('5')" class="target-btn bg-slate-100 target-btn-sel">5</button> <button onclick="selectTarget('6')" class="target-btn bg-slate-100 target-btn-sel">6</button>
+        </div>
+       </div><!-- Result -->
+       <div><label class="block text-sm font-medium text-slate-600 mb-2">Resultado</label>
+        <div class="grid grid-cols-3 gap-2"><button onclick="selectResult('GOL')" class="btn-touch py-3 rounded-xl border-2 border-green-300 bg-green-50 font-bold text-green-700 result-btn">GOL</button> <button onclick="selectResult('DEFENDIDA')" class="btn-touch py-3 rounded-xl border-2 border-blue-300 bg-blue-50 font-bold text-blue-700 result-btn">DEFENDIDA</button> <button onclick="selectResult('OUT')" class="btn-touch py-3 rounded-xl border-2 border-slate-300 bg-slate-50 font-bold text-slate-700 result-btn">OUT</button> <button onclick="selectResult('BALL OVER')" class="btn-touch py-3 rounded-xl border-2 border-yellow-300 bg-yellow-50 font-bold text-yellow-700 result-btn">BALL OVER</button> <button onclick="selectResult('PENALIDADE')" class="btn-touch py-3 rounded-xl border-2 border-red-300 bg-red-50 font-bold text-red-700 result-btn">PENALIDADE</button> <button onclick="selectResult('BLOCK OUT')" class="btn-touch py-3 rounded-xl border-2 border-purple-300 bg-purple-50 font-bold text-purple-700 result-btn">BLOCK OUT</button>
+        </div>
+       </div><!-- Penalties Multi-Select -->
+       <div id="penaltiesSection" class="hidden"><label class="block text-sm font-medium text-slate-600 mb-2">Penalidades (múltipla seleção)</label>
+        <div class="flex flex-wrap gap-2"><button onclick="togglePenalty('highball')" class="multi-select-btn px-3 py-2 rounded-lg border-2 border-slate-200 text-sm penalty-btn">Highball</button> <button onclick="togglePenalty('longball')" class="multi-select-btn px-3 py-2 rounded-lg border-2 border-slate-200 text-sm penalty-btn">Longball</button> <button onclick="togglePenalty('10segundos')" class="multi-select-btn px-3 py-2 rounded-lg border-2 border-slate-200 text-sm penalty-btn">10 seg</button> <button onclick="togglePenalty('eyeshades')" class="multi-select-btn px-3 py-2 rounded-lg border-2 border-slate-200 text-sm penalty-btn">Eyeshades</button> <button onclick="togglePenalty('illegal_defense')" class="multi-select-btn px-3 py-2 rounded-lg border-2 border-slate-200 text-sm penalty-btn">Illegal Def</button> <button onclick="togglePenalty('illegal_coaching')" class="multi-select-btn px-3 py-2 rounded-lg border-2 border-slate-200 text-sm penalty-btn">Illegal Coach</button> <button onclick="togglePenalty('noise')" class="multi-select-btn px-3 py-2 rounded-lg border-2 border-slate-200 text-sm penalty-btn">Noise</button> <button onclick="togglePenalty('team_delay')" class="multi-select-btn px-3 py-2 rounded-lg border-2 border-slate-200 text-sm penalty-btn">Team Delay</button> <button onclick="togglePenalty('personal_delay')" class="multi-select-btn px-3 py-2 rounded-lg border-2 border-slate-200 text-sm penalty-btn">Personal Delay</button> <button onclick="togglePenalty('conducao')" class="multi-select-btn px-3 py-2 rounded-lg border-2 border-slate-200 text-sm penalty-btn">Condução</button>
+        </div>
+       </div><button onclick="proceedToDefense()" id="btnProceedDefense" class="btn-touch w-full py-4 rounded-xl font-bold text-white btn-success">Continuar →</button>
+      </div><!-- Step 3: Defense Details -->
+      <div id="turnStep3" class="hidden space-y-4">
+       <div class="flex justify-between items-center">
+        <h3 class="font-semibold text-slate-700">Passo 3: Detalhes da Defesa</h3><button onclick="skipDefense()" class="text-slate-500 font-medium">Pular →</button>
+       </div><!-- Defender Selection -->
+       <div id="defenderSelection" class="hidden"><label class="block text-sm font-medium text-slate-600 mb-2">Defensor</label>
+        <div id="defenderButtons" class="flex flex-wrap gap-2"><!-- Generated dynamically -->
+        </div>
+       </div><!-- Defense Type -->
+       <div><label class="block text-sm font-medium text-slate-600 mb-2">Tipo de Defesa (múltipla)</label>
+        <div class="flex flex-wrap gap-2"><button onclick="toggleDefenseType('baixa')" class="multi-select-btn px-4 py-2 rounded-lg border-2 border-slate-200 font-medium defense-type-btn">Baixa</button> <button onclick="toggleDefenseType('alta')" class="multi-select-btn px-4 py-2 rounded-lg border-2 border-slate-200 font-medium defense-type-btn">Alta</button> <button onclick="toggleDefenseType('incorreta')" class="multi-select-btn px-4 py-2 rounded-lg border-2 border-slate-200 font-medium defense-type-btn">Incorreta</button> <button onclick="toggleDefenseType('completa')" class="multi-select-btn px-4 py-2 rounded-lg border-2 border-slate-200 font-medium defense-type-btn">Completa</button>
+        </div>
+       </div><!-- Defense Area -->
+       <div><label class="block text-sm font-medium text-slate-600 mb-2">Área de Defesa</label>
+        <div class="flex flex-wrap gap-2"><button onclick="selectDefenseArea('bracos')" class="multi-select-btn px-3 py-2 rounded-lg border-2 border-slate-200 text-sm defense-area-btn">Braços</button> <button onclick="selectDefenseArea('tronco')" class="multi-select-btn px-3 py-2 rounded-lg border-2 border-slate-200 text-sm defense-area-btn">Tronco</button> <button onclick="selectDefenseArea('dedos')" class="multi-select-btn px-3 py-2 rounded-lg border-2 border-slate-200 text-sm defense-area-btn">Dedos</button> <button onclick="selectDefenseArea('pernas')" class="multi-select-btn px-3 py-2 rounded-lg border-2 border-slate-200 text-sm defense-area-btn">Pernas</button> <button onclick="selectDefenseArea('cara')" class="multi-select-btn px-3 py-2 rounded-lg border-2 border-slate-200 text-sm defense-area-btn">Cara</button> <button onclick="selectDefenseArea('intimas')" class="multi-select-btn px-3 py-2 rounded-lg border-2 border-slate-200 text-sm defense-area-btn">Partes íntimas</button>
+        </div>
+       </div><!-- Pass -->
+       <div><label class="block text-sm font-medium text-slate-600 mb-2">Passe</label>
+        <div class="grid grid-cols-2 gap-2"><button onclick="selectPass(true)" class="btn-touch py-3 rounded-xl border-2 border-slate-200 font-medium pass-btn">Sim</button> <button onclick="selectPass(false)" class="btn-touch py-3 rounded-xl border-2 border-slate-200 font-medium pass-btn">Não</button>
+        </div>
+       </div><!-- Movement -->
+       <div><label class="block text-sm font-medium text-slate-600 mb-2">Movimento</label>
+        <div class="grid grid-cols-2 gap-2"><button onclick="selectMovement('flutuou')" class="btn-touch py-3 rounded-xl border-2 border-slate-200 font-medium movement-btn">Flutuou</button> <button onclick="selectMovement('inverteu')" class="btn-touch py-3 rounded-xl border-2 border-slate-200 font-medium movement-btn">Inverteu</button> <button onclick="selectMovement('nenhum')" class="btn-touch py-3 rounded-xl border-2 border-slate-200 font-medium movement-btn col-span-2">Nenhum</button>
+        </div>
+       </div><button onclick="finishTurn()" id="btnFinishTurn" class="btn-touch w-full py-4 rounded-xl font-bold text-white btn-success">✓ Finalizar Turno</button>
+      </div>
+     </div>
+    </div><!-- HISTORY TAB -->
+    <div id="tab-history" class="tab-content space-y-4">
+     <div class="card p-6">
+      <div class="flex justify-between items-center mb-4">
+       <h2 class="text-xl font-bold text-slate-800">📋 Histórico</h2><span id="historyCount" class="text-sm text-slate-500">0 eventos</span>
+      </div>
+      <div id="historyList" class="space-y-3">
+       <p class="text-slate-500 text-center py-8">Nenhum evento registrado</p>
+      </div>
+     </div>
+    </div><!-- REPORT TAB -->
+    <div id="tab-report" class="tab-content space-y-4">
+     <div class="card p-6">
+      <h2 class="text-xl font-bold text-slate-800 mb-4">📊 Relatório Técnico</h2>
+      <div id="reportContent" class="prose max-w-none">
+       <p class="text-slate-500">O relatório será gerado após registrar eventos do jogo.</p>
+      </div>
+     </div>
+     <div class="grid grid-cols-2 gap-4"><button onclick="generateReport()" class="btn-touch py-4 rounded-xl font-bold text-white btn-primary">🔄 Atualizar Relatório</button> <button onclick="exportCSV()" class="btn-touch py-4 rounded-xl font-bold text-white btn-success">📥 Exportar CSV</button> <button onclick="exportBackupJSON()" class="btn-touch py-4 rounded-xl font-bold text-white btn-warning">💾 Backup JSON</button> <button onclick="importBackupJSON()" class="btn-touch py-4 rounded-xl font-bold text-white" style="background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);">📂 Restaurar</button>
+     </div>
+     <div class="card p-6 mt-4">
+      <h3 class="font-bold text-slate-800 mb-3">📅 Filtrar por Fase</h3>
+      <div class="grid grid-cols-3 gap-2"><button onclick="filterReportPhase('all')" class="btn-touch py-3 rounded-xl font-medium bg-blue-600 text-white report-filter-btn active">Jogo Completo</button> <button onclick="filterReportPhase('1st')" class="btn-touch py-3 rounded-xl font-medium border-2 border-slate-300 bg-slate-50 report-filter-btn">1º Tempo</button> <button onclick="filterReportPhase('2nd')" class="btn-touch py-3 rounded-xl font-medium border-2 border-slate-300 bg-slate-50 report-filter-btn">2º Tempo</button> <button onclick="filterReportPhase('ot1')" class="btn-touch py-3 rounded-xl font-medium border-2 border-slate-300 bg-slate-50 report-filter-btn col-span-3">Prorrogações</button>
+      </div>
+     </div>
+    </div>
+   </main>
+  </div>
+  <script>
+    // ==================== STATE ====================
+    const defaultConfig = {
+      app_title: 'Scout Goalball'
+    };
+
+    let state = {
+      app_title: 'Scout Goalball',
+      competitionName: '',
+      matchLocation: '',
+      matchDate: new Date().toISOString().split('T')[0],
+      myTeamName: 'Minha Equipe',
+      oppTeamName: 'Adversário',
+      myTeamPlayers: Array(6).fill(null).map((_, i) => ({ name: '', number: '' })),
+      oppTeamPlayers: Array(6).fill(null).map((_, i) => ({ name: '', number: '' })),
+      trackOpponent: false,
+      phase: '1st',
+      score: { my: 0, opp: 0 },
+      timeouts: {
+        my: { reg: 0, ot: 0 },
+        opp: { reg: 0, ot: 0 }
+      },
+      substitutions: {
+        my: { reg: 0, ot: 0 },
+        opp: { reg: 0, ot: 0 }
+      },
+      formation: {
+        leftWing: null,
+        pivot: null,
+        rightWing: null
+      },
+      bench: [],
+      history: [],
+      currentTurn: null,
+      editingTurnId: null,
+      gameEnded: false,
+      reportPhaseFilter: 'all'
+    };
+
+    // ==================== INITIALIZATION ====================
+    function init() {
+      loadFromStorage();
+      renderMyTeamPlayers();
+      renderOppTeamPlayers();
+      updateFormationSelectors();
+      updateScoreboard();
+      updateTimeoutDisplays();
+      updateSubstitutionDisplays();
+      updatePhaseButtons();
+      renderHistory();
+      document.getElementById('matchDate').value = state.matchDate;
+      document.getElementById('competitionName').value = state.competitionName;
+      document.getElementById('matchLocation').value = state.matchLocation;
+    }
+
+    function loadFromStorage() {
+      const saved = localStorage.getItem('scoutGoalball');
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          state = { ...state, ...parsed };
+          document.getElementById('myTeamName').value = state.myTeamName;
+          document.getElementById('oppTeamName').value = state.oppTeamName;
+          document.getElementById('trackOpponent').checked = state.trackOpponent;
+          if (state.trackOpponent) {
+            document.getElementById('oppTeamPlayers').classList.remove('hidden');
+          }
+        } catch (e) {
+          console.error('Error loading state:', e);
+        }
+      }
+    }
+
+    function saveToStorage() {
+      localStorage.setItem('scoutGoalball', JSON.stringify(state));
+    }
+
+    function saveConfig() {
+      state.myTeamName = document.getElementById('myTeamName').value || 'Minha Equipe';
+      state.oppTeamName = document.getElementById('oppTeamName').value || 'Adversário';
+      state.competitionName = document.getElementById('competitionName').value;
+      state.matchLocation = document.getElementById('matchLocation').value;
+      state.matchDate = document.getElementById('matchDate').value;
+      updateScoreboard();
+      saveToStorage();
+    }
+
+    // ==================== TAB NAVIGATION ====================
+    function showTab(tabName) {
+      document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+      document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+      document.getElementById(`tab-${tabName}`).classList.add('active');
+      document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+    }
+
+    // ==================== PLAYER MANAGEMENT ====================
+    function renderMyTeamPlayers() {
+      const container = document.getElementById('myTeamPlayers');
+      container.innerHTML = state.myTeamPlayers.map((player, i) => `
+        <div class="flex gap-2">
+          <input type="text" placeholder="Nome ${i+1}" value="${player.name}" 
+            onchange="updateMyPlayer(${i}, 'name', this.value)"
+            class="flex-1 px-3 py-2 border-2 border-slate-200 rounded-lg focus:border-blue-500 focus:outline-none">
+          <input type="text" placeholder="Nº" value="${player.number}" 
+            onchange="updateMyPlayer(${i}, 'number', this.value)"
+            class="w-16 px-3 py-2 border-2 border-slate-200 rounded-lg focus:border-blue-500 focus:outline-none text-center">
+        </div>
+      `).join('');
+    }
+
+    function renderOppTeamPlayers() {
+      const container = document.getElementById('oppTeamPlayers');
+      container.innerHTML = state.oppTeamPlayers.map((player, i) => `
+        <div class="flex gap-2">
+          <input type="text" placeholder="Nome ${i+1}" value="${player.name}" 
+            onchange="updateOppPlayer(${i}, 'name', this.value)"
+            class="flex-1 px-3 py-2 border-2 border-slate-200 rounded-lg focus:border-blue-500 focus:outline-none">
+          <input type="text" placeholder="Nº" value="${player.number}" 
+            onchange="updateOppPlayer(${i}, 'number', this.value)"
+            class="w-16 px-3 py-2 border-2 border-slate-200 rounded-lg focus:border-blue-500 focus:outline-none text-center">
+        </div>
+      `).join('');
+    }
+
+    function updateMyPlayer(index, field, value) {
+      state.myTeamPlayers[index][field] = value;
+      updateFormationSelectors();
+      saveToStorage();
+    }
+
+    function updateOppPlayer(index, field, value) {
+      state.oppTeamPlayers[index][field] = value;
+      saveToStorage();
+    }
+
+    function toggleOpponentTracking() {
+      state.trackOpponent = document.getElementById('trackOpponent').checked;
+      document.getElementById('oppTeamPlayers').classList.toggle('hidden', !state.trackOpponent);
+      saveToStorage();
+    }
+
+    // ==================== FORMATION ====================
+    function updateFormationSelectors() {
+      const players = state.myTeamPlayers.filter(p => p.name || p.number);
+      const selectors = ['selectLeftWing', 'selectPivot', 'selectRightWing'];
+      
+      selectors.forEach(selectorId => {
+        const select = document.getElementById(selectorId);
+        const currentValue = select.value;
+        select.innerHTML = '<option value="">Selecionar...</option>' + 
+          players.map((p, i) => `<option value="${i}">${p.number || '-'} - ${p.name || 'Atleta '+(i+1)}</option>`).join('');
+        select.value = currentValue;
+      });
+
+      updateSubstitutionSelectors();
+    }
+
+    function updateFormation() {
+      const leftWing = document.getElementById('selectLeftWing').value;
+      const pivot = document.getElementById('selectPivot').value;
+      const rightWing = document.getElementById('selectRightWing').value;
+
+      const selected = [leftWing, pivot, rightWing].filter(v => v !== '');
+      if (new Set(selected).size !== selected.length) {
+        showToast('Não é possível colocar o mesmo atleta em duas posições!', 'error');
+        return;
+      }
+
+      state.formation.leftWing = leftWing !== '' ? parseInt(leftWing) : null;
+      state.formation.pivot = pivot !== '' ? parseInt(pivot) : null;
+      state.formation.rightWing = rightWing !== '' ? parseInt(rightWing) : null;
+
+      updateFormationDisplay();
+      updateBench();
+      updateSubstitutionSelectors();
+      saveToStorage();
+    }
+
+    function updateFormationDisplay() {
+      const positions = [
+        { id: 'playerLeftWing', key: 'leftWing', label: 'Ala E' },
+        { id: 'playerPivot', key: 'pivot', label: 'Pivô' },
+        { id: 'playerRightWing', key: 'rightWing', label: 'Ala D' }
+      ];
+
+      positions.forEach(pos => {
+        const el = document.getElementById(pos.id);
+        const playerIndex = state.formation[pos.key];
+        if (playerIndex !== null && state.myTeamPlayers[playerIndex]) {
+          const player = state.myTeamPlayers[playerIndex];
+          el.innerHTML = `<span class="text-xs text-slate-500">${pos.label}</span><span class="player-number">${player.number || '-'}</span>`;
+        } else {
+          el.innerHTML = `<span class="text-xs text-slate-500">${pos.label}</span><span class="player-number">-</span>`;
+        }
+      });
+    }
+
+    function updateBench() {
+      const onCourt = [state.formation.leftWing, state.formation.pivot, state.formation.rightWing].filter(v => v !== null);
+      const allPlayers = state.myTeamPlayers.map((p, i) => i).filter(i => state.myTeamPlayers[i].name || state.myTeamPlayers[i].number);
+      state.bench = allPlayers.filter(i => !onCourt.includes(i));
+
+      const container = document.getElementById('benchPlayers');
+      if (state.bench.length === 0) {
+        container.innerHTML = '<span class="text-slate-500">Nenhum atleta no banco</span>';
+      } else {
+        container.innerHTML = state.bench.map(i => {
+          const p = state.myTeamPlayers[i];
+          return `<span class="px-4 py-2 bg-slate-100 rounded-lg font-medium">${p.number || '-'} - ${p.name || 'Atleta'}</span>`;
+        }).join('');
+      }
+    }
+
+    function updateSubstitutionSelectors() {
+      const onCourt = [state.formation.leftWing, state.formation.pivot, state.formation.rightWing].filter(v => v !== null);
+      
+      const subOut = document.getElementById('subOut');
+      subOut.innerHTML = '<option value="">Selecionar atleta...</option>' +
+        onCourt.map(i => {
+          const p = state.myTeamPlayers[i];
+          return `<option value="${i}">${p.number || '-'} - ${p.name || 'Atleta'}</option>`;
+        }).join('');
+
+      const subIn = document.getElementById('subIn');
+      subIn.innerHTML = '<option value="">Selecionar do banco...</option>' +
+        state.bench.map(i => {
+          const p = state.myTeamPlayers[i];
+          return `<option value="${i}">${p.number || '-'} - ${p.name || 'Atleta'}</option>`;
+        }).join('');
+    }
+
+    // ==================== GAME PHASE ====================
+    function setPhase(phase) {
+      state.phase = phase;
+      updatePhaseButtons();
+      updateTimeoutDisplays();
+      updateSubstitutionDisplays();
+      
+      const isOT = phase === 'ot1' || phase === 'ot2';
+      document.getElementById('goldenGoalIndicator').classList.toggle('hidden', !isOT);
+      
+      saveToStorage();
+    }
+
+    function updatePhaseButtons() {
+      document.querySelectorAll('.phase-btn').forEach(btn => {
+        const isActive = btn.dataset.phase === state.phase;
+        btn.classList.toggle('btn-primary', isActive);
+        btn.classList.toggle('bg-slate-300', !isActive);
+        btn.classList.toggle('text-slate-700', !isActive);
+        btn.classList.toggle('text-white', isActive);
+      });
+
+      const phaseNames = {
+        '1st': '1º Tempo',
+        '2nd': '2º Tempo',
+        'ot1': 'Prorrogação 1º',
+        'ot2': 'Prorrogação 2º',
+        'penalties': 'Pênaltis'
+      };
+      document.getElementById('currentPhaseDisplay').textContent = phaseNames[state.phase] || '1º Tempo';
+    }
+
+    // ==================== SCOREBOARD ====================
+    function updateScoreboard() {
+      document.getElementById('scoreMyTeam').textContent = state.score.my;
+      document.getElementById('scoreOppTeam').textContent = state.score.opp;
+      document.getElementById('scoreMyTeamName').textContent = state.myTeamName;
+      document.getElementById('scoreOppTeamName').textContent = state.oppTeamName;
+      document.getElementById('quickGoalMyName').textContent = state.myTeamName;
+      document.getElementById('quickGoalOppName').textContent = state.oppTeamName;
+    }
+
+    function quickGoal(team) {
+      if (state.gameEnded) {
+        showToast('Jogo encerrado!', 'error');
+        return;
+      }
+
+      state.score[team]++;
+      updateScoreboard();
+
+      const teamName = team === 'my' ? state.myTeamName : state.oppTeamName;
+      addHistoryEvent({
+        type: 'goal',
+        team: team,
+        teamName: teamName,
+        phase: state.phase,
+        timestamp: new Date().toISOString()
+      });
+
+      if (state.phase === 'ot1' || state.phase === 'ot2') {
+        state.gameEnded = true;
+        showToast('⚡ GOLDEN GOAL! Jogo encerrado!', 'success');
+      }
+
+      saveToStorage();
+    }
+
+    // ==================== TIMEOUTS ====================
+    function callTimeout(team) {
+      if (state.phase === 'penalties') {
+        showToast('Timeouts não permitidos nos pênaltis!', 'error');
+        return;
+      }
+
+      const isOT = state.phase === 'ot1' || state.phase === 'ot2';
+
+      if (isOT) {
+        if (state.timeouts[team].ot >= 1) {
+          showToast('Limite de timeouts na prorrogação atingido!', 'error');
+          return;
+        }
+        state.timeouts[team].ot++;
+      } else {
+        if (state.timeouts[team].reg >= 4) {
+          showToast('Limite de timeouts regulamentar atingido!', 'error');
+          return;
+        }
+        state.timeouts[team].reg++;
+      }
+
+      const teamName = team === 'my' ? state.myTeamName : state.oppTeamName;
+      addHistoryEvent({
+        type: 'timeout',
+        team: team,
+        teamName: teamName,
+        phase: state.phase,
+        isOT: isOT,
+        timestamp: new Date().toISOString()
+      });
+
+      updateTimeoutDisplays();
+      saveToStorage();
+      showToast(`Timeout ${teamName}`, 'info');
+    }
+
+    function updateTimeoutDisplays() {
+      document.getElementById('myTOReg').textContent = `${state.timeouts.my.reg}/4`;
+      document.getElementById('myTOOT').textContent = `${state.timeouts.my.ot}/1`;
+      document.getElementById('oppTOReg').textContent = `${state.timeouts.opp.reg}/4`;
+      document.getElementById('oppTOOT').textContent = `${state.timeouts.opp.ot}/1`;
+
+      const isPenalties = state.phase === 'penalties';
+      document.getElementById('btnMyTO').disabled = isPenalties;
+      document.getElementById('btnOppTO').disabled = isPenalties;
+    }
+
+    // ==================== SUBSTITUTIONS ====================
+    function makeSubstitution(team) {
+      if (state.phase === 'penalties') {
+        showToast('Substituições não permitidas nos pênaltis!', 'error');
+        return;
+      }
+
+      const isOT = state.phase === 'ot1' || state.phase === 'ot2';
+
+      if (team === 'my') {
+        const outIndex = document.getElementById('subOut').value;
+        const inIndex = document.getElementById('subIn').value;
+
+        if (!outIndex || !inIndex) {
+          showToast('Selecione os atletas para substituição!', 'error');
+          return;
+        }
+
+        if (isOT && state.substitutions.my.ot >= 1) {
+          showToast('Limite de substituições na prorrogação atingido!', 'error');
+          return;
+        }
+        if (!isOT && state.substitutions.my.reg >= 4) {
+          showToast('Limite de substituições regulamentar atingido!', 'error');
+          return;
+        }
+
+        const outInt = parseInt(outIndex);
+        const inInt = parseInt(inIndex);
+        
+        if (state.formation.leftWing === outInt) state.formation.leftWing = inInt;
+        else if (state.formation.pivot === outInt) state.formation.pivot = inInt;
+        else if (state.formation.rightWing === outInt) state.formation.rightWing = inInt;
+
+        document.getElementById('selectLeftWing').value = state.formation.leftWing ?? '';
+        document.getElementById('selectPivot').value = state.formation.pivot ?? '';
+        document.getElementById('selectRightWing').value = state.formation.rightWing ?? '';
+
+        updateFormationDisplay();
+        updateBench();
+        updateSubstitutionSelectors();
+
+        const playerOut = state.myTeamPlayers[outInt];
+        const playerIn = state.myTeamPlayers[inInt];
+
+        if (isOT) state.substitutions.my.ot++;
+        else state.substitutions.my.reg++;
+
+        addHistoryEvent({
+          type: 'substitution',
+          team: 'my',
+          teamName: state.myTeamName,
+          playerOut: `${playerOut.number || '-'} ${playerOut.name || 'Atleta'}`,
+          playerIn: `${playerIn.number || '-'} ${playerIn.name || 'Atleta'}`,
+          phase: state.phase,
+          isOT: isOT,
+          timestamp: new Date().toISOString()
+        });
+
+        showToast(`Substituição: ${playerOut.number || '-'} → ${playerIn.number || '-'}`, 'success');
+      } else {
+        if (isOT && state.substitutions.opp.ot >= 1) {
+          showToast('Limite de substituições na prorrogação atingido!', 'error');
+          return;
+        }
+        if (!isOT && state.substitutions.opp.reg >= 4) {
+          showToast('Limite de substituições regulamentar atingido!', 'error');
+          return;
+        }
+
+        if (isOT) state.substitutions.opp.ot++;
+        else state.substitutions.opp.reg++;
+
+        addHistoryEvent({
+          type: 'substitution',
+          team: 'opp',
+          teamName: state.oppTeamName,
+          phase: state.phase,
+          isOT: isOT,
+          timestamp: new Date().toISOString()
+        });
+
+        showToast(`Substituição registrada - ${state.oppTeamName}`, 'info');
+      }
+
+      updateSubstitutionDisplays();
+      saveToStorage();
+    }
+
+    function updateSubstitutionDisplays() {
+      document.getElementById('mySubsReg').textContent = `${state.substitutions.my.reg}/4`;
+      document.getElementById('mySubsOT').textContent = `${state.substitutions.my.ot}/1`;
+      document.getElementById('oppSubsReg').textContent = `${state.substitutions.opp.reg}/4`;
+      document.getElementById('oppSubsOT').textContent = `${state.substitutions.opp.ot}/1`;
+
+      const isPenalties = state.phase === 'penalties';
+      document.getElementById('btnMySub').disabled = isPenalties;
+      document.getElementById('btnOppSub').disabled = isPenalties;
+    }
+
+    // ==================== TURN RECORDING ====================
+    function setAttackingTeam(team) {
+      state.currentTurn = {
+        attackingTeam: team,
+        attackingTeamName: team === 'my' ? state.myTeamName : state.oppTeamName,
+        defendingTeam: team === 'my' ? 'opp' : 'my',
+        defendingTeamName: team === 'my' ? state.oppTeamName : state.myTeamName,
+        phase: state.phase,
+        timestamp: new Date().toISOString(),
+        attacker: null,
+        throwType: null,
+        ballHeight: null,
+        target: null,
+        result: null,
+        penalties: [],
+        defense: {
+          defender: null,
+          types: [],
+          area: null,
+          pass: null,
+          movement: null
+        }
+      };
+
+      document.getElementById('turnStep1').classList.add('hidden');
+      document.getElementById('turnStep2').classList.remove('hidden');
+      document.getElementById('btnEditLast').classList.toggle('hidden', state.history.length === 0 || state.history[0].type !== 'turn');
+
+      const attackerSection = document.getElementById('attackerSelection');
+      if (team === 'my') {
+        attackerSection.classList.remove('hidden');
+        renderAttackerButtons();
+      } else {
+        attackerSection.classList.add('hidden');
+      }
+
+      resetTurnSelections();
+    }
+
+    function renderAttackerButtons() {
+      const onCourt = [state.formation.leftWing, state.formation.pivot, state.formation.rightWing].filter(v => v !== null);
+      const container = document.getElementById('attackerButtons');
+      container.innerHTML = onCourt.map(i => {
+        const p = state.myTeamPlayers[i];
+        return `<button onclick="selectAttacker(${i})" class="btn-touch px-4 py-2 rounded-lg border-2 border-slate-200 font-medium attacker-btn">${p.number || '-'} - ${p.name || 'Atleta'}</button>`;
+      }).join('');
+    }
+
+    function renderDefenderButtons() {
+      const onCourt = [state.formation.leftWing, state.formation.pivot, state.formation.rightWing].filter(v => v !== null);
+      const container = document.getElementById('defenderButtons');
+      container.innerHTML = onCourt.map(i => {
+        const p = state.myTeamPlayers[i];
+        return `<button onclick="selectDefender(${i})" class="btn-touch px-4 py-2 rounded-lg border-2 border-slate-200 font-medium defender-btn">${p.number || '-'} - ${p.name || 'Atleta'}</button>`;
+      }).join('');
+    }
+
+    function selectAttacker(index) {
+      state.currentTurn.attacker = index;
+      document.querySelectorAll('.attacker-btn').forEach(btn => btn.classList.remove('selected', 'bg-blue-600', 'text-white', 'border-blue-600'));
+      event.target.classList.add('selected', 'bg-blue-600', 'text-white', 'border-blue-600');
+    }
+
+    function selectDefender(index) {
+      state.currentTurn.defense.defender = index;
+      document.querySelectorAll('.defender-btn').forEach(btn => btn.classList.remove('selected', 'bg-blue-600', 'text-white', 'border-blue-600'));
+      event.target.classList.add('selected', 'bg-blue-600', 'text-white', 'border-blue-600');
+    }
+
+    function selectThrowType(type) {
+      state.currentTurn.throwType = type;
+      document.querySelectorAll('.throw-type-btn').forEach(btn => {
+        btn.classList.remove('selected', 'bg-blue-600', 'text-white', 'border-blue-600');
+        btn.classList.add('border-slate-200');
+      });
+      event.target.classList.add('selected', 'bg-blue-600', 'text-white', 'border-blue-600');
+      event.target.classList.remove('border-slate-200');
+    }
+
+    function selectBallHeight(height) {
+      state.currentTurn.ballHeight = height;
+      document.querySelectorAll('.ball-height-btn').forEach(btn => {
+        btn.classList.remove('selected', 'bg-blue-600', 'text-white', 'border-blue-600');
+        btn.classList.add('border-slate-200');
+      });
+      event.target.classList.add('selected', 'bg-blue-600', 'text-white', 'border-blue-600');
+      event.target.classList.remove('border-slate-200');
+    }
+
+    function selectTarget(target) {
+      state.currentTurn.target = target;
+      document.querySelectorAll('.target-btn-sel').forEach(btn => btn.classList.remove('selected'));
+      event.target.classList.add('selected');
+    }
+
+    function selectResult(result) {
+      state.currentTurn.result = result;
+      document.querySelectorAll('.result-btn').forEach(btn => {
+        btn.classList.remove('ring-4', 'ring-blue-400');
+      });
+      event.target.classList.add('ring-4', 'ring-blue-400');
+
+      document.getElementById('penaltiesSection').classList.toggle('hidden', result !== 'PENALIDADE');
+    }
+
+    function togglePenalty(penalty) {
+      const index = state.currentTurn.penalties.indexOf(penalty);
+      if (index === -1) {
+        state.currentTurn.penalties.push(penalty);
+        event.target.classList.add('selected');
+      } else {
+        state.currentTurn.penalties.splice(index, 1);
+        event.target.classList.remove('selected');
+      }
+    }
+
+    function toggleDefenseType(type) {
+      const index = state.currentTurn.defense.types.indexOf(type);
+      if (index === -1) {
+        state.currentTurn.defense.types.push(type);
+        event.target.classList.add('selected');
+      } else {
+        state.currentTurn.defense.types.splice(index, 1);
+        event.target.classList.remove('selected');
+      }
+    }
+
+    function selectDefenseArea(area) {
+      state.currentTurn.defense.area = area;
+      document.querySelectorAll('.defense-area-btn').forEach(btn => btn.classList.remove('selected'));
+      event.target.classList.add('selected');
+    }
+
+    function selectPass(hasPass) {
+      state.currentTurn.defense.pass = hasPass;
+      document.querySelectorAll('.pass-btn').forEach(btn => {
+        btn.classList.remove('selected', 'bg-blue-600', 'text-white', 'border-blue-600');
+        btn.classList.add('border-slate-200');
+      });
+      event.target.classList.add('selected', 'bg-blue-600', 'text-white', 'border-blue-600');
+      event.target.classList.remove('border-slate-200');
+    }
+
+    function selectMovement(movement) {
+      state.currentTurn.defense.movement = movement;
+      document.querySelectorAll('.movement-btn').forEach(btn => {
+        btn.classList.remove('selected', 'bg-blue-600', 'text-white', 'border-blue-600');
+        btn.classList.add('border-slate-200');
+      });
+      event.target.classList.add('selected', 'bg-blue-600', 'text-white', 'border-blue-600');
+      event.target.classList.remove('border-slate-200');
+    }
+
+    function resetTurnSelections() {
+      document.querySelectorAll('.throw-type-btn, .ball-height-btn, .result-btn, .penalty-btn, .defense-type-btn, .defense-area-btn, .pass-btn, .movement-btn, .attacker-btn, .defender-btn').forEach(btn => {
+        btn.classList.remove('selected', 'bg-blue-600', 'text-white', 'border-blue-600', 'ring-4', 'ring-blue-400');
+        if (btn.classList.contains('border-slate-200') === false) {
+          btn.classList.add('border-slate-200');
+        }
+      });
+      document.querySelectorAll('.target-btn-sel').forEach(btn => btn.classList.remove('selected'));
+      document.getElementById('penaltiesSection').classList.add('hidden');
+    }
+
+    function cancelTurn() {
+      state.currentTurn = null;
+      state.editingTurnId = null;
+      document.getElementById('btnFinishTurn').textContent = '✓ Finalizar Turno';
+      document.getElementById('turnStep1').classList.remove('hidden');
+      document.getElementById('turnStep2').classList.add('hidden');
+      document.getElementById('turnStep3').classList.add('hidden');
+      resetTurnSelections();
+    }
+
+    function editLastTurn() {
+      if (state.history.length === 0 || state.history[0].type !== 'turn') return;
+
+      const lastTurn = state.history[0];
+      state.editingTurnId = lastTurn.id;
+      state.currentTurn = JSON.parse(JSON.stringify(lastTurn));
+
+      // Restore form
+      if (lastTurn.attackingTeam === 'my' && lastTurn.attacker !== null) {
+        document.querySelectorAll('.attacker-btn').forEach((btn, idx) => {
+          if (idx === lastTurn.attacker) btn.click();
+        });
+      }
+
+      if (lastTurn.throwType) {
+        document.querySelectorAll('.throw-type-btn').forEach(btn => {
+          if (btn.textContent.toLowerCase().includes(lastTurn.throwType.toLowerCase())) btn.click();
+        });
+      }
+
+      if (lastTurn.ballHeight) {
+        document.querySelectorAll('.ball-height-btn').forEach(btn => {
+          if (btn.textContent.includes(lastTurn.ballHeight)) btn.click();
+        });
+      }
+
+      if (lastTurn.target) {
+        document.querySelectorAll('.target-btn-sel').forEach(btn => {
+          if (btn.textContent === lastTurn.target) btn.click();
+        });
+      }
+
+      if (lastTurn.result) {
+        document.querySelectorAll('.result-btn').forEach(btn => {
+          if (btn.textContent === lastTurn.result) btn.click();
+        });
+      }
+
+      if (lastTurn.penalties && lastTurn.penalties.length > 0) {
+        lastTurn.penalties.forEach(pen => {
+          document.querySelectorAll('.penalty-btn').forEach(btn => {
+            if (btn.textContent.toLowerCase().includes(pen.toLowerCase())) btn.click();
+          });
+        });
+      }
+
+      document.getElementById('btnFinishTurn').textContent = '🔄 Atualizar Turno';
+      document.getElementById('turnStep1').classList.add('hidden');
+      document.getElementById('turnStep2').classList.remove('hidden');
+    }
+
+    function proceedToDefense() {
+      if (!state.currentTurn.result) {
+        showToast('Selecione o resultado do ataque!', 'error');
+        return;
+      }
+
+      const needsDefense = ['DEFENDIDA', 'GOL'].includes(state.currentTurn.result);
+      
+      if (needsDefense) {
+        document.getElementById('turnStep2').classList.add('hidden');
+        document.getElementById('turnStep3').classList.remove('hidden');
+
+        const defenderSection = document.getElementById('defenderSelection');
+        if (state.currentTurn.defendingTeam === 'my') {
+          defenderSection.classList.remove('hidden');
+          renderDefenderButtons();
+          
+          if (state.currentTurn.defense.defender !== null) {
+            document.querySelectorAll('.defender-btn').forEach((btn, idx) => {
+              if (idx === state.currentTurn.defense.defender) btn.click();
+            });
+          }
+        } else {
+          defenderSection.classList.add('hidden');
+        }
+
+        // Restore defense details
+        if (state.currentTurn.defense.types && state.currentTurn.defense.types.length > 0) {
+          state.currentTurn.defense.types.forEach(t => {
+            document.querySelectorAll('.defense-type-btn').forEach(btn => {
+              if (btn.textContent.toLowerCase() === t.toLowerCase()) btn.click();
+            });
+          });
+        }
+
+        if (state.currentTurn.defense.area) {
+          document.querySelectorAll('.defense-area-btn').forEach(btn => {
+            if (btn.textContent.toLowerCase() === state.currentTurn.defense.area.toLowerCase()) btn.click();
+          });
+        }
+
+        if (state.currentTurn.defense.pass !== null) {
+          document.querySelectorAll('.pass-btn').forEach(btn => {
+            if ((state.currentTurn.defense.pass && btn.textContent === 'Sim') || 
+                (!state.currentTurn.defense.pass && btn.textContent === 'Não')) {
+              btn.click();
+            }
+          });
+        }
+
+        if (state.currentTurn.defense.movement) {
+          document.querySelectorAll('.movement-btn').forEach(btn => {
+            if (btn.textContent.toLowerCase().includes(state.currentTurn.defense.movement.toLowerCase())) btn.click();
+          });
+        }
+      } else {
+        finishTurn();
+      }
+    }
+
+    function skipDefense() {
+      finishTurn();
+    }
+
+    function finishTurn() {
+      if (state.currentTurn.result === 'GOL') {
+        state.score[state.currentTurn.attackingTeam]++;
+        updateScoreboard();
+
+        if (state.phase === 'ot1' || state.phase === 'ot2') {
+          state.gameEnded = true;
+          showToast('⚡ GOLDEN GOAL! Jogo encerrado!', 'success');
+        }
+      }
+
+      if (state.currentTurn.attacker !== null) {
+        const attacker = state.myTeamPlayers[state.currentTurn.attacker];
+        state.currentTurn.attackerName = `${attacker.number || '-'} ${attacker.name || 'Atleta'}`;
+      }
+
+      if (state.currentTurn.defense.defender !== null) {
+        const defender = state.myTeamPlayers[state.currentTurn.defense.defender];
+        state.currentTurn.defense.defenderName = `${defender.number || '-'} ${defender.name || 'Atleta'}`;
+      }
+
+      if (state.editingTurnId) {
+        const index = state.history.findIndex(e => e.id === state.editingTurnId);
+        if (index !== -1) {
+          state.history[index] = { ...state.currentTurn, id: state.editingTurnId };
+        }
+        state.editingTurnId = null;
+        showToast('✔ Turno atualizado!', 'success');
+      } else {
+        addHistoryEvent({
+          type: 'turn',
+          ...state.currentTurn
+        });
+        showToast('✔ Turno registrado!', 'success');
+      }
+
+      state.currentTurn = null;
+      document.getElementById('btnFinishTurn').textContent = '✓ Finalizar Turno';
+      document.getElementById('turnStep1').classList.remove('hidden');
+      document.getElementById('turnStep2').classList.add('hidden');
+      document.getElementById('turnStep3').classList.add('hidden');
+      resetTurnSelections();
+
+      saveToStorage();
+    }
+
+    // ==================== HISTORY ====================
+    function addHistoryEvent(event) {
+      event.id = Date.now();
+      state.history.unshift(event);
+      renderHistory();
+      saveToStorage();
+    }
+
+    function renderHistory() {
+      const container = document.getElementById('historyList');
+      document.getElementById('historyCount').textContent = `${state.history.length} eventos`;
+
+      if (state.history.length === 0) {
+        container.innerHTML = '<p class="text-slate-500 text-center py-8">Nenhum evento registrado</p>';
+        return;
+      }
+
+      container.innerHTML = state.history.map(event => {
+        let content = '';
+        let icon = '';
+        let color = 'blue';
+
+        switch (event.type) {
+          case 'turn':
+            icon = '🎯';
+            color = event.attackingTeam === 'my' ? 'blue' : 'red';
+            content = `
+              <div class="font-semibold">${event.attackingTeamName} - ${event.result || 'N/A'}</div>
+              <div class="text-sm text-slate-600">
+                ${event.attackerName ? `Atacante: ${event.attackerName} | ` : ''}
+                Tipo: ${event.throwType || '-'} | Alvo: ${event.target || '-'}
+              </div>
+              ${event.defense.types.length > 0 ? `<div class="text-sm text-slate-500">Defesa: ${event.defense.types.join(', ')}</div>` : ''}
+              ${event.penalties.length > 0 ? `<div class="text-sm text-red-500">Penalidades: ${event.penalties.join(', ')}</div>` : ''}
+            `;
+            break;
+          case 'goal':
+            icon = '⚽';
+            color = event.team === 'my' ? 'green' : 'red';
+            content = `<div class="font-semibold">GOL - ${event.teamName}</div>`;
+            break;
+          case 'timeout':
+            icon = '⏸️';
+            color = event.team === 'my' ? 'yellow' : 'orange';
+            content = `<div class="font-semibold">Timeout - ${event.teamName}</div>`;
+            break;
+          case 'substitution':
+            icon = '🔄';
+            color = event.team === 'my' ? 'purple' : 'pink';
+            content = `
+              <div class="font-semibold">Substituição - ${event.teamName}</div>
+              ${event.playerOut ? `<div class="text-sm text-slate-600">OUT: ${event.playerOut} → IN: ${event.playerIn}</div>` : ''}
+            `;
+            break;
+        }
+
+        const time = new Date(event.timestamp).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+        const phaseNames = { '1st': '1ºT', '2nd': '2ºT', 'ot1': 'OT1', 'ot2': 'OT2', 'penalties': 'PEN' };
+
+        return `
+          <div class="history-item bg-white p-4 rounded-lg border-l-4 border-${color}-500" data-id="${event.id}">
+            <div class="flex justify-between items-start">
+              <div class="flex-1">
+                <div class="flex items-center gap-2 mb-1">
+                  <span>${icon}</span>
+                  <span class="text-xs bg-slate-100 px-2 py-0.5 rounded">${phaseNames[event.phase] || event.phase}</span>
+                  <span class="text-xs text-slate-400">${time}</span>
+                </div>
+                ${content}
+              </div>
+              <div class="flex gap-2">
+                ${event.type === 'turn' ? `<button onclick="editHistoryEvent(${event.id})" class="text-blue-500 hover:text-blue-700 p-2 text-sm font-medium">✎</button>` : ''}
+                <button onclick="deleteHistoryEvent(${event.id})" class="text-red-400 hover:text-red-600 p-2">✕</button>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function editHistoryEvent(id) {
+      const event = state.history.find(e => e.id === id);
+      if (!event || event.type !== 'turn') return;
+
+      state.editingTurnId = id;
+      state.currentTurn = JSON.parse(JSON.stringify(event));
+      showTab('game');
+      
+      setTimeout(() => {
+        editLastTurn();
+      }, 100);
+    }
+
+    function deleteHistoryEvent(id) {
+      const index = state.history.findIndex(e => e.id === id);
+      if (index !== -1) {
+        state.history.splice(index, 1);
+        
+        // Recalcular tudo baseado no histórico (fonte única de verdade)
+        recalculateFromHistory();
+        
+        renderHistory();
+        saveToStorage();
+        showToast('Evento removido', 'info');
+        
+        // Atualizar relatório se a aba estiver ativa
+        if (document.getElementById('tab-report').classList.contains('active')) {
+          generateReport();
+        }
+      }
+    }
+
+    function recalculateFromHistory() {
+      // Reset dos contadores
+      state.score = { my: 0, opp: 0 };
+      state.timeouts = {
+        my: { reg: 0, ot: 0 },
+        opp: { reg: 0, ot: 0 }
+      };
+      state.substitutions = {
+        my: { reg: 0, ot: 0 },
+        opp: { reg: 0, ot: 0 }
+      };
+
+      // Reprocessar todo histórico
+      state.history.forEach(event => {
+        if (event.type === 'goal') {
+          state.score[event.team]++;
+        } else if (event.type === 'turn' && event.result === 'GOL') {
+          state.score[event.attackingTeam]++;
+        } else if (event.type === 'timeout') {
+          const isOT = event.phase === 'ot1' || event.phase === 'ot2';
+          if (isOT) {
+            state.timeouts[event.team].ot++;
+          } else {
+            state.timeouts[event.team].reg++;
+          }
+        } else if (event.type === 'substitution') {
+          const isOT = event.phase === 'ot1' || event.phase === 'ot2';
+          if (isOT) {
+            state.substitutions[event.team].ot++;
+          } else {
+            state.substitutions[event.team].reg++;
+          }
+        }
+      });
+
+      // Atualizar displays
+      updateScoreboard();
+      updateTimeoutDisplays();
+      updateSubstitutionDisplays();
+    }
+
+    // ==================== REPORT ====================
+    function filterReportPhase(phase) {
+      state.reportPhaseFilter = phase;
+      document.querySelectorAll('.report-filter-btn').forEach(btn => {
+        btn.classList.remove('active', 'bg-blue-600', 'text-white');
+        btn.classList.add('border-2', 'border-slate-300', 'bg-slate-50');
+      });
+      event.target.classList.add('active', 'bg-blue-600', 'text-white');
+      event.target.classList.remove('border-2', 'border-slate-300', 'bg-slate-50');
+      generateReport();
+    }
+
+    function getFilteredHistory(type = 'turn') {
+      return state.history.filter(e => {
+        if (e.type !== type) return false;
+        if (state.reportPhaseFilter === 'all') return true;
+        return e.phase === state.reportPhaseFilter;
+      });
+    }
+
+    function generateReport() {
+      // Sempre recalcular a partir do histórico (fonte única de verdade)
+      recalculateFromHistory();
+      
+      const turns = getFilteredHistory('turn');
+      const myTurns = turns.filter(t => t.attackingTeam === 'my');
+      const oppTurns = turns.filter(t => t.attackingTeam === 'opp');
+
+      const countResults = (turnsList) => {
+        const results = {};
+        turnsList.forEach(t => {
+          results[t.result] = (results[t.result] || 0) + 1;
+        });
+        return results;
+      };
+
+      const countTargets = (turnsList) => {
+        const targets = {};
+        turnsList.forEach(t => {
+          if (t.target) {
+            targets[t.target] = (targets[t.target] || 0) + 1;
+          }
+        });
+        return Object.entries(targets).sort((a, b) => b[1] - a[1]);
+      };
+
+      const goalsByPlayer = {};
+      myTurns.filter(t => t.result === 'GOL' && t.attackerName).forEach(t => {
+        goalsByPlayer[t.attackerName] = (goalsByPlayer[t.attackerName] || 0) + 1;
+      });
+
+      const myResults = countResults(myTurns);
+      const oppResults = countResults(oppTurns);
+      const myTopTargets = countTargets(myTurns).slice(0, 3);
+      const oppTopTargets = countTargets(oppTurns).slice(0, 3);
+
+      // Calculate efficiency
+      const myGols = myResults['GOL'] || 0;
+      const myTotal = myTurns.length;
+      const myEfficiency = myTotal > 0 ? ((myGols / myTotal) * 100).toFixed(1) : 0;
+
+      const oppGols = oppResults['GOL'] || 0;
+      const oppTotal = oppTurns.length;
+      const oppEfficiency = oppTotal > 0 ? ((oppGols / oppTotal) * 100).toFixed(1) : 0;
+
+      // Defense efficiency
+      const myDefenses = myTurns.filter(t => t.result === 'DEFENDIDA' && t.defense.types.includes('completa')).length;
+      const myDefenseEfficiency = oppTotal > 0 ? ((myDefenses / oppTotal) * 100).toFixed(1) : 0;
+
+      const oppDefenses = oppTurns.filter(t => t.result === 'DEFENDIDA' && t.defense.types.includes('completa')).length;
+      const oppDefenseEfficiency = myTotal > 0 ? ((oppDefenses / myTotal) * 100).toFixed(1) : 0;
+
+      // Zone distribution
+      const zoneDistribution = (turnsList) => {
+        const zones = {};
+        turnsList.forEach(t => {
+          if (t.target) zones[t.target] = (zones[t.target] || 0) + 1;
+        });
+        const total = turnsList.length;
+        return Object.entries(zones).map(([z, c]) => ({
+          zone: z,
+          count: c,
+          percentage: ((c / total) * 100).toFixed(1)
+        })).sort((a, b) => b.count - a.count);
+      };
+
+      const myZones = zoneDistribution(myTurns);
+      const oppZones = zoneDistribution(oppTurns);
+
+      // Movement analysis
+      const myFloats = myTurns.filter(t => t.defense.movement === 'flutuou').length;
+      const myInversions = myTurns.filter(t => t.defense.movement === 'inverteu').length;
+      const goalsAfterFloat = myTurns.filter(t => t.defense.movement === 'flutuou' && t.result === 'GOL').length;
+      const goalsAfterInversion = myTurns.filter(t => t.defense.movement === 'inverteu' && t.result === 'GOL').length;
+
+      // Most common penalties
+      const penaltyCount = {};
+      myTurns.forEach(t => {
+        if (t.penalties && t.penalties.length > 0) {
+          t.penalties.forEach(p => {
+            penaltyCount[p] = (penaltyCount[p] || 0) + 1;
+          });
+        }
+      });
+      const topPenalties = Object.entries(penaltyCount).sort((a, b) => b[1] - a[1]).slice(0, 3);
+
+      const oppPenaltyCount = {};
+      oppTurns.forEach(t => {
+        if (t.penalties && t.penalties.length > 0) {
+          t.penalties.forEach(p => {
+            oppPenaltyCount[p] = (oppPenaltyCount[p] || 0) + 1;
+          });
+        }
+      });
+      const oppTopPenalties = Object.entries(oppPenaltyCount).sort((a, b) => b[1] - a[1]).slice(0, 3);
+
+      const phaseLabel = {
+        'all': 'Jogo Completo',
+        '1st': '1º Tempo',
+        '2nd': '2º Tempo',
+        'ot1': 'Prorrogações',
+        'ot2': 'Prorrogações'
+      }[state.reportPhaseFilter];
+
+      const report = `
+        <div class="space-y-6">
+          <div class="bg-gradient-to-r from-slate-900 to-slate-800 text-white p-6 rounded-xl text-center">
+            <div class="text-sm text-slate-300 mb-2">${phaseLabel}</div>
+            <h3 class="text-lg font-bold mb-3">PLACAR FINAL</h3>
+            <div class="text-5xl font-black">${state.myTeamName}<br><span class="text-blue-400">${state.score.my}</span> × <span class="text-red-400">${state.score.opp}</span><br>${state.oppTeamName}</div>
+          </div>
+
+          ${state.competitionName || state.matchLocation ? `
+            <div class="bg-slate-50 p-4 rounded-xl text-sm text-slate-700">
+              ${state.competitionName ? `<p><strong>Competição:</strong> ${state.competitionName}</p>` : ''}
+              ${state.matchLocation ? `<p><strong>Local:</strong> ${state.matchLocation}</p>` : ''}
+              <p><strong>Data:</strong> ${new Date(state.matchDate).toLocaleDateString('pt-BR')}</p>
+            </div>
+          ` : ''}
+
+          <div class="grid grid-cols-2 gap-4">
+            <div class="bg-blue-50 p-4 rounded-xl">
+              <h4 class="font-bold text-blue-900 mb-3">${state.myTeamName}</h4>
+              
+              <div class="mb-4 pb-4 border-b border-blue-200">
+                <p class="text-xs text-blue-700 font-medium mb-2">ATAQUE</p>
+                <p class="text-sm">Total de ataques: ${myTotal}</p>
+                <p class="text-sm">Gols: ${myGols}</p>
+                <p class="text-lg font-bold text-blue-700">Eficiência: ${myEfficiency}%</p>
+              </div>
+
+              <div class="mb-4 pb-4 border-b border-blue-200">
+                <p class="text-xs text-blue-700 font-medium mb-2">DEFESA</p>
+                <p class="text-sm">Ataques sofridos: ${oppTotal}</p>
+                <p class="text-sm">Defesas completas: ${myDefenses}</p>
+                <p class="text-sm">Gols sofridos: ${oppGols}</p>
+                <p class="text-lg font-bold text-blue-700">Eficiência: ${myDefenseEfficiency}%</p>
+              </div>
+
+              ${myTopTargets.length > 0 ? `
+                <div class="mb-4 pb-4 border-b border-blue-200">
+                  <p class="text-xs text-blue-700 font-medium mb-2">TOP ZONAS</p>
+                  ${myTopTargets.map((t, i) => `<p class="text-sm">Zona ${t[0]} – ${t[1]}x</p>`).join('')}
+                </div>
+              ` : ''}
+
+              ${Object.keys(goalsByPlayer).length > 0 ? `
+                <div>
+                  <p class="text-xs text-blue-700 font-medium mb-2">GOLS POR ATLETA</p>
+                  ${Object.entries(goalsByPlayer).map(([p, g]) => `<p class="text-sm">${p}: ${g}</p>`).join('')}
+                </div>
+              ` : ''}
+            </div>
+
+            <div class="bg-red-50 p-4 rounded-xl">
+              <h4 class="font-bold text-red-900 mb-3">${state.oppTeamName}</h4>
+              
+              <div class="mb-4 pb-4 border-b border-red-200">
+                <p class="text-xs text-red-700 font-medium mb-2">ATAQUE</p>
+                <p class="text-sm">Total de ataques: ${oppTotal}</p>
+                <p class="text-sm">Gols: ${oppGols}</p>
+                <p class="text-lg font-bold text-red-700">Eficiência: ${oppEfficiency}%</p>
+              </div>
+
+              <div class="mb-4 pb-4 border-b border-red-200">
+                <p class="text-xs text-red-700 font-medium mb-2">DEFESA</p>
+                <p class="text-sm">Ataques sofridos: ${myTotal}</p>
+                <p class="text-sm">Defesas completas: ${oppDefenses}</p>
+                <p class="text-sm">Gols sofridos: ${myGols}</p>
+                <p class="text-lg font-bold text-red-700">Eficiência: ${oppDefenseEfficiency}%</p>
+              </div>
+
+              ${oppTopTargets.length > 0 ? `
+                <div class="mb-4 pb-4 border-b border-red-200">
+                  <p class="text-xs text-red-700 font-medium mb-2">TOP ZONAS</p>
+                  ${oppTopTargets.map((t, i) => `<p class="text-sm">Zona ${t[0]} – ${t[1]}x</p>`).join('')}
+                </div>
+              ` : ''}
+            </div>
+          </div>
+
+          <div class="bg-slate-50 p-4 rounded-xl">
+            <h4 class="font-bold text-slate-800 mb-3">📍 Distribuição de Zonas</h4>
+            <div class="grid grid-cols-2 gap-4 text-sm">
+              <div>
+                <p class="font-medium text-slate-700 mb-2">${state.myTeamName}</p>
+                ${myZones.slice(0, 5).map(z => `<p>${z.zone}: ${z.percentage}% (${z.count}x)</p>`).join('')}
+              </div>
+              <div>
+                <p class="font-medium text-slate-700 mb-2">${state.oppTeamName}</p>
+                ${oppZones.slice(0, 5).map(z => `<p>${z.zone}: ${z.percentage}% (${z.count}x)</p>`).join('')}
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-purple-50 p-4 rounded-xl">
+            <h4 class="font-bold text-purple-900 mb-3">🔄 Análise de Movimentação</h4>
+            <div class="grid grid-cols-2 gap-4 text-sm">
+              <div>
+                <p class="font-medium text-purple-700">Flutuações: ${myFloats}</p>
+                <p class="text-xs text-slate-600">Gols após flutuação: ${goalsAfterFloat}</p>
+              </div>
+              <div>
+                <p class="font-medium text-purple-700">Inversões: ${myInversions}</p>
+                <p class="text-xs text-slate-600">Gols após inversão: ${goalsAfterInversion}</p>
+              </div>
+            </div>
+          </div>
+
+          ${topPenalties.length > 0 ? `
+            <div class="bg-yellow-50 p-4 rounded-xl">
+              <h4 class="font-bold text-yellow-900 mb-3">⚠️ Penalidades Mais Frequentes</h4>
+              <div class="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <p class="font-medium text-yellow-700 mb-2">${state.myTeamName}</p>
+                  ${topPenalties.map(([p, c]) => `<p>${p}: ${c}x</p>`).join('')}
+                </div>
+                ${oppTopPenalties.length > 0 ? `
+                  <div>
+                    <p class="font-medium text-yellow-700 mb-2">${state.oppTeamName}</p>
+                    ${oppTopPenalties.map(([p, c]) => `<p>${p}: ${c}x</p>`).join('')}
+                  </div>
+                ` : ''}
+              </div>
+            </div>
+          ` : ''}
+
+          <div class="bg-slate-50 p-4 rounded-xl">
+            <h4 class="font-bold text-slate-800 mb-3">🎮 Controle de Jogo</h4>
+            <div class="grid grid-cols-2 gap-4 text-sm">
+              <div>
+                <p class="font-medium">${state.myTeamName}</p>
+                <p>Timeouts: ${state.timeouts.my.reg} (Reg) + ${state.timeouts.my.ot} (OT)</p>
+                <p>Substituições: ${state.substitutions.my.reg} (Reg) + ${state.substitutions.my.ot} (OT)</p>
+              </div>
+              <div>
+                <p class="font-medium">${state.oppTeamName}</p>
+                <p>Timeouts: ${state.timeouts.opp.reg} (Reg) + ${state.timeouts.opp.ot} (OT)</p>
+                <p>Substituições: ${state.substitutions.opp.reg} (Reg) + ${state.substitutions.opp.ot} (OT)</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="text-center text-xs text-slate-500">
+            Relatório gerado em ${new Date().toLocaleString('pt-BR')}
+          </div>
+        </div>
+      `;
+
+      document.getElementById('reportContent').innerHTML = report;
+    }
+
+    // ==================== EXPORT ====================
+    function exportCSV() {
+      const headers = [
+        'Timestamp', 'Fase', 'Tipo', 'Equipe Atacante', 'Equipe Defensora',
+        'Atacante', 'Tipo Arremesso', 'Altura', 'Alvo', 'Resultado',
+        'Penalidades', 'Defensor', 'Tipos Defesa', 'Área Defesa', 'Passe', 'Movimento'
+      ];
+
+      const rows = state.history.map(event => {
+        if (event.type === 'turn') {
+          return [
+            event.timestamp,
+            event.phase,
+            'Turno',
+            event.attackingTeamName,
+            event.defendingTeamName,
+            event.attackerName || '',
+            event.throwType || '',
+            event.ballHeight || '',
+            event.target || '',
+            event.result || '',
+            event.penalties.join('; '),
+            event.defense.defenderName || '',
+            event.defense.types.join('; '),
+            event.defense.area || '',
+            event.defense.pass !== null ? (event.defense.pass ? 'Sim' : 'Não') : '',
+            event.defense.movement || ''
+          ];
+        } else if (event.type === 'timeout') {
+          return [
+            event.timestamp, event.phase, 'Timeout', event.teamName, '', '', '', '', '', '', '', '', '', '', '', ''
+          ];
+        } else if (event.type === 'substitution') {
+          return [
+            event.timestamp, event.phase, 'Substituição', event.teamName, '', 
+            event.playerOut ? `OUT: ${event.playerOut}` : '', 
+            event.playerIn ? `IN: ${event.playerIn}` : '', '', '', '', '', '', '', '', '', ''
+          ];
+        } else if (event.type === 'goal') {
+          return [
+            event.timestamp, event.phase, 'Gol', event.teamName, '', '', '', '', '', 'GOL', '', '', '', '', '', ''
+          ];
+        }
+        return [];
+      });
+
+      const metadata = [
+        ['Scout Goalball - Exportação'],
+        [`${state.myTeamName} ${state.score.my} x ${state.score.opp} ${state.oppTeamName}`],
+        [`Exportado em: ${new Date().toLocaleString('pt-BR')}`],
+        []
+      ];
+
+      const csvContent = [...metadata, headers, ...rows]
+        .map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
+        .join('\n');
+
+      const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `scout_goalball_${state.myTeamName}_vs_${state.oppTeamName}_${new Date().toISOString().slice(0,10)}.csv`;
+      link.click();
+      URL.revokeObjectURL(url);
+
+      showToast('📥 CSV exportado!', 'success');
+    }
+
+    function exportBackupJSON() {
+      const backup = {
+        version: '1.0',
+        exportedAt: new Date().toISOString(),
+        data: state
+      };
+
+      const json = JSON.stringify(backup, null, 2);
+      const blob = new Blob([json], { type: 'application/json;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `scout_goalball_backup_${new Date().toISOString().slice(0,10)}.json`;
+      link.click();
+      URL.revokeObjectURL(url);
+
+      showToast('💾 Backup criado!', 'success');
+    }
+
+    function importBackupJSON() {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = '.json';
+      input.onchange = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          try {
+            const backup = JSON.parse(event.target.result);
+            if (backup.data) {
+              state = { ...state, ...backup.data };
+              saveToStorage();
+              location.reload();
+              showToast('📂 Backup restaurado!', 'success');
+            }
+          } catch (err) {
+            showToast('Erro ao restaurar backup!', 'error');
+          }
+        };
+        reader.readAsText(file);
+      };
+      input.click();
+    }
+
+    // ==================== TOAST ====================
+    function showToast(message, type = 'info') {
+      const colors = {
+        success: 'bg-green-500',
+        error: 'bg-red-500',
+        info: 'bg-blue-500',
+        warning: 'bg-yellow-500'
+      };
+
+      const toast = document.createElement('div');
+      toast.className = `fixed bottom-24 left-1/2 transform -translate-x-1/2 ${colors[type]} text-white px-6 py-3 rounded-full shadow-lg z-50 font-medium text-sm`;
+      toast.textContent = message;
+      document.body.appendChild(toast);
+
+      setTimeout(() => {
+        toast.style.transition = 'opacity 0.3s';
+        toast.style.opacity = '0';
+        setTimeout(() => toast.remove(), 300);
+      }, 2500);
+    }
+
+    // ==================== ELEMENT SDK ====================
+    if (window.elementSdk) {
+      window.elementSdk.init({
+        defaultConfig,
+        onConfigChange: async (config) => {
+          state.app_title = config.app_title || defaultConfig.app_title;
+          document.getElementById('appTitle').textContent = state.app_title;
+        },
+        mapToCapabilities: (config) => ({
+          recolorables: [],
+          borderables: [],
+          fontEditable: undefined,
+          fontSizeable: undefined
+        }),
+        mapToEditPanelValues: (config) => new Map([
+          ['app_title', state.app_title || defaultConfig.app_title],
+          ['competition_name', state.competitionName || ''],
+          ['match_location', state.matchLocation || '']
+        ])
+      });
+    }
+
+    init();
+  </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9d2f4dd353b20b0d',t:'MTc3MTkzOTY4NC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
