@@ -150,7 +150,24 @@
  <body class="h-full bg-gradient-to-br from-slate-100 to-slate-200">
   <div id="app" class="h-full overflow-auto"><!-- Header -->
    <header class="bg-gradient-to-r from-blue-700 to-blue-900 text-white p-4 sticky top-0 z-50 shadow-lg">
-    <h1 id="appTitle" class="text-2xl font-bold text-center">Scout Goalball</h1>
+    <div class="flex items-center justify-between">
+  
+  <!-- Sua figurinha -->
+  <img src="assets/avatar.png" 
+       alt="Analista Técnica" 
+       class="h-12 w-12 rounded-full object-cover border-2 border-white">
+
+  <!-- Título central -->
+  <h1 id="appTitle" class="text-2xl font-bold text-center flex-1">
+    Scout Goalball Pro
+  </h1>
+
+  <!-- Logo APEC -->
+  <img src="assets/logo-apec.png" 
+       alt="Logo APEC" 
+       class="h-12 w-12 object-contain">
+  
+</div>
    </header><!-- Navigation -->
    <nav class="bg-white shadow-md p-2 sticky top-16 z-40 overflow-x-auto">
     <div class="flex gap-2 min-w-max px-2"><button onclick="showTab('config')" class="nav-btn btn-touch px-4 py-2 rounded-full font-medium text-sm active" data-tab="config">⚙️ Config</button> <button onclick="showTab('lineup')" class="nav-btn btn-touch px-4 py-2 rounded-full font-medium text-sm" data-tab="lineup">👥 Escalação</button> <button onclick="showTab('game')" class="nav-btn btn-touch px-4 py-2 rounded-full font-medium text-sm" data-tab="game">🎯 Jogo</button> <button onclick="showTab('history')" class="nav-btn btn-touch px-4 py-2 rounded-full font-medium text-sm" data-tab="history">📋 Histórico</button> <button onclick="showTab('report')" class="nav-btn btn-touch px-4 py-2 rounded-full font-medium text-sm" data-tab="report">📊 Relatório</button>
@@ -1789,4 +1806,5 @@
     init();
   </script>
  <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9d2f4dd353b20b0d',t:'MTc3MTkzOTY4NC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+
 </html>
