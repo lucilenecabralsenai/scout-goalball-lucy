@@ -1,1532 +1,2036 @@
 <!doctype html>
-<html lang="pt-br">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+<html lang="pt-BR" class="h-full">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Scout Goalball Pro</title>
-
-  <!-- Tailwind via CDN (pra ficar prático igual Canva). Pode trocar por CSS local depois. -->
-  <script src="https://cdn.tailwindcss.com"></script>
-
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="/_sdk/element_sdk.js"></script>
+  <script src="/_sdk/data_sdk.js"></script>
   <style>
-    .tab-content { display:none; }
-    .tab-content.active { display:block; }
-    .btn-touch { touch-action: manipulation; }
-    .segmented .seg-btn[aria-pressed="true"] { outline: 3px solid rgba(59,130,246,.35); background: rgba(59,130,246,.08); }
-    .chip[aria-pressed="true"] { background: rgba(59,130,246,.12); border-color: rgb(59,130,246); }
-    .chip-danger[aria-pressed="true"] { background: rgba(239,68,68,.10); border-color: rgb(239,68,68); }
-    .chip-ok[aria-pressed="true"] { background: rgba(34,197,94,.10); border-color: rgb(34,197,94); }
-    .card { background:#fff; border:1px solid #e5e7eb; border-radius:16px; box-shadow:0 8px 24px rgba(15,23,42,.08); }
-    .muted { color:#64748b; }
-    .mono { font-variant-numeric: tabular-nums; }
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    
+    * {
+      font-family: 'Inter', system-ui, sans-serif;
+    }
+    
+    .tab-btn.active {
+      background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+      color: white;
+    }
+    
+    .heat-zone {
+      transition: fill 0.3s ease;
+    }
+    
+    .court-zone:hover {
+      opacity: 0.8;
+    }
+    
+    .modal-overlay {
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(4px);
+    }
+    
+    .card-shadow {
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    }
+    
+    .scrollbar-thin::-webkit-scrollbar {
+      width: 6px;
+    }
+    
+    .scrollbar-thin::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+    
+    .scrollbar-thin::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 3px;
+    }
+    
+    .btn-primary {
+      background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+    }
+    
+    .btn-primary:hover {
+      background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%);
+    }
+    
+    .btn-success {
+      background: linear-gradient(135deg, #15803d 0%, #22c55e 100%);
+    }
+    
+    .btn-danger {
+      background: linear-gradient(135deg, #b91c1c 0%, #ef4444 100%);
+    }
+    
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      ring: 2px;
+      ring-color: #3b82f6;
+    }
+    
+    .toggle-checkbox:checked {
+      background-color: #3b82f6;
+    }
+    
+    .toggle-checkbox:checked + .toggle-label {
+      background-color: #3b82f6;
+    }
   </style>
-</head>
-
-<body class="min-h-screen bg-gradient-to-br from-slate-100 to-slate-200">
-<div id="app" class="min-h-screen">
-
-  <!-- HEADER -->
-  <header class="app-header">
-  <div class="header-left">
-    <img src="avatar.png" alt="Analista Técnica" class="header-img">
-  </div>
-
-  <div class="header-center">
-    <h1>Scout Goalball Pro</h1>
-  </div>
-
-  <div class="header-right">
-    <img src="logo-apec.png" alt="Logo APEC" class="header-img">
-  </div>
-</header>
-
-  <!-- NAV -->
-  <nav class="bg-white/80 backdrop-blur border-b border-slate-200 sticky top-[56px] z-40">
-    <div class="max-w-5xl mx-auto px-2 py-2 flex gap-2 overflow-x-auto">
-      <button class="nav-btn btn-touch px-4 py-2 rounded-full border text-sm font-medium active" data-tab="config">⚙️ Config</button>
-      <button class="nav-btn btn-touch px-4 py-2 rounded-full border text-sm font-medium" data-tab="escalacao">👥 Escalação</button>
-      <button class="nav-btn btn-touch px-4 py-2 rounded-full border text-sm font-medium" data-tab="jogo">🎯 Jogo</button>
-      <button class="nav-btn btn-touch px-4 py-2 rounded-full border text-sm font-medium" data-tab="historico">📜 Histórico</button>
-      <button class="nav-btn btn-touch px-4 py-2 rounded-full border text-sm font-medium" data-tab="relatorio">📊 Relatório</button>
-      <button class="nav-btn btn-touch px-4 py-2 rounded-full border text-sm font-medium" data-tab="analise">🔎 Análise</button>
+  <style>body { box-sizing: border-box; }</style>
+ </head>
+ <body class="h-full bg-slate-100 overflow-auto">
+  <div id="app" class="h-full w-full flex flex-col"><!-- Header -->
+   <header class="bg-gradient-to-r from-blue-900 to-blue-700 text-white px-4 py-3 flex-shrink-0">
+    <div class="flex items-center justify-between">
+     <h1 id="app-title" class="text-xl font-bold tracking-tight">⚽ Scout Goalball Pro</h1>
+     <div class="flex items-center gap-2"><span id="current-phase" class="text-sm bg-blue-800 px-3 py-1 rounded-full">1º Tempo</span> <span id="match-score" class="text-lg font-bold">0 - 0</span>
+     </div>
     </div>
-  </nav>
-
-  <main class="max-w-5xl mx-auto p-4 pb-24">
-
-    <!-- CONFIG -->
-    <section id="tab-config" class="tab-content active space-y-4">
-      <div class="card p-5">
-        <h2 class="text-lg font-bold mb-4">🏆 Configuração do Jogo</h2>
-
-        <div class="grid sm:grid-cols-3 gap-3">
-          <div class="sm:col-span-1">
-            <label class="block text-sm font-medium muted mb-1">Competição</label>
-            <input id="competitionName" class="w-full px-3 py-2 border rounded-xl" placeholder="Nome da competição">
-          </div>
-          <div class="sm:col-span-1">
-            <label class="block text-sm font-medium muted mb-1">Local da Partida</label>
-            <input id="matchLocation" class="w-full px-3 py-2 border rounded-xl" placeholder="Cidade / Ginásio">
-          </div>
-          <div class="sm:col-span-1">
-            <label class="block text-sm font-medium muted mb-1">Data</label>
-            <input id="matchDate" type="date" class="w-full px-3 py-2 border rounded-xl">
-          </div>
+   </header><!-- Navigation -->
+   <nav class="bg-white border-b border-slate-200 px-2 py-2 flex-shrink-0 overflow-x-auto">
+    <div class="flex gap-1 min-w-max"><button class="tab-btn active px-4 py-2 rounded-lg text-sm font-medium transition-all" data-tab="config">⚙️ Config</button> <button class="tab-btn px-4 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 transition-all" data-tab="escalacao">👥 Escalação</button> <button class="tab-btn px-4 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 transition-all" data-tab="jogo">🎮 Jogo</button> <button class="tab-btn px-4 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 transition-all" data-tab="historico">📋 Histórico</button> <button class="tab-btn px-4 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 transition-all" data-tab="relatorio">📊 Relatório</button> <button class="tab-btn px-4 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 transition-all" data-tab="analise">📈 Análise</button>
+    </div>
+   </nav><!-- Main Content -->
+   <main class="flex-1 overflow-auto p-4"><!-- Config Tab -->
+    <section id="tab-config" class="tab-content">
+     <div class="max-w-3xl mx-auto space-y-4">
+      <div class="bg-white rounded-xl p-5 card-shadow">
+       <h2 class="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2"><span class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">🏆</span> Dados da Competição</h2>
+       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div><label class="block text-sm font-medium text-slate-600 mb-1">Competição</label> <input type="text" id="config-competition" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="Nome da competição">
         </div>
-
-        <div class="grid sm:grid-cols-2 gap-3 mt-3">
-          <div>
-            <label class="block text-sm font-medium muted mb-1">Nome da Minha Equipe</label>
-            <input id="myTeamName" class="w-full px-3 py-2 border rounded-xl" placeholder="Minha Equipe">
-          </div>
-          <div>
-            <label class="block text-sm font-medium muted mb-1">Nome da Equipe Adversária</label>
-            <input id="oppTeamName" class="w-full px-3 py-2 border rounded-xl" placeholder="Adversário">
-          </div>
+        <div><label class="block text-sm font-medium text-slate-600 mb-1">Local</label> <input type="text" id="config-location" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="Local da partida">
         </div>
+        <div><label class="block text-sm font-medium text-slate-600 mb-1">Data</label> <input type="date" id="config-date" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+        </div>
+       </div>
       </div>
-
-      <div class="card p-5">
-        <h2 class="text-lg font-bold mb-4">🥬 Atletas - Minha Equipe</h2>
-        <div id="myPlayersGrid" class="grid sm:grid-cols-2 gap-3"></div>
-        <p class="text-xs muted mt-3">Dica: você pode colocar só número se quiser. Salva automático.</p>
+      <div class="bg-white rounded-xl p-5 card-shadow">
+       <h2 class="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2"><span class="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">🟢</span> Minha Equipe</h2>
+       <div class="mb-4"><label class="block text-sm font-medium text-slate-600 mb-1">Nome da Equipe</label> <input type="text" id="config-my-team" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="Nome da minha equipe">
+       </div>
+       <div class="space-y-3" id="my-team-athletes"><!-- Athletes will be rendered here -->
+       </div>
       </div>
-
-      <div class="card p-5">
-        <div class="flex items-center justify-between gap-3">
-          <h2 class="text-lg font-bold">🟣 Atletas - Adversário</h2>
-          <label class="flex items-center gap-2 text-sm">
-            <input id="toggleOppPlayers" type="checkbox" class="scale-110">
-            Cadastrar atletas adversários
-          </label>
+      <div class="bg-white rounded-xl p-5 card-shadow">
+       <div class="flex items-center justify-between mb-4">
+        <h2 class="text-lg font-semibold text-slate-800 flex items-center gap-2"><span class="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center">🔴</span> Equipe Adversária</h2><label class="flex items-center gap-2 cursor-pointer"> <span class="text-sm text-slate-600">Cadastrar</span> <input type="checkbox" id="opponent-toggle" class="w-10 h-5 rounded-full appearance-none bg-slate-300 checked:bg-blue-500 transition-colors cursor-pointer relative after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:w-4 after:h-4 after:bg-white after:rounded-full after:transition-transform checked:after:translate-x-5"> </label>
+       </div>
+       <div id="opponent-section" class="hidden">
+        <div class="mb-4"><label class="block text-sm font-medium text-slate-600 mb-1">Nome da Equipe</label> <input type="text" id="config-opponent-team" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="Nome do adversário">
         </div>
-        <div id="oppPlayersWrap" class="mt-3 hidden">
-          <div id="oppPlayersGrid" class="grid sm:grid-cols-2 gap-3"></div>
-          <p class="text-xs muted mt-3">Se não souber nomes, use só número.</p>
+        <div class="space-y-3" id="opponent-athletes"><!-- Opponent athletes will be rendered here -->
         </div>
+       </div>
+      </div><button id="save-config" class="w-full btn-primary text-white py-3 rounded-xl font-semibold transition-all hover:shadow-lg"> 💾 Salvar Configuração </button>
+     </div>
+    </section><!-- Escalação Tab -->
+    <section id="tab-escalacao" class="tab-content hidden">
+     <div class="max-w-4xl mx-auto space-y-4"><!-- Current Lineup -->
+      <div class="bg-white rounded-xl p-5 card-shadow">
+       <h2 class="text-lg font-semibold text-slate-800 mb-4">🏐 Escalação Atual</h2><!-- Phase Selector -->
+       <div class="flex gap-2 mb-4"><button class="phase-btn active px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium" data-phase="1T">1º Tempo</button> <button class="phase-btn px-4 py-2 bg-slate-200 text-slate-700 rounded-lg text-sm font-medium" data-phase="2T">2º Tempo</button> <button class="phase-btn px-4 py-2 bg-slate-200 text-slate-700 rounded-lg text-sm font-medium" data-phase="PR">Prorrogação</button>
+       </div><!-- Court Representation -->
+       <div class="bg-gradient-to-b from-blue-50 to-slate-50 rounded-xl p-4 border-2 border-blue-200 mb-4">
+        <div class="grid grid-cols-3 gap-4 max-w-md mx-auto">
+         <div class="text-center">
+          <div class="w-16 h-16 mx-auto bg-blue-600 rounded-full flex items-center justify-center text-white font-bold text-lg mb-2" id="pos-left">
+           -
+          </div><span class="text-xs text-slate-600">Ala Esquerda</span> <select id="select-left" class="w-full mt-1 text-xs p-1 border rounded"> <option value="">Selecionar</option> </select>
+         </div>
+         <div class="text-center">
+          <div class="w-20 h-20 mx-auto bg-blue-800 rounded-full flex items-center justify-center text-white font-bold text-xl mb-2" id="pos-center">
+           -
+          </div><span class="text-xs text-slate-600">Pivô</span> <select id="select-center" class="w-full mt-1 text-xs p-1 border rounded"> <option value="">Selecionar</option> </select>
+         </div>
+         <div class="text-center">
+          <div class="w-16 h-16 mx-auto bg-blue-600 rounded-full flex items-center justify-center text-white font-bold text-lg mb-2" id="pos-right">
+           -
+          </div><span class="text-xs text-slate-600">Ala Direita</span> <select id="select-right" class="w-full mt-1 text-xs p-1 border rounded"> <option value="">Selecionar</option> </select>
+         </div>
+        </div>
+       </div><!-- Bench -->
+       <div class="bg-slate-100 rounded-lg p-3">
+        <h3 class="text-sm font-medium text-slate-600 mb-2">📌 Banco de Reservas</h3>
+        <div id="bench-players" class="flex flex-wrap gap-2"><!-- Bench players will be shown here -->
+        </div>
+       </div>
+      </div><!-- Substitution -->
+      <div class="bg-white rounded-xl p-5 card-shadow">
+       <h2 class="text-lg font-semibold text-slate-800 mb-4">🔄 Realizar Substituição</h2>
+       <div class="grid grid-cols-2 gap-4">
+        <div><label class="block text-sm font-medium text-slate-600 mb-1">Sai</label> <select id="sub-out" class="w-full px-3 py-2 border border-slate-300 rounded-lg"> <option value="">Selecionar atleta</option> </select>
+        </div>
+        <div><label class="block text-sm font-medium text-slate-600 mb-1">Entra</label> <select id="sub-in" class="w-full px-3 py-2 border border-slate-300 rounded-lg"> <option value="">Selecionar atleta</option> </select>
+        </div>
+       </div><button id="confirm-sub" class="w-full mt-4 btn-success text-white py-2 rounded-lg font-medium"> ✅ Confirmar Substituição </button>
+      </div><!-- Target Plan -->
+      <div class="bg-white rounded-xl p-5 card-shadow">
+       <h2 class="text-lg font-semibold text-slate-800 mb-4">🎯 Plano de Alvos - Pré-Jogo</h2>
+       <div id="target-plan-container" class="space-y-4"><!-- Target plans will be rendered here -->
+       </div><button id="save-target-plan" class="w-full mt-4 btn-primary text-white py-2 rounded-lg font-medium"> 💾 Salvar Plano de Alvos </button>
       </div>
-
-      <div class="card p-5">
-        <h2 class="text-lg font-bold mb-3">⏱️ Fase do Jogo</h2>
-        <div class="grid sm:grid-cols-5 gap-2">
-          <button class="phase-btn btn-touch px-3 py-2 rounded-xl border text-sm font-semibold" data-phase="1T">1º Tempo</button>
-          <button class="phase-btn btn-touch px-3 py-2 rounded-xl border text-sm font-semibold" data-phase="2T">2º Tempo</button>
-          <button class="phase-btn btn-touch px-3 py-2 rounded-xl border text-sm font-semibold" data-phase="OT1">Prorrog. 1º</button>
-          <button class="phase-btn btn-touch px-3 py-2 rounded-xl border text-sm font-semibold" data-phase="OT2">Prorrog. 2º</button>
-          <button class="phase-btn btn-touch px-3 py-2 rounded-xl border text-sm font-semibold" data-phase="PEN">Pênaltis</button>
+     </div>
+    </section><!-- Jogo Tab -->
+    <section id="tab-jogo" class="tab-content hidden">
+     <div class="max-w-4xl mx-auto space-y-4"><!-- Quick Actions -->
+      <div class="grid grid-cols-2 gap-3"><button id="btn-attack" class="bg-gradient-to-br from-green-500 to-green-700 text-white p-4 rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transition-all"> ⚡ Registrar Ataque </button> <button id="btn-change-target" class="bg-gradient-to-br from-orange-500 to-orange-700 text-white p-4 rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transition-all"> 🎯 Mudança de Alvo </button>
+      </div><!-- Attack Modal -->
+      <div id="attack-modal" class="hidden fixed inset-0 modal-overlay z-50 flex items-center justify-center p-4">
+       <div class="bg-white rounded-2xl w-full max-w-lg max-h-[90%] overflow-y-auto">
+        <div class="sticky top-0 bg-white border-b px-4 py-3 flex items-center justify-between">
+         <h3 class="text-lg font-semibold">⚡ Registrar Ataque</h3><button id="close-attack-modal" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100">✕</button>
         </div>
-        <p class="text-xs muted mt-2">Timeouts/Substituições: Reg 0/4 e OT 0/1 (cada equipe).</p>
+        <div class="p-4 space-y-4"><!-- Team Selection -->
+         <div><label class="block text-sm font-medium text-slate-600 mb-2">Equipe</label>
+          <div class="grid grid-cols-2 gap-2"><button class="team-select-btn px-4 py-2 border-2 border-blue-500 bg-blue-50 text-blue-700 rounded-lg font-medium" data-team="my">Minha Equipe</button> <button class="team-select-btn px-4 py-2 border-2 border-slate-300 text-slate-600 rounded-lg font-medium" data-team="opponent">Adversário</button>
+          </div>
+         </div><!-- Athlete Selection -->
+         <div><label class="block text-sm font-medium text-slate-600 mb-2">Atleta</label> <select id="attack-athlete" class="w-full px-3 py-2 border border-slate-300 rounded-lg"> <option value="">Selecionar atleta</option> </select>
+         </div><!-- Ball Type -->
+         <div><label class="block text-sm font-medium text-slate-600 mb-2">Tipo de Bola</label>
+          <div class="grid grid-cols-3 gap-2" id="ball-type-grid"><button class="ball-type-btn px-3 py-2 border-2 border-slate-300 rounded-lg text-sm" data-type="lisa">Lisa</button> <button class="ball-type-btn px-3 py-2 border-2 border-slate-300 rounded-lg text-sm" data-type="quicada">Quicada</button> <button class="ball-type-btn px-3 py-2 border-2 border-slate-300 rounded-lg text-sm" data-type="curva">Curva</button> <button class="ball-type-btn px-3 py-2 border-2 border-slate-300 rounded-lg text-sm" data-type="spin">Spin</button> <button class="ball-type-btn px-3 py-2 border-2 border-slate-300 rounded-lg text-sm" data-type="lenta">Lenta</button> <button class="ball-type-btn px-3 py-2 border-2 border-slate-300 rounded-lg text-sm" data-type="rapida">Rápida</button>
+          </div>
+         </div><!-- Target Zone -->
+         <div><label class="block text-sm font-medium text-slate-600 mb-2">Alvo</label>
+          <div class="grid grid-cols-9 gap-1" id="target-grid"><button class="target-btn px-2 py-2 border-2 border-slate-300 rounded text-xs font-medium" data-target="1">1</button> <button class="target-btn px-2 py-2 border-2 border-slate-300 rounded text-xs font-medium" data-target="2">2</button> <button class="target-btn px-2 py-2 border-2 border-slate-300 rounded text-xs font-medium" data-target="2/3">2/3</button> <button class="target-btn px-2 py-2 border-2 border-slate-300 rounded text-xs font-medium" data-target="3">3</button> <button class="target-btn px-2 py-2 border-2 border-slate-300 rounded text-xs font-medium" data-target="M">M</button> <button class="target-btn px-2 py-2 border-2 border-slate-300 rounded text-xs font-medium" data-target="4">4</button> <button class="target-btn px-2 py-2 border-2 border-slate-300 rounded text-xs font-medium" data-target="4/5">4/5</button> <button class="target-btn px-2 py-2 border-2 border-slate-300 rounded text-xs font-medium" data-target="5">5</button> <button class="target-btn px-2 py-2 border-2 border-slate-300 rounded text-xs font-medium" data-target="6">6</button>
+          </div>
+         </div><!-- Result -->
+         <div><label class="block text-sm font-medium text-slate-600 mb-2">Resultado</label>
+          <div class="grid grid-cols-3 gap-2" id="result-grid"><button class="result-btn px-3 py-2 border-2 border-slate-300 rounded-lg text-sm" data-result="gol">⚽ Gol</button> <button class="result-btn px-3 py-2 border-2 border-slate-300 rounded-lg text-sm" data-result="defendida">🧤 Defendida</button> <button class="result-btn px-3 py-2 border-2 border-slate-300 rounded-lg text-sm" data-result="blockout">🚫 Blockout</button> <button class="result-btn px-3 py-2 border-2 border-slate-300 rounded-lg text-sm" data-result="fora">❌ Fora</button> <button class="result-btn px-3 py-2 border-2 border-slate-300 rounded-lg text-sm" data-result="penalidade">⚠️ Penalidade</button>
+          </div>
+         </div><!-- Penalty Type (conditional) -->
+         <div id="penalty-section" class="hidden"><label class="block text-sm font-medium text-slate-600 mb-2">Tipo de Penalidade</label> <select id="penalty-type" class="w-full px-3 py-2 border border-slate-300 rounded-lg"> <option value="">Selecionar tipo</option> <option value="highball">Highball</option> <option value="longball">Longball</option> <option value="noise">Noise</option> <option value="eyeshade">Eyeshade</option> <option value="delay">Delay</option> <option value="10sec">10 Segundos</option> <option value="illegal-defense">Defesa Ilegal</option> <option value="other">Outra</option> </select>
+         </div><!-- Defense Section -->
+         <div id="defense-section" class="border-t pt-4 mt-4">
+          <h4 class="text-sm font-semibold text-slate-700 mb-3">🛡️ Defesa</h4><!-- Defense Structure -->
+          <div class="mb-3"><label class="block text-xs font-medium text-slate-500 mb-2">Estrutura Defensiva (múltipla seleção)</label>
+           <div class="grid grid-cols-2 gap-2"><label class="flex items-center gap-2 p-2 border rounded-lg cursor-pointer hover:bg-slate-50"> <input type="checkbox" class="defense-structure" value="individual"> <span class="text-sm">Individual</span> </label> <label class="flex items-center gap-2 p-2 border rounded-lg cursor-pointer hover:bg-slate-50"> <input type="checkbox" class="defense-structure" value="bloco-correto"> <span class="text-sm">Bloco Correto</span> </label> <label class="flex items-center gap-2 p-2 border rounded-lg cursor-pointer hover:bg-slate-50"> <input type="checkbox" class="defense-structure" value="bloco-incorreto"> <span class="text-sm">Bloco Incorreto</span> </label> <label class="flex items-center gap-2 p-2 border rounded-lg cursor-pointer hover:bg-slate-50"> <input type="checkbox" class="defense-structure" value="cobertura"> <span class="text-sm">Cobertura</span> </label>
+           </div>
+          </div><!-- Ball Behavior -->
+          <div><label class="block text-xs font-medium text-slate-500 mb-2">Comportamento da Bola</label>
+           <div class="grid grid-cols-2 gap-2" id="ball-behavior-grid"><button class="behavior-btn px-3 py-2 border-2 border-slate-300 rounded-lg text-xs" data-behavior="dominada">Dominada</button> <button class="behavior-btn px-3 py-2 border-2 border-slate-300 rounded-lg text-xs" data-behavior="voltou">Bateu e Voltou</button> <button class="behavior-btn px-3 py-2 border-2 border-slate-300 rounded-lg text-xs" data-behavior="subiu">Bateu e Subiu</button> <button class="behavior-btn px-3 py-2 border-2 border-slate-300 rounded-lg text-xs" data-behavior="rebote">Rebote Perigoso</button> <button class="behavior-btn px-3 py-2 border-2 border-slate-300 rounded-lg text-xs" data-behavior="escapou">Escapou</button>
+           </div>
+          </div>
+         </div><button id="save-attack" class="w-full btn-success text-white py-3 rounded-xl font-semibold"> 💾 Salvar Lance </button>
+        </div>
+       </div>
+      </div><!-- Target Change Modal -->
+      <div id="target-change-modal" class="hidden fixed inset-0 modal-overlay z-50 flex items-center justify-center p-4">
+       <div class="bg-white rounded-2xl w-full max-w-md">
+        <div class="border-b px-4 py-3 flex items-center justify-between">
+         <h3 class="text-lg font-semibold">🎯 Mudança de Alvo</h3><button id="close-target-modal" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100">✕</button>
+        </div>
+        <div class="p-4 space-y-4">
+         <div><label class="block text-sm font-medium text-slate-600 mb-2">Atleta</label> <select id="target-change-athlete" class="w-full px-3 py-2 border border-slate-300 rounded-lg"> <option value="">Selecionar atleta</option> </select>
+         </div>
+         <div><label class="block text-sm font-medium text-slate-600 mb-2">Novos Alvos</label>
+          <div class="grid grid-cols-9 gap-1" id="new-target-grid"><button class="new-target-btn px-2 py-2 border-2 border-slate-300 rounded text-xs font-medium" data-target="1">1</button> <button class="new-target-btn px-2 py-2 border-2 border-slate-300 rounded text-xs font-medium" data-target="2">2</button> <button class="new-target-btn px-2 py-2 border-2 border-slate-300 rounded text-xs font-medium" data-target="2/3">2/3</button> <button class="new-target-btn px-2 py-2 border-2 border-slate-300 rounded text-xs font-medium" data-target="3">3</button> <button class="new-target-btn px-2 py-2 border-2 border-slate-300 rounded text-xs font-medium" data-target="M">M</button> <button class="new-target-btn px-2 py-2 border-2 border-slate-300 rounded text-xs font-medium" data-target="4">4</button> <button class="new-target-btn px-2 py-2 border-2 border-slate-300 rounded text-xs font-medium" data-target="4/5">4/5</button> <button class="new-target-btn px-2 py-2 border-2 border-slate-300 rounded text-xs font-medium" data-target="5">5</button> <button class="new-target-btn px-2 py-2 border-2 border-slate-300 rounded text-xs font-medium" data-target="6">6</button>
+          </div>
+         </div><button id="save-target-change" class="w-full btn-primary text-white py-3 rounded-xl font-semibold"> 💾 Salvar Mudança </button>
+        </div>
+       </div>
+      </div><!-- Live Stats -->
+      <div class="bg-white rounded-xl p-4 card-shadow">
+       <h3 class="text-lg font-semibold text-slate-800 mb-3">📊 Estatísticas em Tempo Real</h3>
+       <div class="grid grid-cols-2 gap-4">
+        <div class="bg-green-50 rounded-lg p-3 border border-green-200">
+         <h4 class="text-sm font-medium text-green-700 mb-2">Minha Equipe</h4>
+         <div class="space-y-1 text-sm">
+          <div class="flex justify-between">
+           <span>Arremessos:</span><span id="my-throws">0</span>
+          </div>
+          <div class="flex justify-between">
+           <span>Gols:</span><span id="my-goals">0</span>
+          </div>
+          <div class="flex justify-between">
+           <span>Aproveitamento:</span><span id="my-efficiency">0%</span>
+          </div>
+         </div>
+        </div>
+        <div class="bg-red-50 rounded-lg p-3 border border-red-200">
+         <h4 class="text-sm font-medium text-red-700 mb-2">Adversário</h4>
+         <div class="space-y-1 text-sm">
+          <div class="flex justify-between">
+           <span>Arremessos:</span><span id="opp-throws">0</span>
+          </div>
+          <div class="flex justify-between">
+           <span>Gols:</span><span id="opp-goals">0</span>
+          </div>
+          <div class="flex justify-between">
+           <span>Aproveitamento:</span><span id="opp-efficiency">0%</span>
+          </div>
+         </div>
+        </div>
+       </div>
+      </div><!-- Recent Events -->
+      <div class="bg-white rounded-xl p-4 card-shadow">
+       <h3 class="text-lg font-semibold text-slate-800 mb-3">🕐 Últimos Lances</h3>
+       <div id="recent-events" class="space-y-2 max-h-48 overflow-y-auto scrollbar-thin">
+        <p class="text-slate-500 text-sm text-center py-4">Nenhum lance registrado</p>
+       </div>
       </div>
-    </section>
-
-    <!-- ESCALAÇÃO -->
-    <section id="tab-escalacao" class="tab-content space-y-4">
-      <div class="card p-5">
-        <h2 class="text-lg font-bold mb-4">📐 Formação em V</h2>
-        <div class="bg-gradient-to-b from-slate-800 to-slate-700 rounded-2xl p-6 relative text-white">
-          <div class="grid grid-cols-3 items-center">
-            <div class="flex justify-center">
-              <div id="chipALE" class="h-16 w-16 rounded-full bg-white text-slate-900 flex flex-col items-center justify-center font-bold shadow">
-                <div class="text-xs muted">Ala E</div>
-                <div class="text-lg mono">—</div>
-              </div>
-            </div>
-            <div class="flex justify-center">
-              <div id="chipPIVO" class="h-16 w-16 rounded-full bg-white text-slate-900 flex flex-col items-center justify-center font-bold shadow translate-y-[-10px]">
-                <div class="text-xs muted">Pivô</div>
-                <div class="text-lg mono">—</div>
-              </div>
-            </div>
-            <div class="flex justify-center">
-              <div id="chipALD" class="h-16 w-16 rounded-full bg-white text-slate-900 flex flex-col items-center justify-center font-bold shadow">
-                <div class="text-xs muted">Ala D</div>
-                <div class="text-lg mono">—</div>
-              </div>
-            </div>
-          </div>
+     </div>
+    </section><!-- Histórico Tab -->
+    <section id="tab-historico" class="tab-content hidden">
+     <div class="max-w-4xl mx-auto">
+      <div class="bg-white rounded-xl p-4 card-shadow">
+       <div class="flex items-center justify-between mb-4">
+        <h2 class="text-lg font-semibold text-slate-800">📋 Histórico de Lances</h2>
+        <div class="flex gap-2"><select id="history-filter" class="px-3 py-1 border rounded-lg text-sm"> <option value="all">Todos</option> <option value="1T">1º Tempo</option> <option value="2T">2º Tempo</option> <option value="PR">Prorrogação</option> </select>
         </div>
-
-        <div class="mt-5 space-y-3">
-          <h3 class="font-bold">Definir Escalação (Minha equipe)</h3>
-          <div class="grid sm:grid-cols-3 gap-3">
-            <div>
-              <label class="block text-sm font-medium muted mb-1">Ala Esquerda (recuado)</label>
-              <select id="selALE" class="w-full px-3 py-2 border rounded-xl"></select>
-            </div>
-            <div>
-              <label class="block text-sm font-medium muted mb-1">Pivô (avançado)</label>
-              <select id="selPIVO" class="w-full px-3 py-2 border rounded-xl"></select>
-            </div>
-            <div>
-              <label class="block text-sm font-medium muted mb-1">Ala Direita (recuado)</label>
-              <select id="selALD" class="w-full px-3 py-2 border rounded-xl"></select>
-            </div>
-          </div>
-          <p class="text-xs muted">A escalação atual é usada na aba Jogo automaticamente.</p>
-        </div>
+       </div>
+       <div id="history-list" class="space-y-2 max-h-[60vh] overflow-y-auto scrollbar-thin">
+        <p class="text-slate-500 text-sm text-center py-8">Nenhum lance registrado ainda</p>
+       </div>
       </div>
-
-      <div class="card p-5">
-        <h2 class="text-lg font-bold mb-2">🪑 Banco</h2>
-        <div id="benchList" class="text-sm muted">Nenhum atleta no banco</div>
+     </div><!-- Edit Event Modal -->
+     <div id="edit-event-modal" class="hidden fixed inset-0 modal-overlay z-50 flex items-center justify-center p-4">
+      <div class="bg-white rounded-2xl w-full max-w-lg max-h-[90%] overflow-y-auto">
+       <div class="sticky top-0 bg-white border-b px-4 py-3 flex items-center justify-between">
+        <h3 class="text-lg font-semibold">✏️ Editar Lance</h3><button id="close-edit-modal" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100">✕</button>
+       </div>
+       <div class="p-4 space-y-4" id="edit-form-content"><!-- Edit form will be dynamically generated -->
+       </div>
       </div>
-
-      <div class="card p-5">
-        <h2 class="text-lg font-bold mb-4">🔁 Substituições</h2>
-
-        <div class="grid sm:grid-cols-2 gap-3">
-          <div class="border rounded-2xl p-4">
-            <h3 class="font-bold mb-2">Minha equipe</h3>
-            <div class="grid grid-cols-2 gap-2">
-              <select id="subMyOut" class="px-3 py-2 border rounded-xl"></select>
-              <select id="subMyIn" class="px-3 py-2 border rounded-xl"></select>
-            </div>
-            <button id="btnSubMy" class="btn-touch mt-3 w-full px-4 py-2 rounded-xl bg-blue-600 text-white font-semibold">Aplicar substituição</button>
-            <div class="mt-2 text-xs muted" id="subMyInfo"></div>
-          </div>
-
-          <div class="border rounded-2xl p-4">
-            <h3 class="font-bold mb-2">Adversário</h3>
-            <div class="grid grid-cols-2 gap-2">
-              <select id="subOppOut" class="px-3 py-2 border rounded-xl"></select>
-              <select id="subOppIn" class="px-3 py-2 border rounded-xl"></select>
-            </div>
-            <button id="btnSubOpp" class="btn-touch mt-3 w-full px-4 py-2 rounded-xl bg-red-600 text-white font-semibold">Aplicar substituição</button>
-            <div class="mt-2 text-xs muted" id="subOppInfo"></div>
-          </div>
+     </div>
+    </section><!-- Relatório Tab -->
+    <section id="tab-relatorio" class="tab-content hidden">
+     <div class="max-w-5xl mx-auto space-y-4"><!-- Period Selector -->
+      <div class="bg-white rounded-xl p-4 card-shadow">
+       <div class="flex gap-2 flex-wrap"><button class="report-period-btn active px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium" data-period="all">Geral</button> <button class="report-period-btn px-4 py-2 bg-slate-200 text-slate-700 rounded-lg text-sm font-medium" data-period="1T">1º Tempo</button> <button class="report-period-btn px-4 py-2 bg-slate-200 text-slate-700 rounded-lg text-sm font-medium" data-period="2T">2º Tempo</button> <button class="report-period-btn px-4 py-2 bg-slate-200 text-slate-700 rounded-lg text-sm font-medium" data-period="PR">Prorrogação</button>
+       </div>
+      </div><!-- Attack Stats -->
+      <div class="bg-white rounded-xl p-4 card-shadow">
+       <h3 class="text-lg font-semibold text-slate-800 mb-4">⚡ Estatísticas de Ataque - Minha Equipe</h3>
+       <div id="attack-stats-table" class="overflow-x-auto">
+        <table class="w-full text-sm">
+         <thead class="bg-slate-100">
+          <tr>
+           <th class="px-3 py-2 text-left">Atleta</th>
+           <th class="px-3 py-2 text-center">Arr.</th>
+           <th class="px-3 py-2 text-center">Gols</th>
+           <th class="px-3 py-2 text-center">Def.</th>
+           <th class="px-3 py-2 text-center">Pen.</th>
+           <th class="px-3 py-2 text-center">% Aprov.</th>
+           <th class="px-3 py-2 text-center">% Plano</th>
+          </tr>
+         </thead>
+         <tbody id="attack-stats-body">
+          <tr>
+           <td colspan="7" class="text-center py-4 text-slate-500">Sem dados</td>
+          </tr>
+         </tbody>
+        </table>
+       </div><!-- Attack Highlights -->
+       <div class="grid grid-cols-3 gap-3 mt-4" id="attack-highlights">
+        <div class="bg-green-50 rounded-lg p-3 text-center">
+         <div class="text-xs text-green-600 mb-1">
+          Mais Eficiente
+         </div>
+         <div class="font-semibold text-green-800" id="most-efficient">
+          -
+         </div>
         </div>
-
-        <p class="text-xs muted mt-3">Regra prática no sistema: Reg 0/3 por tempo; OT 0/1. (Você pode ajustar depois.)</p>
+        <div class="bg-blue-50 rounded-lg p-3 text-center">
+         <div class="text-xs text-blue-600 mb-1">
+          Zona + Usada
+         </div>
+         <div class="font-semibold text-blue-800" id="most-used-zone">
+          -
+         </div>
+        </div>
+        <div class="bg-purple-50 rounded-lg p-3 text-center">
+         <div class="text-xs text-purple-600 mb-1">
+          Zona + Eficiente
+         </div>
+         <div class="font-semibold text-purple-800" id="most-efficient-zone">
+          -
+         </div>
+        </div>
+       </div>
+      </div><!-- Defense Stats -->
+      <div class="bg-white rounded-xl p-4 card-shadow">
+       <h3 class="text-lg font-semibold text-slate-800 mb-4">🛡️ Estatísticas de Defesa</h3>
+       <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div class="bg-slate-50 rounded-lg p-3 text-center">
+         <div class="text-xs text-slate-600 mb-1">
+          Bloco Correto
+         </div>
+         <div class="text-2xl font-bold text-slate-800" id="correct-blocks">
+          0
+         </div>
+        </div>
+        <div class="bg-slate-50 rounded-lg p-3 text-center">
+         <div class="text-xs text-slate-600 mb-1">
+          Bloco Incorreto
+         </div>
+         <div class="text-2xl font-bold text-slate-800" id="incorrect-blocks">
+          0
+         </div>
+        </div>
+        <div class="bg-slate-50 rounded-lg p-3 text-center">
+         <div class="text-xs text-slate-600 mb-1">
+          Cobertura
+         </div>
+         <div class="text-2xl font-bold text-slate-800" id="coverage-count">
+          0
+         </div>
+        </div>
+        <div class="bg-slate-50 rounded-lg p-3 text-center">
+         <div class="text-xs text-slate-600 mb-1">
+          % Sucesso Bloco
+         </div>
+         <div class="text-2xl font-bold text-slate-800" id="block-success">
+          0%
+         </div>
+        </div>
+       </div>
+       <div class="grid grid-cols-2 md:grid-cols-5 gap-3 mt-4">
+        <div class="bg-green-50 rounded-lg p-2 text-center">
+         <div class="text-xs text-green-600">
+          Dominada
+         </div>
+         <div class="font-bold text-green-800" id="ball-dominated">
+          0
+         </div>
+        </div>
+        <div class="bg-yellow-50 rounded-lg p-2 text-center">
+         <div class="text-xs text-yellow-600">
+          Bateu e Voltou
+         </div>
+         <div class="font-bold text-yellow-800" id="ball-returned">
+          0
+         </div>
+        </div>
+        <div class="bg-orange-50 rounded-lg p-2 text-center">
+         <div class="text-xs text-orange-600">
+          Bateu e Subiu
+         </div>
+         <div class="font-bold text-orange-800" id="ball-up">
+          0
+         </div>
+        </div>
+        <div class="bg-red-50 rounded-lg p-2 text-center">
+         <div class="text-xs text-red-600">
+          Rebote Perigoso
+         </div>
+         <div class="font-bold text-red-800" id="dangerous-rebound">
+          0
+         </div>
+        </div>
+        <div class="bg-red-100 rounded-lg p-2 text-center">
+         <div class="text-xs text-red-700">
+          Escapou
+         </div>
+         <div class="font-bold text-red-900" id="ball-escaped">
+          0
+         </div>
+        </div>
+       </div>
+       <div class="mt-4 p-3 bg-red-50 rounded-lg">
+        <div class="text-sm text-red-700">
+         Gols sofridos após bloco incorreto: <span class="font-bold" id="goals-after-bad-block">0</span>
+        </div>
+       </div>
+      </div><!-- Heat Map -->
+      <div class="bg-white rounded-xl p-4 card-shadow">
+       <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-semibold text-slate-800">🗺️ Mapa de Calor - Arremessos</h3><select id="heatmap-filter" class="px-3 py-1 border rounded-lg text-sm"> <option value="all">Todos</option> <option value="goals">Apenas Gols</option> <option value="planned">Dentro do Plano</option> </select>
+       </div><!-- Court SVG -->
+       <div class="flex justify-center">
+        <svg id="court-heatmap" viewbox="0 0 180 90" class="w-full max-w-xl border-2 border-slate-300 rounded-lg bg-gradient-to-b from-blue-100 to-slate-100"><!-- Court outline --> <rect x="0" y="0" width="180" height="90" fill="none" stroke="#334155" stroke-width="1" /> <!-- Center line --> <line x1="90" y1="0" x2="90" y2="90" stroke="#334155" stroke-width="0.5" stroke-dasharray="2,2" /> <!-- Goal areas --> <rect x="0" y="0" width="30" height="90" fill="rgba(239,68,68,0.1)" stroke="#ef4444" stroke-width="0.5" /> <rect x="150" y="0" width="30" height="90" fill="rgba(59,130,246,0.1)" stroke="#3b82f6" stroke-width="0.5" /> <!-- Target zones (opponent side - where we throw) --> <g id="target-zones">
+          <rect class="court-zone heat-zone" data-zone="1" x="0" y="0" width="20" height="30" fill="rgba(59,130,246,0.1)" stroke="#64748b" stroke-width="0.3" />
+          <rect class="court-zone heat-zone" data-zone="2" x="0" y="30" width="20" height="15" fill="rgba(59,130,246,0.1)" stroke="#64748b" stroke-width="0.3" />
+          <rect class="court-zone heat-zone" data-zone="2/3" x="0" y="45" width="20" height="0" fill="rgba(59,130,246,0.1)" stroke="#64748b" stroke-width="0.3" />
+          <rect class="court-zone heat-zone" data-zone="3" x="0" y="30" width="20" height="30" fill="rgba(59,130,246,0.1)" stroke="#64748b" stroke-width="0.3" />
+          <rect class="court-zone heat-zone" data-zone="M" x="0" y="40" width="20" height="10" fill="rgba(59,130,246,0.2)" stroke="#64748b" stroke-width="0.3" />
+          <rect class="court-zone heat-zone" data-zone="4" x="0" y="45" width="20" height="15" fill="rgba(59,130,246,0.1)" stroke="#64748b" stroke-width="0.3" />
+          <rect class="court-zone heat-zone" data-zone="4/5" x="0" y="45" width="20" height="0" fill="rgba(59,130,246,0.1)" stroke="#64748b" stroke-width="0.3" />
+          <rect class="court-zone heat-zone" data-zone="5" x="0" y="45" width="20" height="15" fill="rgba(59,130,246,0.1)" stroke="#64748b" stroke-width="0.3" />
+          <rect class="court-zone heat-zone" data-zone="6" x="0" y="60" width="20" height="30" fill="rgba(59,130,246,0.1)" stroke="#64748b" stroke-width="0.3" />
+         </g> <!-- Zone labels --> <text x="10" y="18" text-anchor="middle" font-size="6" fill="#475569">
+          1
+         </text> <text x="10" y="38" text-anchor="middle" font-size="6" fill="#475569">
+          2
+         </text> <text x="10" y="47" text-anchor="middle" font-size="6" fill="#475569">
+          M
+         </text> <text x="10" y="56" text-anchor="middle" font-size="6" fill="#475569">
+          5
+         </text> <text x="10" y="78" text-anchor="middle" font-size="6" fill="#475569">
+          6
+         </text> <!-- Throw points container --> <g id="throw-points"></g>
+        </svg>
+       </div><!-- Legend -->
+       <div class="flex justify-center gap-4 mt-3 text-xs">
+        <div class="flex items-center gap-1"><span class="w-3 h-3 rounded-full bg-blue-500"></span> <span>Normal</span>
+        </div>
+        <div class="flex items-center gap-1"><span class="w-3 h-3 rounded-full bg-green-500"></span> <span>No Plano</span>
+        </div>
+        <div class="flex items-center gap-1"><span class="w-3 h-3 rounded-full bg-red-500"></span> <span>Gol</span>
+        </div>
+        <div class="flex items-center gap-1"><span class="w-3 h-3 rounded-full bg-yellow-500"></span> <span>Fora do Plano</span>
+        </div>
+       </div>
       </div>
-
-      <div class="card p-5">
-        <h2 class="text-lg font-bold mb-3">⏱️ Timeouts</h2>
-        <div class="grid sm:grid-cols-2 gap-3">
-          <div class="border rounded-2xl p-4">
-            <div class="font-bold mb-2" id="myTimeoutTitle">Minha equipe</div>
-            <div class="text-sm muted">Reg: <span class="mono" id="myTOReg">0</span>/4 • OT: <span class="mono" id="myTOOT">0</span>/1</div>
-            <button id="btnMyTO" class="btn-touch mt-3 w-full px-4 py-2 rounded-xl bg-blue-600 text-white font-semibold">Timeout</button>
-          </div>
-          <div class="border rounded-2xl p-4">
-            <div class="font-bold mb-2" id="oppTimeoutTitle">Adversário</div>
-            <div class="text-sm muted">Reg: <span class="mono" id="oppTOReg">0</span>/4 • OT: <span class="mono" id="oppTOOT">0</span>/1</div>
-            <button id="btnOppTO" class="btn-touch mt-3 w-full px-4 py-2 rounded-xl bg-red-600 text-white font-semibold">Timeout</button>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- JOGO -->
-    <section id="tab-jogo" class="tab-content space-y-4">
-
-      <div class="card p-5">
-        <div class="flex items-center justify-between gap-3 flex-wrap">
-          <div class="font-bold">Placar</div>
-          <div class="text-sm muted">Fase: <span id="phaseLabel" class="font-semibold">1º Tempo</span></div>
-        </div>
-
-        <div class="mt-3 bg-slate-900 text-white rounded-2xl p-5 flex items-center justify-center gap-4">
-          <div class="text-center">
-            <div class="text-xs opacity-80" id="myTeamLabel">Minha Equipe</div>
-            <div class="text-4xl font-extrabold mono" id="scoreMy">0</div>
-          </div>
-          <div class="text-xl font-bold opacity-80">×</div>
-          <div class="text-center">
-            <div class="text-xs opacity-80" id="oppTeamLabel">Adversário</div>
-            <div class="text-4xl font-extrabold mono" id="scoreOpp">0</div>
-          </div>
-        </div>
-
-        <div class="mt-4 grid sm:grid-cols-2 gap-3">
-          <button id="btnGoalMy" class="btn-touch px-4 py-3 rounded-2xl bg-green-600 text-white font-bold">+ GOL (Minha equipe)</button>
-          <button id="btnGoalOpp" class="btn-touch px-4 py-3 rounded-2xl bg-red-600 text-white font-bold">+ GOL (Adversário)</button>
-        </div>
-      </div>
-
-      <div class="card p-5">
-        <h2 class="text-lg font-bold mb-3">🧾 Registrar Turno</h2>
-
-        <!-- Step 1 -->
-        <div id="step1" class="space-y-3">
-          <div class="text-sm muted">Passo 1: Quem está atacando?</div>
-          <div class="grid sm:grid-cols-2 gap-3">
-            <button id="btnAtkMy" class="btn-touch px-4 py-3 rounded-2xl bg-blue-600 text-white font-bold">Minha equipe</button>
-            <button id="btnAtkOpp" class="btn-touch px-4 py-3 rounded-2xl bg-red-600 text-white font-bold">Adversário</button>
-          </div>
-        </div>
-
-        <!-- Step 2 -->
-        <div id="step2" class="hidden space-y-4">
-          <div class="flex items-center justify-between">
-            <div class="text-sm muted">Passo 2: Detalhes do Ataque</div>
-            <button id="btnCancelTurn" class="text-sm text-red-600 font-semibold">✖ Cancelar</button>
-          </div>
-
-          <div>
-            <div class="text-sm font-semibold mb-2">Atacante</div>
-            <div id="attackerButtons" class="flex gap-2 flex-wrap"></div>
-          </div>
-
-          <div class="grid sm:grid-cols-2 gap-3">
-            <div class="border rounded-2xl p-3 segmented">
-              <div class="text-sm font-semibold mb-2">Tipo de Arremesso</div>
-              <div class="grid grid-cols-2 gap-2">
-                <button class="seg-btn btn-touch px-3 py-2 rounded-xl border" data-group="throwType" data-value="Lisa" aria-pressed="false">Lisa</button>
-                <button class="seg-btn btn-touch px-3 py-2 rounded-xl border" data-group="throwType" data-value="Quicada" aria-pressed="false">Quicada</button>
-              </div>
-            </div>
-
-            <div class="border rounded-2xl p-3">
-              <div class="text-sm font-semibold mb-2">Altura/Característica</div>
-              <div class="grid grid-cols-2 gap-2">
-                <button class="chip btn-touch px-3 py-2 rounded-xl border text-sm" data-group="height" data-value="Bola alta" aria-pressed="false">Bola alta</button>
-                <button class="chip btn-touch px-3 py-2 rounded-xl border text-sm" data-group="height" data-value="Bola lisa" aria-pressed="false">Bola lisa</button>
-                <button class="chip btn-touch px-3 py-2 rounded-xl border text-sm" data-group="height" data-value="C/ efeito" aria-pressed="false">C/ efeito</button>
-                <button class="chip btn-touch px-3 py-2 rounded-xl border text-sm" data-group="height" data-value="Alvo quicada" aria-pressed="false">Alvo quicada</button>
-                <button class="chip btn-touch px-3 py-2 rounded-xl border text-sm" data-group="height" data-value="Alvo lisa" aria-pressed="false">Alvo lisa</button>
-                <button class="chip btn-touch px-3 py-2 rounded-xl border text-sm" data-group="height" data-value="Alvo c/ efeito" aria-pressed="false">Alvo c/ efeito</button>
-                <button class="chip chip-danger btn-touch col-span-2 px-3 py-2 rounded-xl border text-sm" data-group="height" data-value="Bola pra fora" aria-pressed="false">Bola pra fora</button>
-              </div>
-            </div>
-          </div>
-
-          <div class="border rounded-2xl p-3">
-            <div class="text-sm font-semibold mb-2">Alvo (zona)</div>
-            <div class="grid grid-cols-9 gap-2">
-              <button class="chip btn-touch px-3 py-2 rounded-xl border text-sm" data-group="target" data-value="1" aria-pressed="false">1</button>
-              <button class="chip btn-touch px-3 py-2 rounded-xl border text-sm" data-group="target" data-value="2" aria-pressed="false">2</button>
-              <button class="chip btn-touch px-3 py-2 rounded-xl border text-sm" data-group="target" data-value="2/3" aria-pressed="false">2/3</button>
-              <button class="chip btn-touch px-3 py-2 rounded-xl border text-sm" data-group="target" data-value="3" aria-pressed="false">3</button>
-              <button class="chip btn-touch px-3 py-2 rounded-xl border text-sm" data-group="target" data-value="M" aria-pressed="false">M</button>
-              <button class="chip btn-touch px-3 py-2 rounded-xl border text-sm" data-group="target" data-value="4" aria-pressed="false">4</button>
-              <button class="chip btn-touch px-3 py-2 rounded-xl border text-sm" data-group="target" data-value="4/5" aria-pressed="false">4/5</button>
-              <button class="chip btn-touch px-3 py-2 rounded-xl border text-sm" data-group="target" data-value="5" aria-pressed="false">5</button>
-              <button class="chip btn-touch px-3 py-2 rounded-xl border text-sm" data-group="target" data-value="6" aria-pressed="false">6</button>
-            </div>
-          </div>
-
-          <div class="border rounded-2xl p-3">
-            <div class="text-sm font-semibold mb-2">Resultado (do ataque)</div>
-            <div class="grid sm:grid-cols-3 gap-2">
-              <button class="chip chip-ok btn-touch px-3 py-2 rounded-xl border font-semibold" data-group="result" data-value="GOL" aria-pressed="false">GOL</button>
-              <button class="chip btn-touch px-3 py-2 rounded-xl border font-semibold" data-group="result" data-value="DEFENDIDA" aria-pressed="false">DEFENDIDA</button>
-              <button class="chip btn-touch px-3 py-2 rounded-xl border font-semibold" data-group="result" data-value="OUT" aria-pressed="false">OUT</button>
-
-              <button class="chip btn-touch px-3 py-2 rounded-xl border font-semibold" data-group="result" data-value="BALL OVER" aria-pressed="false">BALL OVER</button>
-              <button class="chip chip-danger btn-touch px-3 py-2 rounded-xl border font-semibold" data-group="result" data-value="PENALIDADE" aria-pressed="false">PENALIDADE</button>
-              <button class="chip btn-touch px-3 py-2 rounded-xl border font-semibold" data-group="result" data-value="BLOCK OUT" aria-pressed="false">BLOCK OUT</button>
-            </div>
-
-            <div id="penaltiesBox" class="hidden mt-3">
-              <div class="text-sm font-semibold mb-2 text-red-700">Penalidades (múltipla seleção)</div>
-              <div class="flex flex-wrap gap-2">
-                <button class="chip chip-danger btn-touch px-3 py-2 rounded-xl border text-sm" data-group="pen" data-value="Highball" aria-pressed="false">Highball</button>
-                <button class="chip chip-danger btn-touch px-3 py-2 rounded-xl border text-sm" data-group="pen" data-value="Longball" aria-pressed="false">Longball</button>
-                <button class="chip chip-danger btn-touch px-3 py-2 rounded-xl border text-sm" data-group="pen" data-value="10 segundos" aria-pressed="false">10 seg</button>
-                <button class="chip chip-danger btn-touch px-3 py-2 rounded-xl border text-sm" data-group="pen" data-value="Eyeshades" aria-pressed="false">Eyeshades</button>
-                <button class="chip chip-danger btn-touch px-3 py-2 rounded-xl border text-sm" data-group="pen" data-value="Illegal Defense" aria-pressed="false">Illegal Def</button>
-                <button class="chip chip-danger btn-touch px-3 py-2 rounded-xl border text-sm" data-group="pen" data-value="Illegal Coaching" aria-pressed="false">Illegal Coach</button>
-                <button class="chip chip-danger btn-touch px-3 py-2 rounded-xl border text-sm" data-group="pen" data-value="Noise" aria-pressed="false">Noise</button>
-                <button class="chip chip-danger btn-touch px-3 py-2 rounded-xl border text-sm" data-group="pen" data-value="Team Delay of Game" aria-pressed="false">Team Delay</button>
-                <button class="chip chip-danger btn-touch px-3 py-2 rounded-xl border text-sm" data-group="pen" data-value="Personal Delay of Game" aria-pressed="false">Personal Delay</button>
-                <button class="chip chip-danger btn-touch px-3 py-2 rounded-xl border text-sm" data-group="pen" data-value="Condução" aria-pressed="false">Condução</button>
-              </div>
-            </div>
-          </div>
-
-          <button id="btnToDefense" class="btn-touch w-full px-4 py-3 rounded-2xl bg-green-600 text-white font-bold">Continuar →</button>
-        </div>
-
-        <!-- Step 3 -->
-        <div id="step3" class="hidden space-y-4 mt-6">
-          <div class="flex items-center justify-between">
-            <div class="text-sm muted">Passo 3: Detalhes da Defesa</div>
-            <button id="btnSkipDefense" class="text-sm text-blue-700 font-semibold">Pular →</button>
-          </div>
-
-          <div class="border rounded-2xl p-3">
-            <div class="text-sm font-semibold mb-2">Tipo de Defesa (múltipla)</div>
-            <div class="flex flex-wrap gap-2">
-              <button class="chip btn-touch px-3 py-2 rounded-xl border text-sm" data-group="defType" data-value="Baixa" aria-pressed="false">Baixa</button>
-              <button class="chip btn-touch px-3 py-2 rounded-xl border text-sm" data-group="defType" data-value="Alta" aria-pressed="false">Alta</button>
-              <button class="chip btn-touch px-3 py-2 rounded-xl border text-sm" data-group="defType" data-value="Incorreta" aria-pressed="false">Incorreta</button>
-              <button class="chip btn-touch px-3 py-2 rounded-xl border text-sm" data-group="defType" data-value="Completa" aria-pressed="false">Completa</button>
-
-              <button class="chip btn-touch px-3 py-2 rounded-xl border text-sm" data-group="defExtra" data-value="Bloco correto" aria-pressed="false">Bloco correto</button>
-              <button class="chip btn-touch px-3 py-2 rounded-xl border text-sm" data-group="defExtra" data-value="Bloco incorreto" aria-pressed="false">Bloco incorreto</button>
-              <button class="chip btn-touch px-3 py-2 rounded-xl border text-sm" data-group="defExtra" data-value="Cobertura" aria-pressed="false">Cobertura</button>
-              <button class="chip btn-touch px-3 py-2 rounded-xl border text-sm" data-group="defExtra" data-value="Dominada" aria-pressed="false">Dominada</button>
-              <button class="chip btn-touch px-3 py-2 rounded-xl border text-sm" data-group="defExtra" data-value="Bateu e voltou" aria-pressed="false">Bateu e voltou</button>
-              <button class="chip btn-touch px-3 py-2 rounded-xl border text-sm" data-group="defExtra" data-value="Bateu e subiu" aria-pressed="false">Bateu e subiu</button>
-              <button class="chip btn-touch px-3 py-2 rounded-xl border text-sm" data-group="defExtra" data-value="Rebote perigoso" aria-pressed="false">Rebote perigoso</button>
-              <button class="chip btn-touch px-3 py-2 rounded-xl border text-sm" data-group="defExtra" data-value="Escapou" aria-pressed="false">Escapou</button>
-            </div>
-          </div>
-
-          <div class="border rounded-2xl p-3">
-            <div class="text-sm font-semibold mb-2">Área de Defesa (corpo)</div>
-            <div class="flex flex-wrap gap-2">
-              <button class="chip btn-touch px-3 py-2 rounded-xl border text-sm" data-group="defArea" data-value="Braços" aria-pressed="false">Braços</button>
-              <button class="chip btn-touch px-3 py-2 rounded-xl border text-sm" data-group="defArea" data-value="Tronco" aria-pressed="false">Tronco</button>
-              <button class="chip btn-touch px-3 py-2 rounded-xl border text-sm" data-group="defArea" data-value="Dedos" aria-pressed="false">Dedos</button>
-              <button class="chip btn-touch px-3 py-2 rounded-xl border text-sm" data-group="defArea" data-value="Pernas" aria-pressed="false">Pernas</button>
-              <button class="chip btn-touch px-3 py-2 rounded-xl border text-sm" data-group="defArea" data-value="Cara" aria-pressed="false">Cara</button>
-              <button class="chip btn-touch px-3 py-2 rounded-xl border text-sm" data-group="defArea" data-value="Partes íntimas" aria-pressed="false">Partes íntimas</button>
-            </div>
-          </div>
-
-          <div class="grid sm:grid-cols-3 gap-3">
-            <div class="border rounded-2xl p-3 segmented">
-              <div class="text-sm font-semibold mb-2">Passe</div>
-              <div class="grid grid-cols-2 gap-2">
-                <button class="seg-btn btn-touch px-3 py-2 rounded-xl border" data-group="pass" data-value="Sim" aria-pressed="false">Sim</button>
-                <button class="seg-btn btn-touch px-3 py-2 rounded-xl border" data-group="pass" data-value="Não" aria-pressed="false">Não</button>
-              </div>
-            </div>
-
-            <div class="border rounded-2xl p-3 segmented">
-              <div class="text-sm font-semibold mb-2">Movimento</div>
-              <div class="grid grid-cols-2 gap-2">
-                <button class="seg-btn btn-touch px-3 py-2 rounded-xl border" data-group="move" data-value="Flutuou" aria-pressed="false">Flutuou</button>
-                <button class="seg-btn btn-touch px-3 py-2 rounded-xl border" data-group="move" data-value="Inverteu" aria-pressed="false">Inverteu</button>
-              </div>
-              <button class="seg-btn btn-touch mt-2 w-full px-3 py-2 rounded-xl border" data-group="move" data-value="Nenhum" aria-pressed="true">Nenhum</button>
-            </div>
-
-            <div class="border rounded-2xl p-3">
-              <div class="text-sm font-semibold mb-2">Saídas de bola (se aplicável)</div>
-              <select id="outType" class="w-full px-3 py-2 border rounded-xl">
-                <option value="">—</option>
-                <option>Out</option>
-                <option>Premature Throw</option>
-                <option>Pass Out</option>
-                <option>Ball Over</option>
-                <option>Block out</option>
-              </select>
-            </div>
-          </div>
-
-          <button id="btnFinishTurn" class="btn-touch w-full px-4 py-3 rounded-2xl bg-green-600 text-white font-bold">✓ Finalizar Turno</button>
-        </div>
-      </div>
-
-      <div class="card p-5">
-        <h2 class="text-lg font-bold mb-2">Atalho</h2>
-        <div class="text-sm muted">Dica: você pode registrar o ataque com calma e depois completar a defesa — igual você explicou que acontece no jogo.</div>
-      </div>
-    </section>
-
-    <!-- HISTÓRICO -->
-    <section id="tab-historico" class="tab-content space-y-4">
-      <div class="card p-5">
-        <div class="flex items-center justify-between">
-          <h2 class="text-lg font-bold">📜 Histórico</h2>
-          <div class="text-sm muted"><span id="evtCount">0</span> eventos</div>
-        </div>
-        <div id="historyList" class="mt-3 space-y-3"></div>
-      </div>
-    </section>
-
-    <!-- RELATÓRIO -->
-    <section id="tab-relatorio" class="tab-content space-y-4">
-      <div class="card p-5">
-        <h2 class="text-lg font-bold mb-3">📊 Relatório Técnico</h2>
-
-        <div class="bg-slate-900 text-white rounded-2xl p-4 text-center">
-          <div class="text-xs opacity-80">PLACAR FINAL</div>
-          <div class="text-2xl font-extrabold" id="finalScore">—</div>
-          <div class="text-xs opacity-70 mt-1" id="matchMeta">—</div>
-        </div>
-
-        <div class="grid sm:grid-cols-2 gap-3 mt-4">
-          <div class="border rounded-2xl p-4" id="cardMyReport">
-            <div class="font-bold" id="repMyName">Minha equipe</div>
-            <div class="text-sm muted mt-1">
-              Total de turnos: <span class="mono" id="repMyTurns">0</span><br>
-              GOL: <span class="mono" id="repMyGoals">0</span><br>
-              DEFENDIDA: <span class="mono" id="repMyDefs">0</span><br>
-              PENALIDADE: <span class="mono" id="repMyPens">0</span>
-            </div>
-            <div class="mt-3">
-              <div class="text-sm font-semibold text-blue-700">Top Alvos</div>
-              <div class="text-sm muted" id="repMyTopTargets">—</div>
-            </div>
-            <div class="mt-3">
-              <div class="text-sm font-semibold text-blue-700">Gols por Atleta</div>
-              <div class="text-sm muted" id="repMyGoalsBy">—</div>
-            </div>
-          </div>
-
-          <div class="border rounded-2xl p-4" id="cardOppReport">
-            <div class="font-bold" id="repOppName">Adversário</div>
-            <div class="text-sm muted mt-1">
-              Total de turnos: <span class="mono" id="repOppTurns">0</span><br>
-              GOL: <span class="mono" id="repOppGoals">0</span><br>
-              DEFENDIDA: <span class="mono" id="repOppDefs">0</span><br>
-              PENALIDADE: <span class="mono" id="repOppPens">0</span>
-            </div>
-            <div class="mt-3">
-              <div class="text-sm font-semibold text-red-700">Top Alvos</div>
-              <div class="text-sm muted" id="repOppTopTargets">—</div>
-            </div>
-            <div class="mt-3">
-              <div class="text-sm font-semibold text-red-700">Gols por Atleta</div>
-              <div class="text-sm muted" id="repOppGoalsBy">—</div>
-            </div>
-          </div>
-        </div>
-
-        <div class="border rounded-2xl p-4 mt-4">
-          <div class="font-bold mb-1">Controle de Jogo</div>
-          <div class="text-sm muted grid sm:grid-cols-2 gap-3">
-            <div>
-              <div class="font-semibold" id="ctlMyName">Minha equipe</div>
-              Timeouts: <span class="mono" id="ctlMyTO">0</span> (Reg) + <span class="mono" id="ctlMyTOOT2">0</span> (OT)<br>
-              Substituições: <span class="mono" id="ctlMySub">0</span> (Reg) + <span class="mono" id="ctlMySubOT">0</span> (OT)
-            </div>
-            <div>
-              <div class="font-semibold" id="ctlOppName">Adversário</div>
-              Timeouts: <span class="mono" id="ctlOppTO">0</span> (Reg) + <span class="mono" id="ctlOppTOOT2">0</span> (OT)<br>
-              Substituições: <span class="mono" id="ctlOppSub">0</span> (Reg) + <span class="mono" id="ctlOppSubOT">0</span> (OT)
-            </div>
-          </div>
-          <div class="text-xs muted mt-3" id="reportStamp">—</div>
-        </div>
-
-        <div class="mt-4 grid sm:grid-cols-2 gap-3">
-          <button id="btnRefreshReport" class="btn-touch px-4 py-3 rounded-2xl bg-blue-600 text-white font-bold">🔄 Atualizar Relatório</button>
-          <button id="btnExportCSV" class="btn-touch px-4 py-3 rounded-2xl bg-green-600 text-white font-bold">📁 Exportar CSV</button>
-        </div>
-      </div>
-    </section>
-
-    <!-- ANÁLISE -->
-    <section id="tab-analise" class="tab-content space-y-4">
-      <div class="card p-5">
-        <h2 class="text-lg font-bold mb-3">📈 Indicadores (defesa extra)</h2>
-        <div class="grid sm:grid-cols-4 gap-3">
-          <div class="border rounded-2xl p-4 text-center">
-            <div class="text-sm muted">Bloco Correto</div>
-            <div class="text-3xl font-extrabold mono" id="kpiBlockOk">0</div>
-          </div>
-          <div class="border rounded-2xl p-4 text-center">
-            <div class="text-sm muted">Bloco Incorreto</div>
-            <div class="text-3xl font-extrabold mono" id="kpiBlockBad">0</div>
-          </div>
-          <div class="border rounded-2xl p-4 text-center">
-            <div class="text-sm muted">Cobertura</div>
-            <div class="text-3xl font-extrabold mono" id="kpiCover">0</div>
-          </div>
-          <div class="border rounded-2xl p-4 text-center">
-            <div class="text-sm muted">% Sucesso Bloco</div>
-            <div class="text-3xl font-extrabold mono" id="kpiBlockRate">0%</div>
-          </div>
-        </div>
-
-        <div class="grid sm:grid-cols-5 gap-3 mt-3">
-          <div class="border rounded-2xl p-3 text-center bg-green-50">
-            <div class="text-sm text-green-700 font-semibold">Dominada</div>
-            <div class="text-2xl font-extrabold mono" id="kpiDom">0</div>
-          </div>
-          <div class="border rounded-2xl p-3 text-center bg-yellow-50">
-            <div class="text-sm text-yellow-700 font-semibold">Bateu e Voltou</div>
-            <div class="text-2xl font-extrabold mono" id="kpiBV">0</div>
-          </div>
-          <div class="border rounded-2xl p-3 text-center bg-orange-50">
-            <div class="text-sm text-orange-700 font-semibold">Bateu e Subiu</div>
-            <div class="text-2xl font-extrabold mono" id="kpiBS">0</div>
-          </div>
-          <div class="border rounded-2xl p-3 text-center bg-rose-50">
-            <div class="text-sm text-rose-700 font-semibold">Rebote Perigoso</div>
-            <div class="text-2xl font-extrabold mono" id="kpiReb">0</div>
-          </div>
-          <div class="border rounded-2xl p-3 text-center bg-red-50">
-            <div class="text-sm text-red-700 font-semibold">Escapou</div>
-            <div class="text-2xl font-extrabold mono" id="kpiEsc">0</div>
-          </div>
-        </div>
-
-        <div class="mt-3 border rounded-2xl p-3 bg-red-50 text-red-800 font-semibold">
-          Gols sofridos após bloco incorreto: <span class="mono" id="kpiGoalsAfterBadBlock">0</span>
-        </div>
-      </div>
-
-      <div class="card p-5">
-        <div class="flex items-center justify-between gap-3 flex-wrap">
-          <h2 class="text-lg font-bold">🗺️ Mapa de Calor - Arremessos</h2>
-          <select id="heatFilter" class="px-3 py-2 border rounded-xl">
-            <option value="ALL">Todos</option>
-            <option value="MY">Minha equipe atacando</option>
-            <option value="OPP">Adversário atacando</option>
-          </select>
-        </div>
-
-        <div class="mt-3 overflow-x-auto">
-          <svg id="heatSvg" width="720" height="320" viewBox="0 0 720 320" class="mx-auto">
-            <!-- quadra -->
-            <rect x="10" y="10" width="700" height="300" rx="14" fill="#eaf2ff" stroke="#0f172a" stroke-opacity="0.25"/>
-            <!-- linhas -->
-            <line x1="360" y1="10" x2="360" y2="310" stroke="#0f172a" stroke-opacity="0.35" stroke-dasharray="6 6" />
-            <!-- faixas laterais de defesa (visual) -->
-            <rect x="10" y="10" width="85" height="300" fill="rgba(15,23,42,0.05)"/>
-            <rect x="625" y="10" width="85" height="300" fill="rgba(15,23,42,0.05)"/>
-
-            <!-- coluna de alvos (lado direito) -->
-            <g id="targetZones"></g>
-
-            <!-- pontos -->
-            <g id="heatPoints"></g>
+     </div>
+    </section><!-- Análise Tab -->
+    <section id="tab-analise" class="tab-content hidden">
+     <div class="max-w-5xl mx-auto space-y-4"><!-- Comparative Panel -->
+      <div class="bg-white rounded-xl p-4 card-shadow">
+       <h3 class="text-lg font-semibold text-slate-800 mb-4">📈 Análise Comparativa por Tempo</h3>
+       <div class="grid grid-cols-1 md:grid-cols-2 gap-4"><!-- Attack Comparison -->
+        <div>
+         <h4 class="text-sm font-medium text-slate-600 mb-2">Ataque por Tempo</h4>
+         <div class="bg-slate-50 rounded-lg p-3">
+          <svg id="attack-comparison-chart" viewbox="0 0 200 100" class="w-full"><text x="100" y="50" text-anchor="middle" font-size="8" fill="#64748b">
+            Dados serão exibidos aqui
+           </text>
           </svg>
+         </div>
+        </div><!-- Defense Comparison -->
+        <div>
+         <h4 class="text-sm font-medium text-slate-600 mb-2">Defesa por Tempo</h4>
+         <div class="bg-slate-50 rounded-lg p-3">
+          <svg id="defense-comparison-chart" viewbox="0 0 200 100" class="w-full"><text x="100" y="50" text-anchor="middle" font-size="8" fill="#64748b">
+            Dados serão exibidos aqui
+           </text>
+          </svg>
+         </div>
         </div>
-
-        <div class="flex gap-4 justify-center text-sm muted mt-2 flex-wrap">
-          <div class="flex items-center gap-2"><span class="inline-block w-3 h-3 rounded-full bg-blue-500"></span>Normal</div>
-          <div class="flex items-center gap-2"><span class="inline-block w-3 h-3 rounded-full bg-green-500"></span>No Plano</div>
-          <div class="flex items-center gap-2"><span class="inline-block w-3 h-3 rounded-full bg-red-500"></span>Gol</div>
-          <div class="flex items-center gap-2"><span class="inline-block w-3 h-3 rounded-full bg-yellow-500"></span>Fora do Plano</div>
-        </div>
+       </div>
+      </div><!-- Athlete Efficiency -->
+      <div class="bg-white rounded-xl p-4 card-shadow">
+       <h3 class="text-lg font-semibold text-slate-800 mb-4">👤 Eficiência por Atleta</h3>
+       <div id="athlete-efficiency-chart" class="space-y-3">
+        <p class="text-slate-500 text-sm text-center py-4">Registre lances para ver a análise</p>
+       </div>
+      </div><!-- Plan Adherence -->
+      <div class="bg-white rounded-xl p-4 card-shadow">
+       <h3 class="text-lg font-semibold text-slate-800 mb-4">🎯 Aderência ao Plano Tático</h3>
+       <div id="plan-adherence" class="grid grid-cols-2 md:grid-cols-3 gap-3">
+        <p class="col-span-full text-slate-500 text-sm text-center py-4">Configure o plano de alvos para ver a análise</p>
+       </div>
       </div>
+     </div>
     </section>
-
-  </main>
-</div>
-
-<script>
-/* =========================
-   IMAGENS EMBUTIDAS (placeholder)
-   Troque por assets/avatar.png e assets/logo-apec.png se preferir.
-   ========================= */
-const AVATAR_DATA_URI =
-  "data:image/svg+xml;utf8," + encodeURIComponent(`
-  <svg xmlns="http://www.w3.org/2000/svg" width="256" height="256">
-    <defs>
-      <linearGradient id="g" x1="0" x2="1">
-        <stop offset="0" stop-color="#2563eb"/>
-        <stop offset="1" stop-color="#0ea5e9"/>
-      </linearGradient>
-    </defs>
-    <rect width="256" height="256" rx="128" fill="url(#g)"/>
-    <circle cx="128" cy="102" r="44" fill="rgba(255,255,255,.9)"/>
-    <rect x="52" y="154" width="152" height="72" rx="36" fill="rgba(255,255,255,.9)"/>
-    <text x="128" y="242" font-family="Arial" font-size="18" text-anchor="middle" fill="rgba(255,255,255,.95)">Lucy</text>
-  </svg>
-`);
-
-const LOGO_DATA_URI =
-  "data:image/svg+xml;utf8," + encodeURIComponent(`
-  <svg xmlns="http://www.w3.org/2000/svg" width="256" height="256">
-    <rect width="256" height="256" rx="32" fill="#0f172a"/>
-    <circle cx="128" cy="128" r="86" fill="#22c55e" opacity=".15"/>
-    <circle cx="128" cy="128" r="66" fill="#22c55e" opacity=".28"/>
-    <text x="128" y="142" font-family="Arial" font-size="56" font-weight="700" text-anchor="middle" fill="#22c55e">APEC</text>
-  </svg>
-`);
-
-/* =========================
-   ESTADO
-   ========================= */
-const LS_KEY = "scout_goalball_pro_v1";
-
-const state = loadState() ?? {
-  meta: { competition:"", location:"", date:"", myTeam:"Minha Equipe", oppTeam:"Adversário", phase:"1T" },
-  players: {
-    my: Array.from({length:6}, (_,i)=>({ name:"", number:"" })),
-    oppEnabled: false,
-    opp: Array.from({length:6}, (_,i)=>({ name:"", number:"" })),
-  },
-  lineup: { ALE:null, PIVO:null, ALD:null, oppALE:null, oppPIVO:null, oppALD:null }, // simples
-  score: { my:0, opp:0 },
-  timeouts: { my:{reg:0, ot:0}, opp:{reg:0, ot:0} },
-  subs: { my:{reg:0, ot:0}, opp:{reg:0, ot:0} },
-  events: [] // cada evento = turno
-};
-
-let currentTurnDraft = null;
-
-/* =========================
-   UTIL
-   ========================= */
-function saveState(){ localStorage.setItem(LS_KEY, JSON.stringify(state)); }
-function loadState(){
-  try{ return JSON.parse(localStorage.getItem(LS_KEY)); }catch{ return null; }
-}
-function uid(){ return Math.random().toString(36).slice(2,10) + Date.now().toString(36); }
-function nowStamp(){
-  const d = new Date();
-  const pad = n=>String(n).padStart(2,"0");
-  return `${pad(d.getDate())}/${pad(d.getMonth()+1)}/${d.getFullYear()}, ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
-}
-function phaseLabel(phase){
-  return ({ "1T":"1º Tempo", "2T":"2º Tempo", "OT1":"Prorrog. 1º", "OT2":"Prorrog. 2º", "PEN":"Pênaltis" })[phase] || phase;
-}
-function isOT(phase){ return phase === "OT1" || phase === "OT2"; }
-
-/* =========================
-   NAVEGAÇÃO
-   ========================= */
-document.querySelectorAll(".nav-btn").forEach(btn=>{
-  btn.addEventListener("click", ()=>{
-    const tab = btn.dataset.tab;
-    showTab(tab);
-  });
-});
-function showTab(tab){
-  document.querySelectorAll(".nav-btn").forEach(b=>{
-    b.classList.toggle("active", b.dataset.tab===tab);
-    b.classList.toggle("bg-blue-600", b.dataset.tab===tab);
-    b.classList.toggle("text-white", b.dataset.tab===tab);
-  });
-  document.querySelectorAll(".tab-content").forEach(sec=>sec.classList.remove("active"));
-  document.getElementById("tab-"+tab).classList.add("active");
-  if(tab==="relatorio") refreshReport();
-  if(tab==="analise") refreshAnalysis();
-  if(tab==="historico") renderHistory();
-}
-
-/* =========================
-   INIT UI
-   ========================= */
-document.getElementById("avatarImg").src = AVATAR_DATA_URI;
-document.getElementById("logoImg").src = LOGO_DATA_URI;
-
-buildPlayerInputs();
-bindConfig();
-bindPhaseButtons();
-bindLineup();
-bindScore();
-bindTimeouts();
-bindSubs();
-bindTurnFlow();
-buildTargetZones();
-refreshAll();
-
-/* =========================
-   CONFIG / PLAYERS
-   ========================= */
-function buildPlayerInputs(){
-  const myGrid = document.getElementById("myPlayersGrid");
-  myGrid.innerHTML = "";
-  state.players.my.forEach((p,i)=>{
-    myGrid.appendChild(playerRow(`my-${i}`, `Nome ${i+1}`, p));
-  });
-
-  const oppGrid = document.getElementById("oppPlayersGrid");
-  oppGrid.innerHTML = "";
-  state.players.opp.forEach((p,i)=>{
-    oppGrid.appendChild(playerRow(`opp-${i}`, `Nome ${i+1}`, p, true));
-  });
-
-  document.getElementById("toggleOppPlayers").checked = !!state.players.oppEnabled;
-  document.getElementById("oppPlayersWrap").classList.toggle("hidden", !state.players.oppEnabled);
-
-  document.getElementById("toggleOppPlayers").addEventListener("change", (e)=>{
-    state.players.oppEnabled = e.target.checked;
-    document.getElementById("oppPlayersWrap").classList.toggle("hidden", !state.players.oppEnabled);
-    saveState();
-    refreshAll();
-  });
-}
-
-function playerRow(idPrefix, placeholder, player, isOpp=false){
-  const wrap = document.createElement("div");
-  wrap.className = "grid grid-cols-[1fr_92px] gap-2";
-
-  const inpName = document.createElement("input");
-  inpName.className = "px-3 py-2 border rounded-xl";
-  inpName.placeholder = placeholder;
-  inpName.value = player.name || "";
-  inpName.addEventListener("input", ()=>{
-    player.name = inpName.value;
-    saveState(); refreshAll();
-  });
-
-  const inpNum = document.createElement("input");
-  inpNum.className = "px-3 py-2 border rounded-xl";
-  inpNum.placeholder = "Nº";
-  inpNum.value = player.number || "";
-  inpNum.addEventListener("input", ()=>{
-    player.number = inpNum.value;
-    saveState(); refreshAll();
-  });
-
-  wrap.appendChild(inpName);
-  wrap.appendChild(inpNum);
-  return wrap;
-}
-
-function bindConfig(){
-  const comp = document.getElementById("competitionName");
-  const loc = document.getElementById("matchLocation");
-  const date = document.getElementById("matchDate");
-  const my = document.getElementById("myTeamName");
-  const opp = document.getElementById("oppTeamName");
-
-  comp.value = state.meta.competition || "";
-  loc.value = state.meta.location || "";
-  date.value = state.meta.date || "";
-  my.value = state.meta.myTeam || "Minha Equipe";
-  opp.value = state.meta.oppTeam || "Adversário";
-
-  comp.addEventListener("input", ()=>{ state.meta.competition = comp.value; saveState(); refreshAll(); });
-  loc.addEventListener("input", ()=>{ state.meta.location = loc.value; saveState(); refreshAll(); });
-  date.addEventListener("input", ()=>{ state.meta.date = date.value; saveState(); refreshAll(); });
-  my.addEventListener("input", ()=>{ state.meta.myTeam = my.value; saveState(); refreshAll(); });
-  opp.addEventListener("input", ()=>{ state.meta.oppTeam = opp.value; saveState(); refreshAll(); });
-}
-
-function bindPhaseButtons(){
-  const btns = document.querySelectorAll(".phase-btn");
-  btns.forEach(b=>{
-    b.addEventListener("click", ()=>{
-      state.meta.phase = b.dataset.phase;
-      btns.forEach(x=>x.classList.remove("bg-blue-600","text-white"));
-      b.classList.add("bg-blue-600","text-white");
-      saveState(); refreshAll();
-    });
-  });
-  // set active
-  btns.forEach(b=>{
-    if(b.dataset.phase===state.meta.phase) b.classList.add("bg-blue-600","text-white");
-  });
-}
-
-/* =========================
-   ESCALAÇÃO
-   ========================= */
-function bindLineup(){
-  const selALE = document.getElementById("selALE");
-  const selPIVO = document.getElementById("selPIVO");
-  const selALD = document.getElementById("selALD");
-
-  function fillSelect(sel, current){
-    sel.innerHTML = "";
-    const opt0 = document.createElement("option");
-    opt0.value = "";
-    opt0.textContent = "Selecionar...";
-    sel.appendChild(opt0);
-
-    listMyPlayers().forEach(p=>{
-      const o = document.createElement("option");
-      o.value = p.key;
-      o.textContent = p.label;
-      sel.appendChild(o);
-    });
-    sel.value = current || "";
-  }
-
-  fillSelect(selALE, state.lineup.ALE);
-  fillSelect(selPIVO, state.lineup.PIVO);
-  fillSelect(selALD, state.lineup.ALD);
-
-  selALE.addEventListener("change", ()=>{ state.lineup.ALE = selALE.value || null; saveState(); refreshAll(); });
-  selPIVO.addEventListener("change", ()=>{ state.lineup.PIVO = selPIVO.value || null; saveState(); refreshAll(); });
-  selALD.addEventListener("change", ()=>{ state.lineup.ALD = selALD.value || null; saveState(); refreshAll(); });
-}
-
-function listMyPlayers(){
-  return state.players.my
-    .map((p,i)=>{
-      const num = (p.number||"").trim();
-      const name = (p.name||"").trim();
-      const label = (num && name) ? `${num} - ${name}` : (num ? `${num}` : (name? name : `Atleta ${i+1}`));
-      return { key: `my_${i}`, label, index:i, num, name };
-    });
-}
-
-function getPlayerLabel(key){
-  if(!key) return "—";
-  const [team, idx] = key.split("_");
-  const i = Number(idx);
-  if(team==="my"){
-    const p = state.players.my[i];
-    const num = (p.number||"").trim();
-    const name = (p.name||"").trim();
-    return (num && name) ? `${num}` : (num ? `${num}` : (name? name : "—"));
-  }
-  return "—";
-}
-
-function refreshFormation(){
-  document.querySelector("#chipALE .mono").textContent = getPlayerLabel(state.lineup.ALE);
-  document.querySelector("#chipPIVO .mono").textContent = getPlayerLabel(state.lineup.PIVO);
-  document.querySelector("#chipALD .mono").textContent = getPlayerLabel(state.lineup.ALD);
-
-  // banco = quem não está em quadra
-  const inCourt = new Set([state.lineup.ALE, state.lineup.PIVO, state.lineup.ALD].filter(Boolean));
-  const bench = listMyPlayers().filter(p=>!inCourt.has(p.key));
-  const benchList = document.getElementById("benchList");
-  benchList.textContent = bench.length ? bench.map(p=>p.label).join(" • ") : "Nenhum atleta no banco";
-}
-
-/* =========================
-   PLACAR
-   ========================= */
-function bindScore(){
-  document.getElementById("btnGoalMy").addEventListener("click", ()=>{
-    state.score.my++; saveState(); refreshAll();
-  });
-  document.getElementById("btnGoalOpp").addEventListener("click", ()=>{
-    state.score.opp++; saveState(); refreshAll();
-  });
-}
-
-/* =========================
-   TIMEOUTS
-   ========================= */
-function bindTimeouts(){
-  document.getElementById("btnMyTO").addEventListener("click", ()=>{
-    const ot = isOT(state.meta.phase);
-    if(ot) state.timeouts.my.ot++; else state.timeouts.my.reg++;
-    saveState(); refreshAll();
-  });
-  document.getElementById("btnOppTO").addEventListener("click", ()=>{
-    const ot = isOT(state.meta.phase);
-    if(ot) state.timeouts.opp.ot++; else state.timeouts.opp.reg++;
-    saveState(); refreshAll();
-  });
-}
-
-/* =========================
-   SUBS
-   ========================= */
-function bindSubs(){
-  const subMyOut = document.getElementById("subMyOut");
-  const subMyIn = document.getElementById("subMyIn");
-  const subOppOut = document.getElementById("subOppOut");
-  const subOppIn = document.getElementById("subOppIn");
-
-  function fillSubSelects(){
-    const myList = listMyPlayers();
-    [subMyOut, subMyIn].forEach(sel=>{
-      sel.innerHTML = "";
-      myList.forEach(p=>{
-        const o = document.createElement("option");
-        o.value = p.key;
-        o.textContent = p.label;
-        sel.appendChild(o);
+   </main><!-- Toast Notification -->
+   <div id="toast" class="fixed bottom-4 left-1/2 -translate-x-1/2 bg-slate-800 text-white px-4 py-2 rounded-lg shadow-lg hidden transition-all z-50"><span id="toast-message"></span>
+   </div>
+  </div>
+  <script>
+    // =====================================================
+    // SCOUT GOALBALL PRO - MAIN APPLICATION
+    // =====================================================
+    
+    // Application State
+    const AppState = {
+      config: {
+        competition: '',
+        location: '',
+        date: '',
+        myTeam: '',
+        opponentTeam: '',
+        myAthletes: [],
+        opponentAthletes: [],
+        showOpponent: false
+      },
+      lineup: {
+        left: null,
+        center: null,
+        right: null,
+        phase: '1T'
+      },
+      targetPlans: {},
+      currentTargets: {},
+      events: [],
+      matchId: null
+    };
+    
+    // Local storage for offline persistence
+    const STORAGE_KEY = 'scout_goalball_pro_data';
+    
+    // SDK Data
+    let sdkEvents = [];
+    
+    // Default config for Element SDK
+    const defaultConfig = {
+      app_title: '⚽ Scout Goalball Pro'
+    };
+    
+    // Initialize Element SDK
+    if (window.elementSdk) {
+      window.elementSdk.init({
+        defaultConfig,
+        onConfigChange: async (config) => {
+          const title = config.app_title || defaultConfig.app_title;
+          document.getElementById('app-title').textContent = title;
+        },
+        mapToCapabilities: (config) => ({
+          recolorables: [],
+          borderables: [],
+          fontEditable: undefined,
+          fontSizeable: undefined
+        }),
+        mapToEditPanelValues: (config) => new Map([
+          ['app_title', config.app_title || defaultConfig.app_title]
+        ])
       });
-    });
-
-    // adversário: usa número/nome se tiver
-    const oppList = state.players.opp.map((p,i)=>{
-      const num=(p.number||"").trim(), name=(p.name||"").trim();
-      const label=(num&&name)?`${num} - ${name}`:(num?num:(name?name:`Adversário ${i+1}`));
-      return { key:`opp_${i}`, label };
-    });
-
-    [subOppOut, subOppIn].forEach(sel=>{
-      sel.innerHTML = "";
-      oppList.forEach(p=>{
-        const o = document.createElement("option");
-        o.value = p.key;
-        o.textContent = p.label;
-        sel.appendChild(o);
+    }
+    
+    // Data Handler for Data SDK
+    const dataHandler = {
+      onDataChanged(data) {
+        sdkEvents = data.filter(d => d.type === 'event' || d.type === 'substitution' || d.type === 'target_change');
+        AppState.events = sdkEvents;
+        updateAllStats();
+        renderHistory();
+        renderRecentEvents();
+      }
+    };
+    
+    // Initialize Data SDK
+    async function initDataSdk() {
+      if (window.dataSdk) {
+        const result = await window.dataSdk.init(dataHandler);
+        if (!result.isOk) {
+          console.error('Failed to initialize Data SDK');
+        }
+      }
+    }
+    
+    // =====================================================
+    // LOCAL STORAGE FUNCTIONS
+    // =====================================================
+    
+    function saveToLocalStorage() {
+      try {
+        const data = {
+          config: AppState.config,
+          lineup: AppState.lineup,
+          targetPlans: AppState.targetPlans,
+          currentTargets: AppState.currentTargets,
+          matchId: AppState.matchId
+        };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      } catch (e) {
+        console.error('Failed to save to localStorage:', e);
+      }
+    }
+    
+    function loadFromLocalStorage() {
+      try {
+        const data = localStorage.getItem(STORAGE_KEY);
+        if (data) {
+          const parsed = JSON.parse(data);
+          AppState.config = parsed.config || AppState.config;
+          AppState.lineup = parsed.lineup || AppState.lineup;
+          AppState.targetPlans = parsed.targetPlans || {};
+          AppState.currentTargets = parsed.currentTargets || {};
+          AppState.matchId = parsed.matchId || Date.now().toString();
+        } else {
+          AppState.matchId = Date.now().toString();
+        }
+      } catch (e) {
+        console.error('Failed to load from localStorage:', e);
+        AppState.matchId = Date.now().toString();
+      }
+    }
+    
+    // =====================================================
+    // UI HELPER FUNCTIONS
+    // =====================================================
+    
+    function showToast(message, duration = 3000) {
+      const toast = document.getElementById('toast');
+      const toastMessage = document.getElementById('toast-message');
+      toastMessage.textContent = message;
+      toast.classList.remove('hidden');
+      setTimeout(() => {
+        toast.classList.add('hidden');
+      }, duration);
+    }
+    
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-content').forEach(tab => tab.classList.add('hidden'));
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('active');
+        btn.classList.add('text-slate-600', 'hover:bg-slate-100');
       });
-    });
-  }
-
-  fillSubSelects();
-
-  document.getElementById("btnSubMy").addEventListener("click", ()=>{
-    const out = subMyOut.value, inn = subMyIn.value;
-    // se o OUT estiver na quadra, substitui pelo IN na mesma posição
-    ["ALE","PIVO","ALD"].forEach(pos=>{
-      if(state.lineup[pos]===out) state.lineup[pos]=inn;
-    });
-    const ot = isOT(state.meta.phase);
-    if(ot) state.subs.my.ot++; else state.subs.my.reg++;
-    saveState(); refreshAll();
-    document.getElementById("subMyInfo").textContent = `Out ${getPlayerLabel(out)} → In ${getPlayerLabel(inn)} (aplicado)`;
-  });
-
-  document.getElementById("btnSubOpp").addEventListener("click", ()=>{
-    const ot = isOT(state.meta.phase);
-    if(ot) state.subs.opp.ot++; else state.subs.opp.reg++;
-    saveState(); refreshAll();
-    document.getElementById("subOppInfo").textContent = `Substituição adversário registrada.`;
-  });
-}
-
-/* =========================
-   TURNO (ATAQUE → DEFESA)
-   ========================= */
-function bindTurnFlow(){
-  document.getElementById("btnAtkMy").addEventListener("click", ()=>startTurn("MY"));
-  document.getElementById("btnAtkOpp").addEventListener("click", ()=>startTurn("OPP"));
-  document.getElementById("btnCancelTurn").addEventListener("click", resetTurnFlow);
-  document.getElementById("btnToDefense").addEventListener("click", ()=>gotoDefense());
-  document.getElementById("btnSkipDefense").addEventListener("click", ()=>finishTurn(true));
-  document.getElementById("btnFinishTurn").addEventListener("click", ()=>finishTurn(false));
-
-  // chips e segmented
-  document.querySelectorAll(".seg-btn, .chip").forEach(btn=>{
-    btn.addEventListener("click", ()=>{
-      const group = btn.dataset.group;
-      const value = btn.dataset.value;
-
-      if(group==="pen" || group==="defType" || group==="defExtra" || group==="defArea"){
-        // múltipla seleção
-        btn.setAttribute("aria-pressed", btn.getAttribute("aria-pressed")==="true" ? "false":"true");
+      
+      const targetTab = document.getElementById(`tab-${tabId}`);
+      const targetBtn = document.querySelector(`[data-tab="${tabId}"]`);
+      
+      if (targetTab) targetTab.classList.remove('hidden');
+      if (targetBtn) {
+        targetBtn.classList.add('active');
+        targetBtn.classList.remove('text-slate-600', 'hover:bg-slate-100');
+      }
+      
+      if (tabId === 'relatorio') {
+        updateReportStats('all');
+        renderHeatmap('all');
+      }
+      if (tabId === 'analise') {
+        renderAnalysis();
+      }
+    }
+    
+    // =====================================================
+    // CONFIG TAB FUNCTIONS
+    // =====================================================
+    
+    function renderAthleteInputs() {
+      const myTeamContainer = document.getElementById('my-team-athletes');
+      const opponentContainer = document.getElementById('opponent-athletes');
+      
+      // My team athletes
+      let myTeamHTML = '';
+      for (let i = 0; i < 6; i++) {
+        const athlete = AppState.config.myAthletes[i] || { name: '', number: '' };
+        myTeamHTML += `
+          <div class="flex gap-2 items-center">
+            <span class="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center text-xs font-medium text-blue-700">${i + 1}</span>
+            <input type="text" class="my-athlete-name flex-1 px-3 py-2 border border-slate-300 rounded-lg text-sm" placeholder="Nome do atleta" value="${athlete.name}" data-index="${i}">
+            <input type="text" class="my-athlete-number w-20 px-3 py-2 border border-slate-300 rounded-lg text-sm text-center" placeholder="Nº" value="${athlete.number}" data-index="${i}">
+          </div>
+        `;
+      }
+      myTeamContainer.innerHTML = myTeamHTML;
+      
+      // Opponent athletes
+      let opponentHTML = '';
+      for (let i = 0; i < 6; i++) {
+        const athlete = AppState.config.opponentAthletes[i] || { name: '', number: '' };
+        opponentHTML += `
+          <div class="flex gap-2 items-center">
+            <span class="w-6 h-6 bg-red-100 rounded-full flex items-center justify-center text-xs font-medium text-red-700">${i + 1}</span>
+            <input type="text" class="opp-athlete-name flex-1 px-3 py-2 border border-slate-300 rounded-lg text-sm" placeholder="Nome do atleta" value="${athlete.name}" data-index="${i}">
+            <input type="text" class="opp-athlete-number w-20 px-3 py-2 border border-slate-300 rounded-lg text-sm text-center" placeholder="Nº" value="${athlete.number}" data-index="${i}">
+          </div>
+        `;
+      }
+      opponentContainer.innerHTML = opponentHTML;
+    }
+    
+    function loadConfigToForm() {
+      document.getElementById('config-competition').value = AppState.config.competition || '';
+      document.getElementById('config-location').value = AppState.config.location || '';
+      document.getElementById('config-date').value = AppState.config.date || '';
+      document.getElementById('config-my-team').value = AppState.config.myTeam || '';
+      document.getElementById('config-opponent-team').value = AppState.config.opponentTeam || '';
+      document.getElementById('opponent-toggle').checked = AppState.config.showOpponent;
+      
+      if (AppState.config.showOpponent) {
+        document.getElementById('opponent-section').classList.remove('hidden');
+      }
+      
+      renderAthleteInputs();
+    }
+    
+    function saveConfig() {
+      AppState.config.competition = document.getElementById('config-competition').value;
+      AppState.config.location = document.getElementById('config-location').value;
+      AppState.config.date = document.getElementById('config-date').value;
+      AppState.config.myTeam = document.getElementById('config-my-team').value;
+      AppState.config.opponentTeam = document.getElementById('config-opponent-team').value;
+      
+      // Save my athletes
+      const myNames = document.querySelectorAll('.my-athlete-name');
+      const myNumbers = document.querySelectorAll('.my-athlete-number');
+      AppState.config.myAthletes = [];
+      myNames.forEach((input, i) => {
+        AppState.config.myAthletes.push({
+          name: input.value,
+          number: myNumbers[i].value
+        });
+      });
+      
+      // Save opponent athletes
+      const oppNames = document.querySelectorAll('.opp-athlete-name');
+      const oppNumbers = document.querySelectorAll('.opp-athlete-number');
+      AppState.config.opponentAthletes = [];
+      oppNames.forEach((input, i) => {
+        AppState.config.opponentAthletes.push({
+          name: oppNames[i].value,
+          number: oppNumbers[i].value
+        });
+      });
+      
+      saveToLocalStorage();
+      updateLineupSelectors();
+      renderTargetPlan();
+      showToast('✅ Configuração salva com sucesso!');
+    }
+    
+    // =====================================================
+    // ESCALAÇÃO TAB FUNCTIONS
+    // =====================================================
+    
+    function updateLineupSelectors() {
+      const athletes = AppState.config.myAthletes.filter(a => a.name || a.number);
+      
+      const selectors = ['select-left', 'select-center', 'select-right', 'sub-out', 'sub-in'];
+      selectors.forEach(id => {
+        const select = document.getElementById(id);
+        if (!select) return;
+        
+        const currentValue = select.value;
+        select.innerHTML = '<option value="">Selecionar</option>';
+        
+        athletes.forEach((athlete, idx) => {
+          const display = athlete.number ? `${athlete.number} - ${athlete.name}` : athlete.name;
+          select.innerHTML += `<option value="${idx}">${display}</option>`;
+        });
+        
+        select.value = currentValue;
+      });
+      
+      // Update attack modal selectors
+      updateAttackAthleteSelector('my');
+    }
+    
+    function updateLineupDisplay() {
+      const positions = ['left', 'center', 'right'];
+      positions.forEach(pos => {
+        const display = document.getElementById(`pos-${pos}`);
+        const idx = AppState.lineup[pos];
+        if (idx !== null && AppState.config.myAthletes[idx]) {
+          const athlete = AppState.config.myAthletes[idx];
+          display.textContent = athlete.number || '-';
+        } else {
+          display.textContent = '-';
+        }
+      });
+      
+      // Update bench
+      const benchContainer = document.getElementById('bench-players');
+      const onCourt = [AppState.lineup.left, AppState.lineup.center, AppState.lineup.right].filter(x => x !== null);
+      const benchPlayers = AppState.config.myAthletes.filter((a, idx) => (a.name || a.number) && !onCourt.includes(idx));
+      
+      if (benchPlayers.length === 0) {
+        benchContainer.innerHTML = '<span class="text-slate-400 text-sm">Nenhum reserva disponível</span>';
+      } else {
+        benchContainer.innerHTML = benchPlayers.map(a => `
+          <span class="px-3 py-1 bg-white rounded-full text-sm border">${a.number || '?'} - ${a.name || 'Sem nome'}</span>
+        `).join('');
+      }
+      
+      // Update sub-in selector to show only bench players
+      const subIn = document.getElementById('sub-in');
+      subIn.innerHTML = '<option value="">Selecionar atleta</option>';
+      AppState.config.myAthletes.forEach((athlete, idx) => {
+        if ((athlete.name || athlete.number) && !onCourt.includes(idx)) {
+          const display = athlete.number ? `${athlete.number} - ${athlete.name}` : athlete.name;
+          subIn.innerHTML += `<option value="${idx}">${display}</option>`;
+        }
+      });
+      
+      // Update sub-out to show only on court players
+      const subOut = document.getElementById('sub-out');
+      subOut.innerHTML = '<option value="">Selecionar atleta</option>';
+      onCourt.forEach(idx => {
+        const athlete = AppState.config.myAthletes[idx];
+        if (athlete) {
+          const display = athlete.number ? `${athlete.number} - ${athlete.name}` : athlete.name;
+          subOut.innerHTML += `<option value="${idx}">${display}</option>`;
+        }
+      });
+    }
+    
+    async function performSubstitution() {
+      const subOutIdx = document.getElementById('sub-out').value;
+      const subInIdx = document.getElementById('sub-in').value;
+      
+      if (!subOutIdx || !subInIdx) {
+        showToast('⚠️ Selecione os atletas para a substituição');
         return;
       }
-
-      // seleção única
-      document.querySelectorAll(`[data-group="${group}"]`).forEach(x=>x.setAttribute("aria-pressed","false"));
-      btn.setAttribute("aria-pressed","true");
-
-      if(group==="result"){
-        document.getElementById("penaltiesBox").classList.toggle("hidden", value!=="PENALIDADE");
+      
+      // Find position of player going out
+      let position = null;
+      if (AppState.lineup.left == subOutIdx) position = 'left';
+      else if (AppState.lineup.center == subOutIdx) position = 'center';
+      else if (AppState.lineup.right == subOutIdx) position = 'right';
+      
+      if (!position) {
+        showToast('⚠️ Atleta selecionado não está em quadra');
+        return;
       }
-    });
-  });
-}
-
-function startTurn(attacking){
-  currentTurnDraft = {
-    id: uid(),
-    phase: state.meta.phase,
-    attacking, // "MY" or "OPP"
-    attacker: null,
-    throwType: null,
-    height: null,
-    target: null,
-    result: null,
-    penalties: [],
-    defense: {
-      defTypes: [],
-      defExtra: [],
-      defArea: [],
-      pass: null,
-      move: "Nenhum",
-      outType: ""
-    },
-    createdAt: new Date().toISOString()
-  };
-
-  // build attacker buttons (usa escalação atual pra ficar rápido)
-  const buttons = document.getElementById("attackerButtons");
-  buttons.innerHTML = "";
-  const inCourt = [state.lineup.ALE, state.lineup.PIVO, state.lineup.ALD].filter(Boolean);
-  const list = inCourt.length ? inCourt : listMyPlayers().slice(0,3).map(p=>p.key);
-
-  list.forEach(key=>{
-    const b = document.createElement("button");
-    b.className = "btn-touch px-3 py-2 rounded-xl border font-semibold";
-    b.textContent = displayNameFromKey(key);
-    b.addEventListener("click", ()=>{
-      document.querySelectorAll("#attackerButtons button").forEach(x=>x.classList.remove("bg-blue-600","text-white"));
-      b.classList.add("bg-blue-600","text-white");
-      currentTurnDraft.attacker = key;
-    });
-    buttons.appendChild(b);
-  });
-
-  // show step2
-  document.getElementById("step1").classList.add("hidden");
-  document.getElementById("step2").classList.remove("hidden");
-  document.getElementById("step3").classList.add("hidden");
-
-  // reset selections visual
-  resetSelections();
-}
-
-function resetSelections(){
-  document.querySelectorAll("[data-group]").forEach(x=>{
-    if(x.classList.contains("seg-btn") && x.dataset.group==="move" && x.dataset.value==="Nenhum"){
-      x.setAttribute("aria-pressed","true");
-    } else {
-      x.setAttribute("aria-pressed","false");
+      
+      // Update lineup
+      AppState.lineup[position] = parseInt(subInIdx);
+      
+      // Record substitution event
+      if (window.dataSdk && sdkEvents.length < 999) {
+        const subEvent = {
+          type: 'substitution',
+          matchId: AppState.matchId,
+          timestamp: new Date().toISOString(),
+          phase: AppState.lineup.phase,
+          subOut: subOutIdx,
+          subIn: subInIdx,
+          position: position,
+          team: 'my',
+          athleteNumber: '',
+          athleteName: '',
+          ballType: '',
+          target: '',
+          result: '',
+          penaltyType: '',
+          defenseStructure: '',
+          ballBehavior: '',
+          plannedTargets: '',
+          newTargets: ''
+        };
+        await window.dataSdk.create(subEvent);
+      }
+      
+      saveToLocalStorage();
+      updateLineupDisplay();
+      showToast('✅ Substituição realizada!');
+      
+      document.getElementById('sub-out').value = '';
+      document.getElementById('sub-in').value = '';
     }
-  });
-  document.getElementById("penaltiesBox").classList.add("hidden");
-  document.getElementById("outType").value = "";
-}
-
-function gotoDefense(){
-  if(!currentTurnDraft) return;
-
-  // capture step2 selections
-  currentTurnDraft.throwType = getSingle("throwType");
-  currentTurnDraft.height = getSingle("height");
-  currentTurnDraft.target = getSingle("target");
-  currentTurnDraft.result = getSingle("result");
-  currentTurnDraft.penalties = getMulti("pen");
-
-  // show step3
-  document.getElementById("step3").classList.remove("hidden");
-  window.scrollTo({ top: document.getElementById("step3").getBoundingClientRect().top + window.scrollY - 120, behavior:"smooth" });
-}
-
-function finishTurn(skipDefense){
-  if(!currentTurnDraft) return;
-
-  // capture defense selections
-  if(!skipDefense){
-    currentTurnDraft.defense.defTypes = getMulti("defType");
-    currentTurnDraft.defense.defExtra = getMulti("defExtra");
-    currentTurnDraft.defense.defArea = getMulti("defArea");
-    currentTurnDraft.defense.pass = getSingle("pass");
-    currentTurnDraft.defense.move = getSingle("move") || "Nenhum";
-    currentTurnDraft.defense.outType = document.getElementById("outType").value || "";
-  }
-
-  // placar automático quando resultado GOL
-  if(currentTurnDraft.result==="GOL"){
-    if(currentTurnDraft.attacking==="MY") state.score.my++;
-    else state.score.opp++;
-  }
-
-  state.events.unshift(currentTurnDraft);
-  currentTurnDraft = null;
-  saveState();
-  refreshAll();
-  resetTurnFlow();
-  showTab("historico");
-}
-
-function resetTurnFlow(){
-  currentTurnDraft = null;
-  document.getElementById("step1").classList.remove("hidden");
-  document.getElementById("step2").classList.add("hidden");
-  document.getElementById("step3").classList.add("hidden");
-}
-
-function getSingle(group){
-  const el = document.querySelector(`[data-group="${group}"][aria-pressed="true"]`);
-  return el ? el.dataset.value : null;
-}
-function getMulti(group){
-  return Array.from(document.querySelectorAll(`[data-group="${group}"][aria-pressed="true"]`))
-    .map(x=>x.dataset.value);
-}
-
-function displayNameFromKey(key){
-  if(!key) return "—";
-  const [team, idx] = key.split("_");
-  const i = Number(idx);
-  if(team==="my"){
-    const p = state.players.my[i];
-    const n = (p.number||"").trim();
-    const nm = (p.name||"").trim();
-    return (n && nm) ? `${n} - ${nm}` : (n ? `${n}` : (nm?nm:`Atleta ${i+1}`));
-  }
-  if(team==="opp"){
-    const p = state.players.opp[i];
-    const n = (p.number||"").trim();
-    const nm = (p.name||"").trim();
-    return (n && nm) ? `${n} - ${nm}` : (n ? `${n}` : (nm?nm:`Adversário ${i+1}`));
-  }
-  return "—";
-}
-
-/* =========================
-   HISTÓRICO + EDITAR
-   ========================= */
-function renderHistory(){
-  const list = document.getElementById("historyList");
-  list.innerHTML = "";
-  document.getElementById("evtCount").textContent = state.events.length;
-
-  if(!state.events.length){
-    list.innerHTML = `<div class="text-sm muted">Nenhum evento registrado ainda.</div>`;
-    return;
-  }
-
-  state.events.forEach((ev, idx)=>{
-    const card = document.createElement("div");
-    card.className = "border rounded-2xl p-4";
-
-    const teamName = ev.attacking==="MY" ? (state.meta.myTeam||"Minha equipe") : (state.meta.oppTeam||"Adversário");
-    const title = `${teamName} - ${ev.result || "—"}`;
-
-    card.innerHTML = `
-      <div class="flex items-start justify-between gap-3">
+    
+    function renderTargetPlan() {
+      const container = document.getElementById('target-plan-container');
+      const athletes = AppState.config.myAthletes.filter(a => a.name || a.number);
+      
+      if (athletes.length === 0) {
+        container.innerHTML = '<p class="text-slate-500 text-sm text-center">Configure os atletas primeiro</p>';
+        return;
+      }
+      
+      const targets = ['1', '2', '2/3', '3', 'M', '4', '4/5', '5', '6'];
+      
+      container.innerHTML = athletes.map((athlete, idx) => {
+        const currentPlan = AppState.targetPlans[idx] || [];
+        return `
+          <div class="border rounded-lg p-3">
+            <div class="flex items-center gap-2 mb-2">
+              <span class="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold">${athlete.number || '?'}</span>
+              <span class="font-medium">${athlete.name || 'Sem nome'}</span>
+            </div>
+            <div class="flex flex-wrap gap-1">
+              ${targets.map(t => `
+                <button class="target-plan-btn px-3 py-1 text-sm border-2 rounded ${currentPlan.includes(t) ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-slate-300'}" data-athlete="${idx}" data-target="${t}">
+                  ${t}
+                </button>
+              `).join('')}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+    
+    function saveTargetPlan() {
+      // Initialize current targets with the plan
+      AppState.currentTargets = JSON.parse(JSON.stringify(AppState.targetPlans));
+      saveToLocalStorage();
+      showToast('✅ Plano de alvos salvo!');
+    }
+    
+    // =====================================================
+    // JOGO TAB FUNCTIONS
+    // =====================================================
+    
+    let attackState = {
+      team: 'my',
+      athlete: '',
+      ballType: '',
+      target: '',
+      result: '',
+      penaltyType: '',
+      defenseStructures: [],
+      ballBehavior: ''
+    };
+    
+    let targetChangeState = {
+      athlete: '',
+      newTargets: []
+    };
+    
+    function openAttackModal() {
+      document.getElementById('attack-modal').classList.remove('hidden');
+      resetAttackState();
+      updateAttackAthleteSelector(attackState.team);
+    }
+    
+    function closeAttackModal() {
+      document.getElementById('attack-modal').classList.add('hidden');
+    }
+    
+    function resetAttackState() {
+      attackState = {
+        team: 'my',
+        athlete: '',
+        ballType: '',
+        target: '',
+        result: '',
+        penaltyType: '',
+        defenseStructures: [],
+        ballBehavior: ''
+      };
+      
+      // Reset UI
+      document.querySelectorAll('.team-select-btn').forEach(btn => {
+        btn.classList.remove('border-blue-500', 'bg-blue-50', 'text-blue-700');
+        btn.classList.add('border-slate-300', 'text-slate-600');
+      });
+      document.querySelector('[data-team="my"]').classList.add('border-blue-500', 'bg-blue-50', 'text-blue-700');
+      
+      document.querySelectorAll('.ball-type-btn, .target-btn, .result-btn, .behavior-btn').forEach(btn => {
+        btn.classList.remove('border-blue-500', 'bg-blue-50', 'text-blue-700');
+        btn.classList.add('border-slate-300');
+      });
+      
+      document.querySelectorAll('.defense-structure').forEach(cb => cb.checked = false);
+      document.getElementById('penalty-section').classList.add('hidden');
+      document.getElementById('attack-athlete').value = '';
+      document.getElementById('penalty-type').value = '';
+    }
+    
+    function updateAttackAthleteSelector(team) {
+      const select = document.getElementById('attack-athlete');
+      select.innerHTML = '<option value="">Selecionar atleta</option>';
+      
+      const athletes = team === 'my' ? AppState.config.myAthletes : AppState.config.opponentAthletes;
+      athletes.forEach((athlete, idx) => {
+        if (athlete.name || athlete.number) {
+          const display = athlete.number ? `${athlete.number} - ${athlete.name}` : athlete.name;
+          select.innerHTML += `<option value="${idx}">${display}</option>`;
+        }
+      });
+    }
+    
+    async function saveAttack() {
+      if (!attackState.athlete || !attackState.ballType || !attackState.target || !attackState.result) {
+        showToast('⚠️ Preencha todos os campos obrigatórios');
+        return;
+      }
+      
+      if (attackState.result === 'penalidade' && !attackState.penaltyType) {
+        showToast('⚠️ Selecione o tipo de penalidade');
+        return;
+      }
+      
+      const athletes = attackState.team === 'my' ? AppState.config.myAthletes : AppState.config.opponentAthletes;
+      const athlete = athletes[attackState.athlete];
+      
+      const event = {
+        type: 'event',
+        matchId: AppState.matchId,
+        timestamp: new Date().toISOString(),
+        phase: AppState.lineup.phase,
+        team: attackState.team,
+        athleteNumber: athlete?.number || '',
+        athleteName: athlete?.name || '',
+        ballType: attackState.ballType,
+        target: attackState.target,
+        result: attackState.result,
+        penaltyType: attackState.penaltyType,
+        defenseStructure: attackState.defenseStructures.join(','),
+        ballBehavior: attackState.ballBehavior,
+        plannedTargets: JSON.stringify(AppState.currentTargets[attackState.athlete] || []),
+        subIn: '',
+        subOut: '',
+        position: '',
+        newTargets: ''
+      };
+      
+      if (window.dataSdk) {
+        if (sdkEvents.length >= 999) {
+          showToast('⚠️ Limite de 999 registros atingido!');
+          return;
+        }
+        const result = await window.dataSdk.create(event);
+        if (!result.isOk) {
+          showToast('❌ Erro ao salvar lance');
+          return;
+        }
+      }
+      
+      closeAttackModal();
+      showToast('✅ Lance registrado!');
+      updateScore();
+    }
+    
+    function openTargetChangeModal() {
+      document.getElementById('target-change-modal').classList.remove('hidden');
+      targetChangeState = { athlete: '', newTargets: [] };
+      
+      // Populate athlete selector
+      const select = document.getElementById('target-change-athlete');
+      select.innerHTML = '<option value="">Selecionar atleta</option>';
+      AppState.config.myAthletes.forEach((athlete, idx) => {
+        if (athlete.name || athlete.number) {
+          const display = athlete.number ? `${athlete.number} - ${athlete.name}` : athlete.name;
+          select.innerHTML += `<option value="${idx}">${display}</option>`;
+        }
+      });
+      
+      // Reset target buttons
+      document.querySelectorAll('.new-target-btn').forEach(btn => {
+        btn.classList.remove('border-orange-500', 'bg-orange-50', 'text-orange-700');
+        btn.classList.add('border-slate-300');
+      });
+    }
+    
+    function closeTargetChangeModal() {
+      document.getElementById('target-change-modal').classList.add('hidden');
+    }
+    
+    async function saveTargetChange() {
+      if (!targetChangeState.athlete || targetChangeState.newTargets.length === 0) {
+        showToast('⚠️ Selecione o atleta e os novos alvos');
+        return;
+      }
+      
+      // Update current targets
+      AppState.currentTargets[targetChangeState.athlete] = [...targetChangeState.newTargets];
+      
+      const athlete = AppState.config.myAthletes[targetChangeState.athlete];
+      
+      // Record target change event
+      if (window.dataSdk && sdkEvents.length < 999) {
+        const event = {
+          type: 'target_change',
+          matchId: AppState.matchId,
+          timestamp: new Date().toISOString(),
+          phase: AppState.lineup.phase,
+          team: 'my',
+          athleteNumber: athlete?.number || '',
+          athleteName: athlete?.name || '',
+          ballType: '',
+          target: '',
+          result: '',
+          penaltyType: '',
+          defenseStructure: '',
+          ballBehavior: '',
+          plannedTargets: '',
+          newTargets: targetChangeState.newTargets.join(','),
+          subIn: '',
+          subOut: '',
+          position: ''
+        };
+        await window.dataSdk.create(event);
+      }
+      
+      saveToLocalStorage();
+      closeTargetChangeModal();
+      showToast('✅ Alvos atualizados!');
+    }
+    
+    function updateScore() {
+      const events = sdkEvents.filter(e => e.type === 'event' && e.result === 'gol');
+      const myGoals = events.filter(e => e.team === 'my').length;
+      const oppGoals = events.filter(e => e.team === 'opponent').length;
+      document.getElementById('match-score').textContent = `${myGoals} - ${oppGoals}`;
+    }
+    
+    function renderRecentEvents() {
+      const container = document.getElementById('recent-events');
+      const events = sdkEvents.filter(e => e.type === 'event').slice(-5).reverse();
+      
+      if (events.length === 0) {
+        container.innerHTML = '<p class="text-slate-500 text-sm text-center py-4">Nenhum lance registrado</p>';
+        return;
+      }
+      
+      container.innerHTML = events.map(e => {
+        const teamClass = e.team === 'my' ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200';
+        const resultEmoji = e.result === 'gol' ? '⚽' : e.result === 'defendida' ? '🧤' : e.result === 'fora' ? '❌' : e.result === 'blockout' ? '🚫' : '⚠️';
+        return `
+          <div class="p-2 rounded-lg border ${teamClass} text-sm">
+            <div class="flex items-center justify-between">
+              <span>${resultEmoji} ${e.athleteNumber || '?'} - ${e.athleteName || 'N/A'}</span>
+              <span class="text-xs text-slate-500">${e.phase}</span>
+            </div>
+            <div class="text-xs text-slate-600 mt-1">
+              ${e.ballType} → Alvo ${e.target} = ${e.result}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+    
+    function updateAllStats() {
+      // Update live stats in Jogo tab
+      const myEvents = sdkEvents.filter(e => e.type === 'event' && e.team === 'my');
+      const oppEvents = sdkEvents.filter(e => e.type === 'event' && e.team === 'opponent');
+      
+      const myGoals = myEvents.filter(e => e.result === 'gol').length;
+      const oppGoals = oppEvents.filter(e => e.result === 'gol').length;
+      
+      document.getElementById('my-throws').textContent = myEvents.length;
+      document.getElementById('my-goals').textContent = myGoals;
+      document.getElementById('my-efficiency').textContent = myEvents.length > 0 ? Math.round((myGoals / myEvents.length) * 100) + '%' : '0%';
+      
+      document.getElementById('opp-throws').textContent = oppEvents.length;
+      document.getElementById('opp-goals').textContent = oppGoals;
+      document.getElementById('opp-efficiency').textContent = oppEvents.length > 0 ? Math.round((oppGoals / oppEvents.length) * 100) + '%' : '0%';
+      
+      updateScore();
+    }
+    
+    // =====================================================
+    // HISTÓRICO TAB FUNCTIONS
+    // =====================================================
+    
+    function renderHistory() {
+      const container = document.getElementById('history-list');
+      const filter = document.getElementById('history-filter').value;
+      
+      let events = sdkEvents.filter(e => e.type === 'event' || e.type === 'substitution' || e.type === 'target_change');
+      
+      if (filter !== 'all') {
+        events = events.filter(e => e.phase === filter);
+      }
+      
+      if (events.length === 0) {
+        container.innerHTML = '<p class="text-slate-500 text-sm text-center py-8">Nenhum lance registrado ainda</p>';
+        return;
+      }
+      
+      // Sort by timestamp descending
+      events.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+      
+      container.innerHTML = events.map(e => {
+        const time = new Date(e.timestamp).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+        
+        if (e.type === 'substitution') {
+          const outAthlete = AppState.config.myAthletes[e.subOut];
+          const inAthlete = AppState.config.myAthletes[e.subIn];
+          return `
+            <div class="p-3 bg-yellow-50 rounded-lg border border-yellow-200" data-id="${e.__backendId}">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <span class="text-lg">🔄</span>
+                  <div>
+                    <div class="text-sm font-medium">Substituição</div>
+                    <div class="text-xs text-slate-600">
+                      Saiu: ${outAthlete?.number || '?'} - ${outAthlete?.name || 'N/A'} → 
+                      Entrou: ${inAthlete?.number || '?'} - ${inAthlete?.name || 'N/A'}
+                    </div>
+                  </div>
+                </div>
+                <div class="flex items-center gap-2">
+                  <span class="text-xs bg-yellow-200 px-2 py-0.5 rounded">${e.phase}</span>
+                  <span class="text-xs text-slate-500">${time}</span>
+                  <button class="delete-event-btn text-red-500 hover:text-red-700 p-1" data-id="${e.__backendId}">🗑️</button>
+                </div>
+              </div>
+            </div>
+          `;
+        }
+        
+        if (e.type === 'target_change') {
+          return `
+            <div class="p-3 bg-orange-50 rounded-lg border border-orange-200" data-id="${e.__backendId}">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <span class="text-lg">🎯</span>
+                  <div>
+                    <div class="text-sm font-medium">Mudança de Alvo</div>
+                    <div class="text-xs text-slate-600">
+                      ${e.athleteNumber || '?'} - ${e.athleteName || 'N/A'} → Novos alvos: ${e.newTargets}
+                    </div>
+                  </div>
+                </div>
+                <div class="flex items-center gap-2">
+                  <span class="text-xs bg-orange-200 px-2 py-0.5 rounded">${e.phase}</span>
+                  <span class="text-xs text-slate-500">${time}</span>
+                  <button class="delete-event-btn text-red-500 hover:text-red-700 p-1" data-id="${e.__backendId}">🗑️</button>
+                </div>
+              </div>
+            </div>
+          `;
+        }
+        
+        const teamClass = e.team === 'my' ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200';
+        const resultEmoji = e.result === 'gol' ? '⚽' : e.result === 'defendida' ? '🧤' : e.result === 'fora' ? '❌' : e.result === 'blockout' ? '🚫' : '⚠️';
+        
+        return `
+          <div class="p-3 rounded-lg border ${teamClass}" data-id="${e.__backendId}">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <span class="text-lg">${resultEmoji}</span>
+                <div>
+                  <div class="text-sm font-medium">${e.athleteNumber || '?'} - ${e.athleteName || 'N/A'}</div>
+                  <div class="text-xs text-slate-600">
+                    ${e.ballType} → Alvo ${e.target} = ${e.result}
+                    ${e.penaltyType ? `(${e.penaltyType})` : ''}
+                  </div>
+                  ${e.defenseStructure ? `<div class="text-xs text-slate-500">Defesa: ${e.defenseStructure} | ${e.ballBehavior}</div>` : ''}
+                </div>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="text-xs ${e.team === 'my' ? 'bg-green-200' : 'bg-red-200'} px-2 py-0.5 rounded">${e.phase}</span>
+                <span class="text-xs text-slate-500">${time}</span>
+                <button class="edit-event-btn text-blue-500 hover:text-blue-700 p-1" data-id="${e.__backendId}">✏️</button>
+                <button class="delete-event-btn text-red-500 hover:text-red-700 p-1" data-id="${e.__backendId}">🗑️</button>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+    
+    async function deleteEvent(id) {
+      const event = sdkEvents.find(e => e.__backendId === id);
+      if (!event) return;
+      
+      if (window.dataSdk) {
+        const result = await window.dataSdk.delete(event);
+        if (!result.isOk) {
+          showToast('❌ Erro ao excluir lance');
+          return;
+        }
+      }
+      
+      showToast('✅ Lance excluído!');
+    }
+    
+    function openEditModal(id) {
+      const event = sdkEvents.find(e => e.__backendId === id);
+      if (!event || event.type !== 'event') return;
+      
+      const modal = document.getElementById('edit-event-modal');
+      const content = document.getElementById('edit-form-content');
+      
+      content.innerHTML = `
+        <input type="hidden" id="edit-event-id" value="${id}">
+        
         <div>
-          <div class="font-bold">${escapeHtml(title)}</div>
-          <div class="text-xs muted">${escapeHtml(phaseLabel(ev.phase))} • ${new Date(ev.createdAt).toLocaleTimeString([], {hour:"2-digit", minute:"2-digit"})}</div>
-          <div class="text-sm mt-2">
-            <span class="muted">Atacante:</span> ${escapeHtml(displayNameFromKey(ev.attacker))}
-            • <span class="muted">Tipo:</span> ${escapeHtml(ev.throwType||"—")}
-            • <span class="muted">Altura:</span> ${escapeHtml(ev.height||"—")}
-            • <span class="muted">Alvo:</span> ${escapeHtml(ev.target||"—")}
-          </div>
-          <div class="text-sm mt-1">
-            <span class="muted">Defesa:</span> ${escapeHtml((ev.defense.defTypes||[]).join(", ")||"—")}
-            ${ev.defense.defExtra?.length ? ` • <span class="muted">Extra:</span> ${escapeHtml(ev.defense.defExtra.join(", "))}` : ``}
-          </div>
-          ${ev.penalties?.length ? `<div class="text-sm mt-1 text-red-700"><span class="muted">Penalidades:</span> ${escapeHtml(ev.penalties.join(", "))}</div>` : ``}
+          <label class="block text-sm font-medium text-slate-600 mb-2">Tipo de Bola</label>
+          <select id="edit-ball-type" class="w-full px-3 py-2 border border-slate-300 rounded-lg">
+            <option value="lisa" ${event.ballType === 'lisa' ? 'selected' : ''}>Lisa</option>
+            <option value="quicada" ${event.ballType === 'quicada' ? 'selected' : ''}>Quicada</option>
+            <option value="curva" ${event.ballType === 'curva' ? 'selected' : ''}>Curva</option>
+            <option value="spin" ${event.ballType === 'spin' ? 'selected' : ''}>Spin</option>
+            <option value="lenta" ${event.ballType === 'lenta' ? 'selected' : ''}>Lenta</option>
+            <option value="rapida" ${event.ballType === 'rapida' ? 'selected' : ''}>Rápida</option>
+          </select>
         </div>
-        <div class="flex flex-col gap-2">
-          <button class="btn-touch px-3 py-2 rounded-xl border text-sm font-semibold" data-action="edit" data-id="${ev.id}">Editar</button>
-          <button class="btn-touch px-3 py-2 rounded-xl border text-sm font-semibold text-red-600" data-action="del" data-id="${ev.id}">Excluir</button>
+        
+        <div>
+          <label class="block text-sm font-medium text-slate-600 mb-2">Alvo</label>
+          <select id="edit-target" class="w-full px-3 py-2 border border-slate-300 rounded-lg">
+            ${['1', '2', '2/3', '3', 'M', '4', '4/5', '5', '6'].map(t => 
+              `<option value="${t}" ${event.target === t ? 'selected' : ''}>${t}</option>`
+            ).join('')}
+          </select>
         </div>
-      </div>
-    `;
-
-    list.appendChild(card);
-  });
-
-  list.querySelectorAll("button[data-action]").forEach(btn=>{
-    btn.addEventListener("click", ()=>{
-      const id = btn.dataset.id;
-      const action = btn.dataset.action;
-      if(action==="del") deleteEvent(id);
-      if(action==="edit") editEvent(id);
-    });
-  });
-}
-
-function deleteEvent(id){
-  const i = state.events.findIndex(e=>e.id===id);
-  if(i>=0){
-    state.events.splice(i,1);
-    saveState(); refreshAll(); renderHistory();
-  }
-}
-
-function editEvent(id){
-  const ev = state.events.find(e=>e.id===id);
-  if(!ev) return;
-
-  // edição rápida: reabre o fluxo já preenchido (modo simples)
-  currentTurnDraft = JSON.parse(JSON.stringify(ev));
-
-  // remove do histórico (vai ser regravado ao finalizar)
-  state.events = state.events.filter(e=>e.id!==id);
-
-  saveState();
-  showTab("jogo");
-
-  // abre step2 e marca atacante
-  document.getElementById("step1").classList.add("hidden");
-  document.getElementById("step2").classList.remove("hidden");
-  document.getElementById("step3").classList.add("hidden");
-
-  // rebuild attacker buttons
-  const buttons = document.getElementById("attackerButtons");
-  buttons.innerHTML = "";
-  const inCourt = [state.lineup.ALE, state.lineup.PIVO, state.lineup.ALD].filter(Boolean);
-  const list = inCourt.length ? inCourt : listMyPlayers().slice(0,3).map(p=>p.key);
-
-  list.forEach(key=>{
-    const b = document.createElement("button");
-    b.className = "btn-touch px-3 py-2 rounded-xl border font-semibold";
-    b.textContent = displayNameFromKey(key);
-    if(currentTurnDraft.attacker===key) b.classList.add("bg-blue-600","text-white");
-    b.addEventListener("click", ()=>{
-      document.querySelectorAll("#attackerButtons button").forEach(x=>x.classList.remove("bg-blue-600","text-white"));
-      b.classList.add("bg-blue-600","text-white");
-      currentTurnDraft.attacker = key;
-    });
-    buttons.appendChild(b);
-  });
-
-  resetSelections();
-
-  // set selections
-  setSingle("throwType", currentTurnDraft.throwType);
-  setSingle("height", currentTurnDraft.height);
-  setSingle("target", currentTurnDraft.target);
-  setSingle("result", currentTurnDraft.result);
-  if(currentTurnDraft.result==="PENALIDADE") document.getElementById("penaltiesBox").classList.remove("hidden");
-  setMulti("pen", currentTurnDraft.penalties||[]);
-
-  // já abre defesa também
-  document.getElementById("step3").classList.remove("hidden");
-  setMulti("defType", currentTurnDraft.defense.defTypes||[]);
-  setMulti("defExtra", currentTurnDraft.defense.defExtra||[]);
-  setMulti("defArea", currentTurnDraft.defense.defArea||[]);
-  setSingle("pass", currentTurnDraft.defense.pass);
-  setSingle("move", currentTurnDraft.defense.move || "Nenhum");
-  document.getElementById("outType").value = currentTurnDraft.defense.outType || "";
-}
-
-function setSingle(group, value){
-  if(!value) return;
-  document.querySelectorAll(`[data-group="${group}"]`).forEach(x=>x.setAttribute("aria-pressed","false"));
-  const el = document.querySelector(`[data-group="${group}"][data-value="${cssEscape(value)}"]`);
-  if(el) el.setAttribute("aria-pressed","true");
-}
-function setMulti(group, values){
-  document.querySelectorAll(`[data-group="${group}"]`).forEach(x=>{
-    x.setAttribute("aria-pressed", values.includes(x.dataset.value) ? "true":"false");
-  });
-}
-function escapeHtml(s){ return String(s??"").replace(/[&<>"']/g, m=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;" }[m])); }
-function cssEscape(s){ return String(s).replace(/"/g,'\\"'); }
-
-/* =========================
-   RELATÓRIO
-   ========================= */
-document.getElementById("btnRefreshReport").addEventListener("click", refreshReport);
-document.getElementById("btnExportCSV").addEventListener("click", exportCSV);
-
-function refreshReport(){
-  const myName = state.meta.myTeam || "Minha equipe";
-  const oppName = state.meta.oppTeam || "Adversário";
-
-  document.getElementById("repMyName").textContent = myName;
-  document.getElementById("repOppName").textContent = oppName;
-  document.getElementById("ctlMyName").textContent = myName;
-  document.getElementById("ctlOppName").textContent = oppName;
-
-  document.getElementById("finalScore").textContent = `${myName} ${state.score.my} × ${state.score.opp} ${oppName}`;
-
-  const metaParts = [];
-  if(state.meta.competition) metaParts.push(state.meta.competition);
-  if(state.meta.location) metaParts.push(state.meta.location);
-  if(state.meta.date) metaParts.push(state.meta.date);
-  document.getElementById("matchMeta").textContent = metaParts.length ? metaParts.join(" • ") : "—";
-
-  // agregações
-  const myEvents = state.events.filter(e=>e.attacking==="MY");
-  const oppEvents = state.events.filter(e=>e.attacking==="OPP");
-
-  setTeamStats("My", myEvents);
-  setTeamStats("Opp", oppEvents);
-
-  // controle
-  document.getElementById("ctlMyTO").textContent = state.timeouts.my.reg;
-  document.getElementById("ctlMyTOOT2").textContent = state.timeouts.my.ot;
-  document.getElementById("ctlOppTO").textContent = state.timeouts.opp.reg;
-  document.getElementById("ctlOppTOOT2").textContent = state.timeouts.opp.ot;
-
-  document.getElementById("ctlMySub").textContent = state.subs.my.reg;
-  document.getElementById("ctlMySubOT").textContent = state.subs.my.ot;
-  document.getElementById("ctlOppSub").textContent = state.subs.opp.reg;
-  document.getElementById("ctlOppSubOT").textContent = state.subs.opp.ot;
-
-  document.getElementById("reportStamp").textContent = `Relatório gerado em ${nowStamp()}`;
-}
-
-function setTeamStats(prefix, events){
-  const turns = events.length;
-  const goals = events.filter(e=>e.result==="GOL").length;
-  const defs = events.filter(e=>e.result==="DEFENDIDA").length;
-  const pens = events.filter(e=>e.result==="PENALIDADE").length;
-
-  document.getElementById(`rep${prefix}Turns`).textContent = turns;
-  document.getElementById(`rep${prefix}Goals`).textContent = goals;
-  document.getElementById(`rep${prefix}Defs`).textContent = defs;
-  document.getElementById(`rep${prefix}Pens`).textContent = pens;
-
-  // top targets
-  const tgtCount = {};
-  events.forEach(e=>{
-    if(e.target) tgtCount[e.target] = (tgtCount[e.target]||0) + 1;
-  });
-  const topTargets = Object.entries(tgtCount).sort((a,b)=>b[1]-a[1]).slice(0,3);
-  document.getElementById(`rep${prefix}TopTargets`).textContent =
-    topTargets.length ? topTargets.map(([k,v])=>`Alvo ${k}: ${v}x`).join(" • ") : "—";
-
-  // goals by attacker
-  const gBy = {};
-  events.filter(e=>e.result==="GOL").forEach(e=>{
-    const name = displayNameFromKey(e.attacker);
-    gBy[name] = (gBy[name]||0) + 1;
-  });
-  const topG = Object.entries(gBy).sort((a,b)=>b[1]-a[1]).slice(0,5);
-  document.getElementById(`rep${prefix}GoalsBy`).textContent =
-    topG.length ? topG.map(([k,v])=>`${k}: ${v} gol(s)`).join(" • ") : "—";
-}
-
-function exportCSV(){
-  const headers = [
-    "id","fase","atacante_time","atacante_jogador","tipo_arremesso","altura","alvo","resultado","penalidades",
-    "def_tipos","def_extra","def_area","passe","movimento","saida_bola","createdAt"
-  ];
-
-  const rows = state.events.map(e=>[
-    e.id,
-    e.phase,
-    e.attacking==="MY" ? (state.meta.myTeam||"Minha equipe") : (state.meta.oppTeam||"Adversário"),
-    displayNameFromKey(e.attacker),
-    e.throwType||"",
-    e.height||"",
-    e.target||"",
-    e.result||"",
-    (e.penalties||[]).join("; "),
-    (e.defense.defTypes||[]).join("; "),
-    (e.defense.defExtra||[]).join("; "),
-    (e.defense.defArea||[]).join("; "),
-    e.defense.pass||"",
-    e.defense.move||"",
-    e.defense.outType||"",
-    e.createdAt
-  ]);
-
-  const csv = [headers.join(","), ...rows.map(r=>r.map(cell=>{
-    const s = String(cell??"");
-    return `"${s.replace(/"/g,'""')}"`;
-  }).join(","))].join("\n");
-
-  const blob = new Blob([csv], {type:"text/csv;charset=utf-8"});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `scout_goalball_${(state.meta.myTeam||"minha").replace(/\s+/g,"_")}_vs_${(state.meta.oppTeam||"adv").replace(/\s+/g,"_")}.csv`;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  URL.revokeObjectURL(url);
-}
-
-/* =========================
-   ANÁLISE + MAPA DE CALOR
-   ========================= */
-document.getElementById("heatFilter").addEventListener("change", refreshAnalysis);
-
-function refreshAnalysis(){
-  const events = state.events;
-  const defExtraAll = events.flatMap(e=>e.defense?.defExtra||[]);
-
-  const ok = defExtraAll.filter(x=>x==="Bloco correto").length;
-  const bad = defExtraAll.filter(x=>x==="Bloco incorreto").length;
-  const cov = defExtraAll.filter(x=>x==="Cobertura").length;
-
-  const dom = defExtraAll.filter(x=>x==="Dominada").length;
-  const bv = defExtraAll.filter(x=>x==="Bateu e voltou").length;
-  const bs = defExtraAll.filter(x=>x==="Bateu e subiu").length;
-  const reb = defExtraAll.filter(x=>x==="Rebote perigoso").length;
-  const esc = defExtraAll.filter(x=>x==="Escapou").length;
-
-  const rate = (ok+bad)>0 ? Math.round((ok/(ok+bad))*100) : 0;
-
-  document.getElementById("kpiBlockOk").textContent = ok;
-  document.getElementById("kpiBlockBad").textContent = bad;
-  document.getElementById("kpiCover").textContent = cov;
-  document.getElementById("kpiBlockRate").textContent = `${rate}%`;
-
-  document.getElementById("kpiDom").textContent = dom;
-  document.getElementById("kpiBV").textContent = bv;
-  document.getElementById("kpiBS").textContent = bs;
-  document.getElementById("kpiReb").textContent = reb;
-  document.getElementById("kpiEsc").textContent = esc;
-
-  // gols após bloco incorreto (heurística: evento com defExtra "Bloco incorreto" e resultado GOL do ataque)
-  const goalsAfterBad = events.filter(e=>e.defense?.defExtra?.includes("Bloco incorreto") && e.result==="GOL").length;
-  document.getElementById("kpiGoalsAfterBadBlock").textContent = goalsAfterBad;
-
-  refreshHeatmap();
-}
-
-function buildTargetZones(){
-  const g = document.getElementById("targetZones");
-  g.innerHTML = "";
-
-  // zona alvo no lado direito (área de defesa) seguindo o padrão: 1,2,2/3,3,M,4,4/5,5,6
-  const labels = ["1","2","2/3","3","M","4","4/5","5","6"];
-
-  const x = 640; // dentro da faixa direita
-  const w = 65;
-  const top = 20;
-  const h = 280;
-  const step = h / labels.length;
-
-  labels.forEach((lab, i)=>{
-    const y = top + i*step;
-    const rect = document.createElementNS("http://www.w3.org/2000/svg","rect");
-    rect.setAttribute("x", x);
-    rect.setAttribute("y", y);
-    rect.setAttribute("width", w);
-    rect.setAttribute("height", step);
-    rect.setAttribute("fill", i%2===0 ? "rgba(37,99,235,0.08)" : "rgba(37,99,235,0.04)");
-    rect.setAttribute("stroke", "rgba(15,23,42,0.15)");
-    g.appendChild(rect);
-
-    const t = document.createElementNS("http://www.w3.org/2000/svg","text");
-    t.setAttribute("x", x + w/2);
-    t.setAttribute("y", y + step/2 + 5);
-    t.setAttribute("text-anchor","middle");
-    t.setAttribute("font-family","Arial");
-    t.setAttribute("font-size","14");
-    t.setAttribute("fill","#0f172a");
-    t.setAttribute("opacity","0.55");
-    t.textContent = lab;
-    g.appendChild(t);
-  });
-}
-
-function refreshHeatmap(){
-  const filter = document.getElementById("heatFilter").value;
-  let events = state.events.filter(e=>!!e.target);
-
-  if(filter==="MY") events = events.filter(e=>e.attacking==="MY");
-  if(filter==="OPP") events = events.filter(e=>e.attacking==="OPP");
-
-  const g = document.getElementById("heatPoints");
-  g.innerHTML = "";
-
-  events.forEach(e=>{
-    const p = targetToPoint(e.target);
-    const c = resultColor(e.result);
-
-    const circle = document.createElementNS("http://www.w3.org/2000/svg","circle");
-    circle.setAttribute("cx", p.x);
-    circle.setAttribute("cy", p.y);
-    circle.setAttribute("r", 8);
-    circle.setAttribute("fill", c);
-    circle.setAttribute("fill-opacity", "0.75");
-    circle.setAttribute("stroke", "rgba(15,23,42,0.25)");
-    g.appendChild(circle);
-  });
-}
-
-function resultColor(result){
-  if(result==="GOL") return "#ef4444"; // vermelho
-  if(result==="OUT") return "#eab308"; // amarelo
-  if(result==="BLOCK OUT") return "#eab308";
-  if(result==="BALL OVER") return "#eab308";
-  if(result==="PENALIDADE") return "#ef4444";
-  if(result==="DEFENDIDA") return "#3b82f6"; // azul
-  return "#22c55e"; // fallback
-}
-
-function targetToPoint(target){
-  // usa os retângulos gerados: lado direito, y por índice
-  const labels = ["1","2","2/3","3","M","4","4/5","5","6"];
-  const i = Math.max(0, labels.indexOf(target));
-  const x = 672; // centro do bloco de alvos
-  const top = 20;
-  const h = 280;
-  const step = h / labels.length;
-  const y = top + i*step + step/2;
-  return { x, y };
-}
-
-/* =========================
-   REFRESH GERAL
-   ========================= */
-function refreshAll(){
-  // labels
-  document.getElementById("myTeamLabel").textContent = state.meta.myTeam || "Minha Equipe";
-  document.getElementById("oppTeamLabel").textContent = state.meta.oppTeam || "Adversário";
-  document.getElementById("phaseLabel").textContent = phaseLabel(state.meta.phase);
-
-  // score
-  document.getElementById("scoreMy").textContent = state.score.my;
-  document.getElementById("scoreOpp").textContent = state.score.opp;
-
-  // timeouts titles
-  document.getElementById("myTimeoutTitle").textContent = state.meta.myTeam || "Minha equipe";
-  document.getElementById("oppTimeoutTitle").textContent = state.meta.oppTeam || "Adversário";
-  document.getElementById("myTOReg").textContent = state.timeouts.my.reg;
-  document.getElementById("myTOOT").textContent = state.timeouts.my.ot;
-  document.getElementById("oppTOReg").textContent = state.timeouts.opp.reg;
-  document.getElementById("oppTOOT").textContent = state.timeouts.opp.ot;
-
-  refreshFormation();
-  renderHistory();
-  refreshReport();
-  refreshAnalysis();
-}
-
-refreshAll();
-
-/* =========================
-   FIM
-   ========================= */
-</script>
-</body>
-
+        
+        <div>
+          <label class="block text-sm font-medium text-slate-600 mb-2">Resultado</label>
+          <select id="edit-result" class="w-full px-3 py-2 border border-slate-300 rounded-lg">
+            <option value="gol" ${event.result === 'gol' ? 'selected' : ''}>Gol</option>
+            <option value="defendida" ${event.result === 'defendida' ? 'selected' : ''}>Defendida</option>
+            <option value="blockout" ${event.result === 'blockout' ? 'selected' : ''}>Blockout</option>
+            <option value="fora" ${event.result === 'fora' ? 'selected' : ''}>Fora</option>
+            <option value="penalidade" ${event.result === 'penalidade' ? 'selected' : ''}>Penalidade</option>
+          </select>
+        </div>
+        
+        <div>
+          <label class="block text-sm font-medium text-slate-600 mb-2">Comportamento da Bola</label>
+          <select id="edit-ball-behavior" class="w-full px-3 py-2 border border-slate-300 rounded-lg">
+            <option value="">Selecionar</option>
+            <option value="dominada" ${event.ballBehavior === 'dominada' ? 'selected' : ''}>Dominada</option>
+            <option value="voltou" ${event.ballBehavior === 'voltou' ? 'selected' : ''}>Bateu e Voltou</option>
+            <option value="subiu" ${event.ballBehavior === 'subiu' ? 'selected' : ''}>Bateu e Subiu</option>
+            <option value="rebote" ${event.ballBehavior === 'rebote' ? 'selected' : ''}>Rebote Perigoso</option>
+            <option value="escapou" ${event.ballBehavior === 'escapou' ? 'selected' : ''}>Escapou</option>
+          </select>
+        </div>
+        
+        <button id="save-edit" class="w-full btn-primary text-white py-3 rounded-xl font-semibold">
+          💾 Salvar Alterações
+        </button>
+      `;
+      
+      modal.classList.remove('hidden');
+    }
+    
+    async function saveEventEdit() {
+      const id = document.getElementById('edit-event-id').value;
+      const event = sdkEvents.find(e => e.__backendId === id);
+      if (!event) return;
+      
+      const updatedEvent = {
+        ...event,
+        ballType: document.getElementById('edit-ball-type').value,
+        target: document.getElementById('edit-target').value,
+        result: document.getElementById('edit-result').value,
+        ballBehavior: document.getElementById('edit-ball-behavior').value
+      };
+      
+      if (window.dataSdk) {
+        const result = await window.dataSdk.update(updatedEvent);
+        if (!result.isOk) {
+          showToast('❌ Erro ao atualizar lance');
+          return;
+        }
+      }
+      
+      document.getElementById('edit-event-modal').classList.add('hidden');
+      showToast('✅ Lance atualizado!');
+    }
+    
+    // =====================================================
+    // RELATÓRIO TAB FUNCTIONS
+    // =====================================================
+    
+    function updateReportStats(period) {
+      let events = sdkEvents.filter(e => e.type === 'event');
+      
+      if (period !== 'all') {
+        events = events.filter(e => e.phase === period);
+      }
+      
+      const myEvents = events.filter(e => e.team === 'my');
+      
+      // Attack stats by athlete
+      const athleteStats = {};
+      AppState.config.myAthletes.forEach((athlete, idx) => {
+        if (!athlete.name && !athlete.number) return;
+        
+        const key = athlete.number || idx.toString();
+        const athleteEvents = myEvents.filter(e => e.athleteNumber === athlete.number);
+        
+        const goals = athleteEvents.filter(e => e.result === 'gol').length;
+        const defended = athleteEvents.filter(e => e.result === 'defendida').length;
+        const penalties = athleteEvents.filter(e => e.result === 'penalidade').length;
+        
+        // Calculate plan adherence
+        let plannedHits = 0;
+        athleteEvents.forEach(e => {
+          try {
+            const planned = JSON.parse(e.plannedTargets || '[]');
+            if (planned.includes(e.target)) plannedHits++;
+          } catch {}
+        });
+        
+        athleteStats[key] = {
+          name: athlete.name,
+          number: athlete.number,
+          throws: athleteEvents.length,
+          goals,
+          defended,
+          penalties,
+          efficiency: athleteEvents.length > 0 ? Math.round((goals / athleteEvents.length) * 100) : 0,
+          planAdherence: athleteEvents.length > 0 ? Math.round((plannedHits / athleteEvents.length) * 100) : 0
+        };
+      });
+      
+      // Render attack stats table
+      const tbody = document.getElementById('attack-stats-body');
+      const statsArray = Object.values(athleteStats).filter(s => s.throws > 0);
+      
+      if (statsArray.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-slate-500">Sem dados</td></tr>';
+      } else {
+        tbody.innerHTML = statsArray.map(s => `
+          <tr class="border-b border-slate-100">
+            <td class="px-3 py-2">${s.number || '?'} - ${s.name || 'N/A'}</td>
+            <td class="px-3 py-2 text-center">${s.throws}</td>
+            <td class="px-3 py-2 text-center font-bold text-green-600">${s.goals}</td>
+            <td class="px-3 py-2 text-center">${s.defended}</td>
+            <td class="px-3 py-2 text-center text-red-600">${s.penalties}</td>
+            <td class="px-3 py-2 text-center">${s.efficiency}%</td>
+            <td class="px-3 py-2 text-center">${s.planAdherence}%</td>
+          </tr>
+        `).join('');
+      }
+      
+      // Highlights
+      if (statsArray.length > 0) {
+        const mostEfficient = statsArray.reduce((a, b) => a.efficiency > b.efficiency ? a : b);
+        document.getElementById('most-efficient').textContent = `${mostEfficient.number || '?'} (${mostEfficient.efficiency}%)`;
+      }
+      
+      // Zone stats
+      const zoneStats = {};
+      myEvents.forEach(e => {
+        if (!zoneStats[e.target]) zoneStats[e.target] = { count: 0, goals: 0 };
+        zoneStats[e.target].count++;
+        if (e.result === 'gol') zoneStats[e.target].goals++;
+      });
+      
+      const zones = Object.entries(zoneStats);
+      if (zones.length > 0) {
+        const mostUsed = zones.reduce((a, b) => a[1].count > b[1].count ? a : b);
+        document.getElementById('most-used-zone').textContent = mostUsed[0];
+        
+        const mostEfficientZone = zones.reduce((a, b) => {
+          const aEff = a[1].count > 0 ? a[1].goals / a[1].count : 0;
+          const bEff = b[1].count > 0 ? b[1].goals / b[1].count : 0;
+          return aEff > bEff ? a : b;
+        });
+        const zoneEff = mostEfficientZone[1].count > 0 ? Math.round((mostEfficientZone[1].goals / mostEfficientZone[1].count) * 100) : 0;
+        document.getElementById('most-efficient-zone').textContent = `${mostEfficientZone[0]} (${zoneEff}%)`;
+      }
+      
+      // Defense stats
+      const oppEvents = events.filter(e => e.team === 'opponent');
+      
+      const defenseStructures = {
+        'bloco-correto': 0,
+        'bloco-incorreto': 0,
+        'cobertura': 0,
+        'individual': 0
+      };
+      
+      const ballBehaviors = {
+        'dominada': 0,
+        'voltou': 0,
+        'subiu': 0,
+        'rebote': 0,
+        'escapou': 0
+      };
+      
+      let goalsAfterBadBlock = 0;
+      
+      oppEvents.forEach(e => {
+        const structures = (e.defenseStructure || '').split(',');
+        structures.forEach(s => {
+          if (defenseStructures.hasOwnProperty(s)) {
+            defenseStructures[s]++;
+          }
+        });
+        
+        if (ballBehaviors.hasOwnProperty(e.ballBehavior)) {
+          ballBehaviors[e.ballBehavior]++;
+        }
+        
+        if (structures.includes('bloco-incorreto') && e.result === 'gol') {
+          goalsAfterBadBlock++;
+        }
+      });
+      
+      document.getElementById('correct-blocks').textContent = defenseStructures['bloco-correto'];
+      document.getElementById('incorrect-blocks').textContent = defenseStructures['bloco-incorreto'];
+      document.getElementById('coverage-count').textContent = defenseStructures['cobertura'];
+      
+      const totalBlocks = defenseStructures['bloco-correto'] + defenseStructures['bloco-incorreto'];
+      const blockSuccess = totalBlocks > 0 ? Math.round((defenseStructures['bloco-correto'] / totalBlocks) * 100) : 0;
+      document.getElementById('block-success').textContent = blockSuccess + '%';
+      
+      document.getElementById('ball-dominated').textContent = ballBehaviors['dominada'];
+      document.getElementById('ball-returned').textContent = ballBehaviors['voltou'];
+      document.getElementById('ball-up').textContent = ballBehaviors['subiu'];
+      document.getElementById('dangerous-rebound').textContent = ballBehaviors['rebote'];
+      document.getElementById('ball-escaped').textContent = ballBehaviors['escapou'];
+      
+      document.getElementById('goals-after-bad-block').textContent = goalsAfterBadBlock;
+    }
+    
+    function renderHeatmap(filter) {
+      const pointsContainer = document.getElementById('throw-points');
+      pointsContainer.innerHTML = '';
+      
+      let events = sdkEvents.filter(e => e.type === 'event' && e.team === 'my');
+      
+      if (filter === 'goals') {
+        events = events.filter(e => e.result === 'gol');
+      } else if (filter === 'planned') {
+        events = events.filter(e => {
+          try {
+            const planned = JSON.parse(e.plannedTargets || '[]');
+            return planned.includes(e.target);
+          } catch {
+            return false;
+          }
+        });
+      }
+      
+      // Target Y positions on goal line (right side at x=195)
+      // Court height 9m = 90 units, targets distributed from top (1) to bottom (6)
+      const targetYPositions = {
+        '1': 10,       // far right corner
+        '2': 23,       // right area
+        '2/3': 32,     // right-center corridor
+        '3': 42,       // right of center
+        'M': 50,       // exact center
+        '4': 58,       // left of center
+        '4/5': 68,     // left-center corridor
+        '5': 77,       // left area
+        '6': 90        // far left corner
+      };
+      
+      // Length zones (faixas) - court divided into 6 zones of 3m each (30 units each in SVG)
+      // F1: 5-37, F2: 37-69, F3: 69-100, F4: 100-131, F5: 131-163, F6: 163-195
+      const lengthZones = {
+        '1': { min: 5, max: 37 },
+        '2': { min: 37, max: 69 },
+        '3': { min: 69, max: 100 },
+        '4': { min: 100, max: 131 },
+        '5': { min: 131, max: 163 },
+        '6': { min: 163, max: 195 }
+      };
+      
+      // Count throws per target
+      const zoneCounts = {};
+      events.forEach(e => {
+        zoneCounts[e.target] = (zoneCounts[e.target] || 0) + 1;
+      });
+      
+      const maxCount = Math.max(...Object.values(zoneCounts), 1);
+      
+      // Plot throw points
+      events.forEach((e, idx) => {
+        const targetY = targetYPositions[e.target];
+        if (targetY === undefined) return;
+        
+        // Random X position across court length (attackers typically throw from faixas 1-4)
+        const throwX = 20 + Math.random() * 150; // Distribute across court
+        
+        // Add small random variance around target Y
+        const throwY = targetY + (Math.random() * 6 - 3);
+        
+        // Determine color based on result/plan
+        let color = '#3b82f6'; // blue - normal
+        
+        if (e.result === 'gol') {
+          color = '#ef4444'; // red - goal
+        } else {
+          try {
+            const planned = JSON.parse(e.plannedTargets || '[]');
+            if (planned.includes(e.target)) {
+              color = '#22c55e'; // green - in plan
+            } else if (planned.length > 0) {
+              color = '#eab308'; // yellow - out of plan
+            }
+          } catch {}
+        }
+        
+        // Draw throw point
+        const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        circle.setAttribute('cx', throwX);
+        circle.setAttribute('cy', throwY);
+        circle.setAttribute('r', '2');
+        circle.setAttribute('fill', color);
+        circle.setAttribute('opacity', '0.7');
+        pointsContainer.appendChild(circle);
+        
+        // Glow effect for goals
+        if (e.result === 'gol') {
+          const glow = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+          glow.setAttribute('cx', throwX);
+          glow.setAttribute('cy', throwY);
+          glow.setAttribute('r', '3.5');
+          glow.setAttribute('fill', 'none');
+          glow.setAttribute('stroke', '#ef4444');
+          glow.setAttribute('stroke-width', '0.8');
+          glow.setAttribute('opacity', '0.4');
+          pointsContainer.appendChild(glow);
+        }
+      });
+      
+      // Update target marker intensity (goal line circles)
+      document.querySelectorAll('.target-marker').forEach(marker => {
+        const targetValue = marker.textContent.trim();
+        const count = zoneCounts[targetValue] || 0;
+        const intensity = count > 0 ? Math.min((count / maxCount) * 0.7 + 0.2, 1) : 0.25;
+        
+        marker.setAttribute('opacity', intensity.toString());
+        
+        // Scale circle size based on activity
+        if (count > 5) {
+          marker.setAttribute('r', '3.2');
+        } else if (count > 2) {
+          marker.setAttribute('r', '2.8');
+        } else {
+          marker.setAttribute('r', '2.5');
+        }
+      });
+    }
+    
+    // =====================================================
+    // ANÁLISE TAB FUNCTIONS
+    // =====================================================
+    
+    function renderAnalysis() {
+      // Attack comparison chart
+      const attackChart = document.getElementById('attack-comparison-chart');
+      const periods = ['1T', '2T', 'PR'];
+      
+      const periodData = periods.map(p => {
+        const events = sdkEvents.filter(e => e.type === 'event' && e.team === 'my' && e.phase === p);
+        const goals = events.filter(e => e.result === 'gol').length;
+        return { period: p, throws: events.length, goals };
+      });
+      
+      const maxThrows = Math.max(...periodData.map(d => d.throws), 1);
+      
+      attackChart.innerHTML = `
+        <rect x="0" y="0" width="200" height="100" fill="#f8fafc"/>
+        ${periodData.map((d, i) => {
+          const barHeight = (d.throws / maxThrows) * 60;
+          const goalHeight = (d.goals / maxThrows) * 60;
+          const x = 30 + i * 50;
+          return `
+            <rect x="${x}" y="${80 - barHeight}" width="20" height="${barHeight}" fill="#93c5fd" rx="2"/>
+            <rect x="${x}" y="${80 - goalHeight}" width="20" height="${goalHeight}" fill="#22c55e" rx="2"/>
+            <text x="${x + 10}" y="95" text-anchor="middle" font-size="8" fill="#475569">${d.period}</text>
+            <text x="${x + 10}" y="${75 - barHeight}" text-anchor="middle" font-size="6" fill="#334155">${d.throws}</text>
+          `;
+        }).join('')}
+        <text x="15" y="12" font-size="7" fill="#64748b">Arremessos</text>
+      `;
+      
+      // Defense comparison chart
+      const defenseChart = document.getElementById('defense-comparison-chart');
+      const defenseData = periods.map(p => {
+        const events = sdkEvents.filter(e => e.type === 'event' && e.team === 'opponent' && e.phase === p);
+        const goalsAgainst = events.filter(e => e.result === 'gol').length;
+        const defended = events.filter(e => e.result === 'defendida').length;
+        return { period: p, total: events.length, goalsAgainst, defended };
+      });
+      
+      const maxDef = Math.max(...defenseData.map(d => d.total), 1);
+      
+      defenseChart.innerHTML = `
+        <rect x="0" y="0" width="200" height="100" fill="#f8fafc"/>
+        ${defenseData.map((d, i) => {
+          const barHeight = (d.total / maxDef) * 60;
+          const goalHeight = (d.goalsAgainst / maxDef) * 60;
+          const x = 30 + i * 50;
+          return `
+            <rect x="${x}" y="${80 - barHeight}" width="20" height="${barHeight}" fill="#fca5a5" rx="2"/>
+            <rect x="${x}" y="${80 - goalHeight}" width="20" height="${goalHeight}" fill="#ef4444" rx="2"/>
+            <text x="${x + 10}" y="95" text-anchor="middle" font-size="8" fill="#475569">${d.period}</text>
+            <text x="${x + 10}" y="${75 - barHeight}" text-anchor="middle" font-size="6" fill="#334155">${d.total}</text>
+          `;
+        }).join('')}
+        <text x="15" y="12" font-size="7" fill="#64748b">Ataques Adversários</text>
+      `;
+      
+      // Athlete efficiency
+      const efficiencyContainer = document.getElementById('athlete-efficiency-chart');
+      const athleteStats = [];
+      
+      AppState.config.myAthletes.forEach((athlete, idx) => {
+        if (!athlete.name && !athlete.number) return;
+        
+        const events = sdkEvents.filter(e => e.type === 'event' && e.team === 'my' && e.athleteNumber === athlete.number);
+        if (events.length === 0) return;
+        
+        const goals = events.filter(e => e.result === 'gol').length;
+        const efficiency = Math.round((goals / events.length) * 100);
+        
+        athleteStats.push({
+          name: athlete.name,
+          number: athlete.number,
+          throws: events.length,
+          goals,
+          efficiency
+        });
+      });
+      
+      if (athleteStats.length === 0) {
+        efficiencyContainer.innerHTML = '<p class="text-slate-500 text-sm text-center py-4">Registre lances para ver a análise</p>';
+      } else {
+        const maxEff = Math.max(...athleteStats.map(s => s.efficiency), 1);
+        efficiencyContainer.innerHTML = athleteStats.map(s => `
+          <div class="flex items-center gap-3">
+            <span class="w-16 text-sm font-medium truncate">${s.number || '?'} - ${s.name?.split(' ')[0] || 'N/A'}</span>
+            <div class="flex-1 bg-slate-200 rounded-full h-4 overflow-hidden">
+              <div class="h-full bg-gradient-to-r from-blue-500 to-green-500 rounded-full transition-all" style="width: ${s.efficiency}%"></div>
+            </div>
+            <span class="w-12 text-right text-sm font-bold">${s.efficiency}%</span>
+          </div>
+        `).join('');
+      }
+      
+      // Plan adherence
+      const planContainer = document.getElementById('plan-adherence');
+      const planStats = [];
+      
+      AppState.config.myAthletes.forEach((athlete, idx) => {
+        if (!athlete.name && !athlete.number) return;
+        
+        const events = sdkEvents.filter(e => e.type === 'event' && e.team === 'my' && e.athleteNumber === athlete.number);
+        if (events.length === 0) return;
+        
+        let adherentCount = 0;
+        events.forEach(e => {
+          try {
+            const planned = JSON.parse(e.plannedTargets || '[]');
+            if (planned.includes(e.target)) adherentCount++;
+          } catch {}
+        });
+        
+        const adherence = Math.round((adherentCount / events.length) * 100);
+        
+        planStats.push({
+          name: athlete.name,
+          number: athlete.number,
+          adherence,
+          total: events.length,
+          adherent: adherentCount
+        });
+      });
+      
+      if (planStats.length === 0) {
+        planContainer.innerHTML = '<p class="col-span-full text-slate-500 text-sm text-center py-4">Configure o plano de alvos para ver a análise</p>';
+      } else {
+        planContainer.innerHTML = planStats.map(s => `
+          <div class="bg-slate-50 rounded-lg p-3 text-center">
+            <div class="text-xs text-slate-600 mb-1">${s.number || '?'} - ${s.name?.split(' ')[0] || 'N/A'}</div>
+            <div class="text-2xl font-bold ${s.adherence >= 70 ? 'text-green-600' : s.adherence >= 50 ? 'text-yellow-600' : 'text-red-600'}">${s.adherence}%</div>
+            <div class="text-xs text-slate-500">${s.adherent}/${s.total} no plano</div>
+          </div>
+        `).join('');
+      }
+    }
+    
+    // =====================================================
+    // EVENT LISTENERS
+    // =====================================================
+    
+    function initializeEventListeners() {
+      // Tab navigation
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+      });
+      
+      // Config tab
+      document.getElementById('opponent-toggle').addEventListener('change', (e) => {
+        AppState.config.showOpponent = e.target.checked;
+        document.getElementById('opponent-section').classList.toggle('hidden', !e.target.checked);
+        saveToLocalStorage();
+      });
+      
+      document.getElementById('save-config').addEventListener('click', saveConfig);
+      
+      // Escalação tab
+      document.querySelectorAll('.phase-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.phase-btn').forEach(b => {
+            b.classList.remove('bg-blue-600', 'text-white');
+            b.classList.add('bg-slate-200', 'text-slate-700');
+          });
+          btn.classList.remove('bg-slate-200', 'text-slate-700');
+          btn.classList.add('bg-blue-600', 'text-white');
+          AppState.lineup.phase = btn.dataset.phase;
+          document.getElementById('current-phase').textContent = 
+            btn.dataset.phase === '1T' ? '1º Tempo' : 
+            btn.dataset.phase === '2T' ? '2º Tempo' : 'Prorrogação';
+          saveToLocalStorage();
+        });
+      });
+      
+      ['left', 'center', 'right'].forEach(pos => {
+        document.getElementById(`select-${pos}`).addEventListener('change', (e) => {
+          AppState.lineup[pos] = e.target.value ? parseInt(e.target.value) : null;
+          saveToLocalStorage();
+          updateLineupDisplay();
+        });
+      });
+      
+      document.getElementById('confirm-sub').addEventListener('click', performSubstitution);
+      
+      // Target plan buttons (delegated)
+      document.getElementById('target-plan-container').addEventListener('click', (e) => {
+        if (e.target.classList.contains('target-plan-btn')) {
+          const athlete = e.target.dataset.athlete;
+          const target = e.target.dataset.target;
+          
+          if (!AppState.targetPlans[athlete]) AppState.targetPlans[athlete] = [];
+          
+          const idx = AppState.targetPlans[athlete].indexOf(target);
+          if (idx > -1) {
+            AppState.targetPlans[athlete].splice(idx, 1);
+            e.target.classList.remove('border-blue-500', 'bg-blue-50', 'text-blue-700');
+            e.target.classList.add('border-slate-300');
+          } else {
+            AppState.targetPlans[athlete].push(target);
+            e.target.classList.add('border-blue-500', 'bg-blue-50', 'text-blue-700');
+            e.target.classList.remove('border-slate-300');
+          }
+          
+          saveToLocalStorage();
+        }
+      });
+      
+      document.getElementById('save-target-plan').addEventListener('click', saveTargetPlan);
+      
+      // Jogo tab
+      document.getElementById('btn-attack').addEventListener('click', openAttackModal);
+      document.getElementById('btn-change-target').addEventListener('click', openTargetChangeModal);
+      document.getElementById('close-attack-modal').addEventListener('click', closeAttackModal);
+      document.getElementById('close-target-modal').addEventListener('click', closeTargetChangeModal);
+      
+      // Team selection in attack modal
+      document.querySelectorAll('.team-select-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.team-select-btn').forEach(b => {
+            b.classList.remove('border-blue-500', 'bg-blue-50', 'text-blue-700');
+            b.classList.add('border-slate-300', 'text-slate-600');
+          });
+          btn.classList.add('border-blue-500', 'bg-blue-50', 'text-blue-700');
+          btn.classList.remove('border-slate-300', 'text-slate-600');
+          attackState.team = btn.dataset.team;
+          updateAttackAthleteSelector(btn.dataset.team);
+        });
+      });
+      
+      document.getElementById('attack-athlete').addEventListener('change', (e) => {
+        attackState.athlete = e.target.value;
+      });
+      
+      document.querySelectorAll('.ball-type-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.ball-type-btn').forEach(b => {
+            b.classList.remove('border-blue-500', 'bg-blue-50', 'text-blue-700');
+            b.classList.add('border-slate-300');
+          });
+          btn.classList.add('border-blue-500', 'bg-blue-50', 'text-blue-700');
+          btn.classList.remove('border-slate-300');
+          attackState.ballType = btn.dataset.type;
+        });
+      });
+      
+      document.querySelectorAll('.target-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.target-btn').forEach(b => {
+            b.classList.remove('border-blue-500', 'bg-blue-50', 'text-blue-700');
+            b.classList.add('border-slate-300');
+          });
+          btn.classList.add('border-blue-500', 'bg-blue-50', 'text-blue-700');
+          btn.classList.remove('border-slate-300');
+          attackState.target = btn.dataset.target;
+        });
+      });
+      
+      document.querySelectorAll('.result-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.result-btn').forEach(b => {
+            b.classList.remove('border-blue-500', 'bg-blue-50', 'text-blue-700');
+            b.classList.add('border-slate-300');
+          });
+          btn.classList.add('border-blue-500', 'bg-blue-50', 'text-blue-700');
+          btn.classList.remove('border-slate-300');
+          attackState.result = btn.dataset.result;
+          
+          document.getElementById('penalty-section').classList.toggle('hidden', btn.dataset.result !== 'penalidade');
+        });
+      });
+      
+      document.getElementById('penalty-type').addEventListener('change', (e) => {
+        attackState.penaltyType = e.target.value;
+      });
+      
+      document.querySelectorAll('.defense-structure').forEach(cb => {
+        cb.addEventListener('change', () => {
+          attackState.defenseStructures = Array.from(document.querySelectorAll('.defense-structure:checked')).map(c => c.value);
+        });
+      });
+      
+      document.querySelectorAll('.behavior-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.behavior-btn').forEach(b => {
+            b.classList.remove('border-blue-500', 'bg-blue-50', 'text-blue-700');
+            b.classList.add('border-slate-300');
+          });
+          btn.classList.add('border-blue-500', 'bg-blue-50', 'text-blue-700');
+          btn.classList.remove('border-slate-300');
+          attackState.ballBehavior = btn.dataset.behavior;
+        });
+      });
+      
+      document.getElementById('save-attack').addEventListener('click', saveAttack);
+      
+      // Target change modal
+      document.getElementById('target-change-athlete').addEventListener('change', (e) => {
+        targetChangeState.athlete = e.target.value;
+      });
+      
+      document.querySelectorAll('.new-target-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const target = btn.dataset.target;
+          const idx = targetChangeState.newTargets.indexOf(target);
+          
+          if (idx > -1) {
+            targetChangeState.newTargets.splice(idx, 1);
+            btn.classList.remove('border-orange-500', 'bg-orange-50', 'text-orange-700');
+            btn.classList.add('border-slate-300');
+          } else {
+            targetChangeState.newTargets.push(target);
+            btn.classList.add('border-orange-500', 'bg-orange-50', 'text-orange-700');
+            btn.classList.remove('border-slate-300');
+          }
+        });
+      });
+      
+      document.getElementById('save-target-change').addEventListener('click', saveTargetChange);
+      
+      // Histórico tab
+      document.getElementById('history-filter').addEventListener('change', renderHistory);
+      
+      document.getElementById('history-list').addEventListener('click', (e) => {
+        if (e.target.classList.contains('delete-event-btn')) {
+          const id = e.target.dataset.id;
+          deleteEvent(id);
+        }
+        if (e.target.classList.contains('edit-event-btn')) {
+          const id = e.target.dataset.id;
+          openEditModal(id);
+        }
+      });
+      
+      document.getElementById('close-edit-modal').addEventListener('click', () => {
+        document.getElementById('edit-event-modal').classList.add('hidden');
+      });
+      
+      document.getElementById('edit-form-content').addEventListener('click', (e) => {
+        if (e.target.id === 'save-edit') {
+          saveEventEdit();
+        }
+      });
+      
+      // Relatório tab
+      document.querySelectorAll('.report-period-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.report-period-btn').forEach(b => {
+            b.classList.remove('bg-blue-600', 'text-white');
+            b.classList.add('bg-slate-200', 'text-slate-700');
+          });
+          btn.classList.remove('bg-slate-200', 'text-slate-700');
+          btn.classList.add('bg-blue-600', 'text-white');
+          updateReportStats(btn.dataset.period);
+          renderHeatmap(document.getElementById('heatmap-filter').value);
+        });
+      });
+      
+      document.getElementById('heatmap-filter').addEventListener('change', (e) => {
+        renderHeatmap(e.target.value);
+      });
+    }
+    
+    // =====================================================
+    // INITIALIZATION
+    // =====================================================
+    
+    async function init() {
+      loadFromLocalStorage();
+      loadConfigToForm();
+      renderAthleteInputs();
+      updateLineupSelectors();
+      updateLineupDisplay();
+      renderTargetPlan();
+      initializeEventListeners();
+      await initDataSdk();
+    }
+    
+    init();
+  </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9d605fe99238b8fb',t:'MTc3MjQ1NDIyNy4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
