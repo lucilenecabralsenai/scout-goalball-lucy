@@ -1,0 +1,2165 @@
+<!doctype html>
+<html lang="pt-BR" class="h-full">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Scout Goalball Pro</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="/_sdk/element_sdk.js"></script>
+  <script src="/_sdk/data_sdk.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    
+    * {
+      font-family: 'Inter', system-ui, sans-serif;
+    }
+    
+    .tab-btn.active {
+      background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+      color: white;
+    }
+    
+    .heat-zone {
+      transition: fill 0.3s ease;
+    }
+    
+    .court-zone:hover {
+      opacity: 0.8;
+    }
+    
+    .modal-overlay {
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(4px);
+    }
+    
+    .card-shadow {
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    }
+    
+    .scrollbar-thin::-webkit-scrollbar {
+      width: 6px;
+    }
+    
+    .scrollbar-thin::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+    
+    .scrollbar-thin::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 3px;
+    }
+    
+    .btn-primary {
+      background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+    }
+    
+    .btn-primary:hover {
+      background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%);
+    }
+    
+    .btn-success {
+      background: linear-gradient(135deg, #15803d 0%, #22c55e 100%);
+    }
+    
+    .btn-danger {
+      background: linear-gradient(135deg, #b91c1c 0%, #ef4444 100%);
+    }
+    
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      ring: 2px;
+      ring-color: #3b82f6;
+    }
+    
+    .toggle-checkbox:checked {
+      background-color: #3b82f6;
+    }
+    
+    .toggle-checkbox:checked + .toggle-label {
+      background-color: #3b82f6;
+    }
+  </style>
+  <style>body { box-sizing: border-box; }</style>
+ </head>
+ <body class="h-full bg-slate-100 overflow-auto">
+  <div id="app" class="h-full w-full flex flex-col"><!-- Header -->
+   
+<header class="bg-blue-800 text-white py-4 px-6 flex items-center justify-between">
+  
+  <!-- Left Avatar -->
+  <div class="w-16 h-16 flex items-center justify-center">
+    <img src="./ASSETS/avatar.png" onerror="this.onerror=null;this.src='./assets/avatar.png';" alt="Avatar" class="w-14 h-14 rounded-full object-cover border-2 border-white">
+  </div>
+
+  <!-- Center Title -->
+  <div class="flex-1 text-center">
+    <h1 class="text-2xl font-bold tracking-wide">Scout Goalball Pro</h1>
+  </div>
+
+  <!-- Right Logo -->
+  <div class="w-16 h-16 flex items-center justify-center">
+    <img src="./ASSETS/logo-apec.png" onerror="this.onerror=null;this.src='./assets/logo-apec.png';" alt="Logo APEC" class="w-14 h-14 object-contain">
+  </div>
+
+</header>
+<!-- Navigation -->
+   <nav class="bg-white border-b border-slate-200 px-2 py-2 flex-shrink-0 overflow-x-auto">
+    <div class="flex gap-1 min-w-max"><button class="tab-btn active px-4 py-2 rounded-lg text-sm font-medium transition-all" data-tab="config">⚙️ Config</button> <button class="tab-btn px-4 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 transition-all" data-tab="escalacao">👥 Escalação</button> <button class="tab-btn px-4 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 transition-all" data-tab="jogo">🎮 Jogo</button> <button class="tab-btn px-4 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 transition-all" data-tab="historico">📋 Histórico</button> <button class="tab-btn px-4 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 transition-all" data-tab="relatorio">📊 Relatório</button> <button class="tab-btn px-4 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 transition-all" data-tab="analise">📈 Análise</button>
+    </div>
+   </nav><!-- Main Content -->
+   <main class="flex-1 overflow-auto p-4"><!-- Config Tab -->
+    <section id="tab-config" class="tab-content">
+     <div class="max-w-3xl mx-auto space-y-4">
+      <div class="bg-white rounded-xl p-5 card-shadow">
+       <h2 class="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2"><span class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">🏆</span> Dados da Competição</h2>
+       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div><label class="block text-sm font-medium text-slate-600 mb-1">Competição</label> <input type="text" id="config-competition" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="Nome da competição">
+        </div>
+        <div><label class="block text-sm font-medium text-slate-600 mb-1">Local</label> <input type="text" id="config-location" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="Local da partida">
+        </div>
+        <div><label class="block text-sm font-medium text-slate-600 mb-1">Data</label> <input type="date" id="config-date" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+        </div>
+       </div>
+      </div>
+      <div class="bg-white rounded-xl p-5 card-shadow">
+       <h2 class="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2"><span class="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">🟢</span> Minha Equipe</h2>
+       <div class="mb-4"><label class="block text-sm font-medium text-slate-600 mb-1">Nome da Equipe</label> <input type="text" id="config-my-team" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="Nome da minha equipe">
+       </div>
+       <div class="space-y-3" id="my-team-athletes"><!-- Athletes will be rendered here -->
+       </div>
+      </div>
+      <div class="bg-white rounded-xl p-5 card-shadow">
+       <div class="flex items-center justify-between mb-4">
+        <h2 class="text-lg font-semibold text-slate-800 flex items-center gap-2"><span class="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center">🔴</span> Equipe Adversária</h2><label class="flex items-center gap-2 cursor-pointer"> <span class="text-sm text-slate-600">Cadastrar</span> <input type="checkbox" id="opponent-toggle" class="w-10 h-5 rounded-full appearance-none bg-slate-300 checked:bg-blue-500 transition-colors cursor-pointer relative after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:w-4 after:h-4 after:bg-white after:rounded-full after:transition-transform checked:after:translate-x-5"> </label>
+       </div>
+       <div id="opponent-section" class="hidden">
+        <div class="mb-4"><label class="block text-sm font-medium text-slate-600 mb-1">Nome da Equipe</label> <input type="text" id="config-opponent-team" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="Nome do adversário">
+        </div>
+        <div class="space-y-3" id="opponent-athletes"><!-- Opponent athletes will be rendered here -->
+        </div>
+       </div>
+      </div><button id="save-config" class="w-full btn-primary text-white py-3 rounded-xl font-semibold transition-all hover:shadow-lg"> 💾 Salvar Configuração </button>
+     </div>
+    </section><!-- Escalação Tab -->
+    <section id="tab-escalacao" class="tab-content hidden">
+     <div class="max-w-4xl mx-auto space-y-4"><!-- Current Lineup -->
+      <div class="bg-white rounded-xl p-5 card-shadow">
+       <h2 class="text-lg font-semibold text-slate-800 mb-4">🏐 Escalação Atual</h2><!-- Phase Selector -->
+       <div class="flex gap-2 mb-4"><button class="phase-btn active px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium" data-phase="1T">1º Tempo</button> <button class="phase-btn px-4 py-2 bg-slate-200 text-slate-700 rounded-lg text-sm font-medium" data-phase="2T">2º Tempo</button> <button class="phase-btn px-4 py-2 bg-slate-200 text-slate-700 rounded-lg text-sm font-medium" data-phase="PR">Prorrogação</button>
+       </div><!-- Court Representation -->
+       <div class="bg-gradient-to-b from-blue-50 to-slate-50 rounded-xl p-4 border-2 border-blue-200 mb-4">
+        <div class="grid grid-cols-3 gap-4 max-w-md mx-auto">
+         <div class="text-center">
+          <div class="w-16 h-16 mx-auto bg-blue-600 rounded-full flex items-center justify-center text-white font-bold text-lg mb-2" id="pos-left">
+           -
+          </div><span class="text-xs text-slate-600">Ala Esquerda</span> <select id="select-left" class="w-full mt-1 text-xs p-1 border rounded"> <option value="">Selecionar</option> </select>
+         </div>
+         <div class="text-center">
+          <div class="w-20 h-20 mx-auto bg-blue-800 rounded-full flex items-center justify-center text-white font-bold text-xl mb-2" id="pos-center">
+           -
+          </div><span class="text-xs text-slate-600">Pivô</span> <select id="select-center" class="w-full mt-1 text-xs p-1 border rounded"> <option value="">Selecionar</option> </select>
+         </div>
+         <div class="text-center">
+          <div class="w-16 h-16 mx-auto bg-blue-600 rounded-full flex items-center justify-center text-white font-bold text-lg mb-2" id="pos-right">
+           -
+          </div><span class="text-xs text-slate-600">Ala Direita</span> <select id="select-right" class="w-full mt-1 text-xs p-1 border rounded"> <option value="">Selecionar</option> </select>
+         </div>
+        </div>
+       </div><!-- Bench -->
+       <div class="bg-slate-100 rounded-lg p-3">
+        <h3 class="text-sm font-medium text-slate-600 mb-2">📌 Banco de Reservas</h3>
+        <div id="bench-players" class="flex flex-wrap gap-2"><!-- Bench players will be shown here -->
+        </div>
+       </div>
+      </div><!-- Substitution -->
+      <div class="bg-white rounded-xl p-5 card-shadow">
+       <h2 class="text-lg font-semibold text-slate-800 mb-4">🔄 Realizar Substituição</h2>
+       <div class="grid grid-cols-2 gap-4">
+        <div><label class="block text-sm font-medium text-slate-600 mb-1">Sai</label> <select id="sub-out" class="w-full px-3 py-2 border border-slate-300 rounded-lg"> <option value="">Selecionar atleta</option> </select>
+        </div>
+        <div><label class="block text-sm font-medium text-slate-600 mb-1">Entra</label> <select id="sub-in" class="w-full px-3 py-2 border border-slate-300 rounded-lg"> <option value="">Selecionar atleta</option> </select>
+        </div>
+       </div><button id="confirm-sub" class="w-full mt-4 btn-success text-white py-2 rounded-lg font-medium"> ✅ Confirmar Substituição </button>
+      </div><!-- Target Plan -->
+      <div class="bg-white rounded-xl p-5 card-shadow">
+       <h2 class="text-lg font-semibold text-slate-800 mb-4">🎯 Plano de Alvos - Pré-Jogo</h2>
+       <div id="target-plan-container" class="space-y-4"><!-- Target plans will be rendered here -->
+       </div><button id="save-target-plan" class="w-full mt-4 btn-primary text-white py-2 rounded-lg font-medium"> 💾 Salvar Plano de Alvos </button>
+      </div>
+     </div>
+    </section><!-- Jogo Tab -->
+    <section id="tab-jogo" class="tab-content hidden">
+     <div class="max-w-4xl mx-auto space-y-4"><!-- Quick Actions -->
+      <div class="grid grid-cols-2 gap-3"><button id="btn-attack" class="bg-gradient-to-br from-green-500 to-green-700 text-white p-4 rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transition-all"> ⚡ Registrar Ataque </button> <button id="btn-change-target" class="bg-gradient-to-br from-orange-500 to-orange-700 text-white p-4 rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transition-all"> 🎯 Mudança de Alvo </button>
+      </div><!-- Attack Modal -->
+      <div id="attack-modal" class="hidden fixed inset-0 modal-overlay z-50 flex items-center justify-center p-4">
+       <div class="bg-white rounded-2xl w-full max-w-lg max-h-[90%] overflow-y-auto">
+        <div class="sticky top-0 bg-white border-b px-4 py-3 flex items-center justify-between">
+         <h3 class="text-lg font-semibold">⚡ Registrar Ataque</h3><button id="close-attack-modal" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100">✕</button>
+        </div>
+        <div class="p-4 space-y-4"><!-- Team Selection -->
+         <div><label class="block text-sm font-medium text-slate-600 mb-2">Equipe</label>
+          <div class="grid grid-cols-2 gap-2"><button class="team-select-btn px-4 py-2 border-2 border-blue-500 bg-blue-50 text-blue-700 rounded-lg font-medium" data-team="my">Minha Equipe</button> <button class="team-select-btn px-4 py-2 border-2 border-slate-300 text-slate-600 rounded-lg font-medium" data-team="opponent">Adversário</button>
+          </div>
+         </div><!-- Athlete Selection -->
+         <div><label class="block text-sm font-medium text-slate-600 mb-2">Atleta</label> <select id="attack-athlete" class="w-full px-3 py-2 border border-slate-300 rounded-lg"> <option value="">Selecionar atleta</option> </select>
+         </div><!-- Ball Type -->
+         <div><label class="block text-sm font-medium text-slate-600 mb-2">Tipo de Bola</label>
+          <div class="grid grid-cols-3 gap-2" id="ball-type-grid"><button class="ball-type-btn px-3 py-2 border-2 border-slate-300 rounded-lg text-sm" data-type="lisa">Lisa</button> <button class="ball-type-btn px-3 py-2 border-2 border-slate-300 rounded-lg text-sm" data-type="quicada">Quicada</button> <button class="ball-type-btn px-3 py-2 border-2 border-slate-300 rounded-lg text-sm" data-type="curva">Curva</button> <button class="ball-type-btn px-3 py-2 border-2 border-slate-300 rounded-lg text-sm" data-type="spin">Spin</button> <button class="ball-type-btn px-3 py-2 border-2 border-slate-300 rounded-lg text-sm" data-type="lenta">Lenta</button> <button class="ball-type-btn px-3 py-2 border-2 border-slate-300 rounded-lg text-sm" data-type="rapida">Rápida</button>
+          </div>
+         </div><!-- Target Zone -->
+         <div><label class="block text-sm font-medium text-slate-600 mb-2">Alvo</label>
+          <div class="grid grid-cols-9 gap-1" id="target-grid"><button class="target-btn px-2 py-2 border-2 border-slate-300 rounded text-xs font-medium" data-target="1">1</button> <button class="target-btn px-2 py-2 border-2 border-slate-300 rounded text-xs font-medium" data-target="2">2</button> <button class="target-btn px-2 py-2 border-2 border-slate-300 rounded text-xs font-medium" data-target="2/3">2/3</button> <button class="target-btn px-2 py-2 border-2 border-slate-300 rounded text-xs font-medium" data-target="3">3</button> <button class="target-btn px-2 py-2 border-2 border-slate-300 rounded text-xs font-medium" data-target="M">M</button> <button class="target-btn px-2 py-2 border-2 border-slate-300 rounded text-xs font-medium" data-target="4">4</button> <button class="target-btn px-2 py-2 border-2 border-slate-300 rounded text-xs font-medium" data-target="4/5">4/5</button> <button class="target-btn px-2 py-2 border-2 border-slate-300 rounded text-xs font-medium" data-target="5">5</button> <button class="target-btn px-2 py-2 border-2 border-slate-300 rounded text-xs font-medium" data-target="6">6</button>
+          </div>
+         </div><!-- Result -->
+         <div><label class="block text-sm font-medium text-slate-600 mb-2">Resultado</label>
+          <div class="grid grid-cols-3 gap-2" id="result-grid"><button class="result-btn px-3 py-2 border-2 border-slate-300 rounded-lg text-sm" data-result="gol">⚽ Gol</button> <button class="result-btn px-3 py-2 border-2 border-slate-300 rounded-lg text-sm" data-result="defendida">🧤 Defendida</button> <button class="result-btn px-3 py-2 border-2 border-slate-300 rounded-lg text-sm" data-result="blockout">🚫 Blockout</button> <button class="result-btn px-3 py-2 border-2 border-slate-300 rounded-lg text-sm" data-result="fora">❌ Fora</button> <button class="result-btn px-3 py-2 border-2 border-slate-300 rounded-lg text-sm" data-result="penalidade">⚠️ Penalidade</button>
+          </div>
+         </div><!-- Penalty Type (conditional) -->
+         <div id="penalty-section" class="hidden"><label class="block text-sm font-medium text-slate-600 mb-2">Tipo de Penalidade</label> <select id="penalty-type" class="w-full px-3 py-2 border border-slate-300 rounded-lg"> <option value="">Selecionar tipo</option> <option value="highball">Highball</option> <option value="longball">Longball</option> <option value="noise">Noise</option> <option value="eyeshade">Eyeshade</option> <option value="delay">Delay</option> <option value="10sec">10 Segundos</option> <option value="illegal-defense">Defesa Ilegal</option> <option value="other">Outra</option> </select>
+         </div><!-- Defense Section -->
+         <div id="defense-section" class="border-t pt-4 mt-4">
+          <h4 class="text-sm font-semibold text-slate-700 mb-3">🛡️ Defesa</h4><!-- Defense Structure -->
+          <div class="mb-3"><label class="block text-xs font-medium text-slate-500 mb-2">Estrutura Defensiva (múltipla seleção)</label>
+           <div class="grid grid-cols-2 gap-2"><label class="flex items-center gap-2 p-2 border rounded-lg cursor-pointer hover:bg-slate-50"> <input type="checkbox" class="defense-structure" value="individual"> <span class="text-sm">Individual</span> </label> <label class="flex items-center gap-2 p-2 border rounded-lg cursor-pointer hover:bg-slate-50"> <input type="checkbox" class="defense-structure" value="bloco-correto"> <span class="text-sm">Bloco Correto</span> </label> <label class="flex items-center gap-2 p-2 border rounded-lg cursor-pointer hover:bg-slate-50"> <input type="checkbox" class="defense-structure" value="bloco-incorreto"> <span class="text-sm">Bloco Incorreto</span> </label> <label class="flex items-center gap-2 p-2 border rounded-lg cursor-pointer hover:bg-slate-50"> <input type="checkbox" class="defense-structure" value="cobertura"> <span class="text-sm">Cobertura</span> </label>
+           </div>
+          </div><!-- Ball Behavior -->
+          <div><label class="block text-xs font-medium text-slate-500 mb-2">Comportamento da Bola</label>
+           <div class="grid grid-cols-2 gap-2" id="ball-behavior-grid"><button class="behavior-btn px-3 py-2 border-2 border-slate-300 rounded-lg text-xs" data-behavior="dominada">Dominada</button> <button class="behavior-btn px-3 py-2 border-2 border-slate-300 rounded-lg text-xs" data-behavior="voltou">Bateu e Voltou</button> <button class="behavior-btn px-3 py-2 border-2 border-slate-300 rounded-lg text-xs" data-behavior="subiu">Bateu e Subiu</button> <button class="behavior-btn px-3 py-2 border-2 border-slate-300 rounded-lg text-xs" data-behavior="rebote">Rebote Perigoso</button> <button class="behavior-btn px-3 py-2 border-2 border-slate-300 rounded-lg text-xs" data-behavior="escapou">Escapou</button>
+           </div>
+          </div>
+         </div><button id="save-attack" class="w-full btn-success text-white py-3 rounded-xl font-semibold"> 💾 Salvar Lance </button>
+        </div>
+       </div>
+      </div><!-- Target Change Modal -->
+      <div id="target-change-modal" class="hidden fixed inset-0 modal-overlay z-50 flex items-center justify-center p-4">
+       <div class="bg-white rounded-2xl w-full max-w-md">
+        <div class="border-b px-4 py-3 flex items-center justify-between">
+         <h3 class="text-lg font-semibold">🎯 Mudança de Alvo</h3><button id="close-target-modal" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100">✕</button>
+        </div>
+        <div class="p-4 space-y-4">
+         <div><label class="block text-sm font-medium text-slate-600 mb-2">Atleta</label> <select id="target-change-athlete" class="w-full px-3 py-2 border border-slate-300 rounded-lg"> <option value="">Selecionar atleta</option> </select>
+         </div>
+         <div><label class="block text-sm font-medium text-slate-600 mb-2">Novos Alvos</label>
+          <div class="grid grid-cols-9 gap-1" id="new-target-grid"><button class="new-target-btn px-2 py-2 border-2 border-slate-300 rounded text-xs font-medium" data-target="1">1</button> <button class="new-target-btn px-2 py-2 border-2 border-slate-300 rounded text-xs font-medium" data-target="2">2</button> <button class="new-target-btn px-2 py-2 border-2 border-slate-300 rounded text-xs font-medium" data-target="2/3">2/3</button> <button class="new-target-btn px-2 py-2 border-2 border-slate-300 rounded text-xs font-medium" data-target="3">3</button> <button class="new-target-btn px-2 py-2 border-2 border-slate-300 rounded text-xs font-medium" data-target="M">M</button> <button class="new-target-btn px-2 py-2 border-2 border-slate-300 rounded text-xs font-medium" data-target="4">4</button> <button class="new-target-btn px-2 py-2 border-2 border-slate-300 rounded text-xs font-medium" data-target="4/5">4/5</button> <button class="new-target-btn px-2 py-2 border-2 border-slate-300 rounded text-xs font-medium" data-target="5">5</button> <button class="new-target-btn px-2 py-2 border-2 border-slate-300 rounded text-xs font-medium" data-target="6">6</button>
+          </div>
+         </div><button id="save-target-change" class="w-full btn-primary text-white py-3 rounded-xl font-semibold"> 💾 Salvar Mudança </button>
+        </div>
+       </div>
+      </div><!-- Live Stats -->
+      <div class="bg-white rounded-xl p-4 card-shadow">
+       <h3 class="text-lg font-semibold text-slate-800 mb-3">📊 Estatísticas em Tempo Real</h3>
+       <div class="grid grid-cols-2 gap-4">
+        <div class="bg-green-50 rounded-lg p-3 border border-green-200">
+         <h4 class="text-sm font-medium text-green-700 mb-2">Minha Equipe</h4>
+         <div class="space-y-1 text-sm">
+          <div class="flex justify-between">
+           <span>Arremessos:</span><span id="my-throws">0</span>
+          </div>
+          <div class="flex justify-between">
+           <span>Gols:</span><span id="my-goals">0</span>
+          </div>
+          <div class="flex justify-between">
+           <span>Aproveitamento:</span><span id="my-efficiency">0%</span>
+          </div>
+         </div>
+        </div>
+        <div class="bg-red-50 rounded-lg p-3 border border-red-200">
+         <h4 class="text-sm font-medium text-red-700 mb-2">Adversário</h4>
+         <div class="space-y-1 text-sm">
+          <div class="flex justify-between">
+           <span>Arremessos:</span><span id="opp-throws">0</span>
+          </div>
+          <div class="flex justify-between">
+           <span>Gols:</span><span id="opp-goals">0</span>
+          </div>
+          <div class="flex justify-between">
+           <span>Aproveitamento:</span><span id="opp-efficiency">0%</span>
+          </div>
+         </div>
+        </div>
+       </div>
+      </div><!-- Recent Events -->
+      <div class="bg-white rounded-xl p-4 card-shadow">
+       <h3 class="text-lg font-semibold text-slate-800 mb-3">🕐 Últimos Lances</h3>
+       <div id="recent-events" class="space-y-2 max-h-48 overflow-y-auto scrollbar-thin">
+        <p class="text-slate-500 text-sm text-center py-4">Nenhum lance registrado</p>
+       </div>
+      </div>
+     </div>
+    </section><!-- Histórico Tab -->
+    <section id="tab-historico" class="tab-content hidden">
+     <div class="max-w-4xl mx-auto">
+      <div class="bg-white rounded-xl p-4 card-shadow">
+       <div class="flex items-center justify-between mb-4">
+        <h2 class="text-lg font-semibold text-slate-800">📋 Histórico de Lances</h2>
+        <div class="flex gap-2"><select id="history-filter" class="px-3 py-1 border rounded-lg text-sm"> <option value="all">Todos</option> <option value="1T">1º Tempo</option> <option value="2T">2º Tempo</option> <option value="PR">Prorrogação</option> </select>
+        </div>
+       </div>
+       <div id="history-list" class="space-y-2 max-h-[60vh] overflow-y-auto scrollbar-thin">
+        <p class="text-slate-500 text-sm text-center py-8">Nenhum lance registrado ainda</p>
+       </div>
+      </div>
+     </div><!-- Edit Event Modal -->
+     <div id="edit-event-modal" class="hidden fixed inset-0 modal-overlay z-50 flex items-center justify-center p-4">
+      <div class="bg-white rounded-2xl w-full max-w-lg max-h-[90%] overflow-y-auto">
+       <div class="sticky top-0 bg-white border-b px-4 py-3 flex items-center justify-between">
+        <h3 class="text-lg font-semibold">✏️ Editar Lance</h3><button id="close-edit-modal" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100">✕</button>
+       </div>
+       <div class="p-4 space-y-4" id="edit-form-content"><!-- Edit form will be dynamically generated -->
+       </div>
+      </div>
+     </div>
+    </section><!-- Relatório Tab -->
+    <section id="tab-relatorio" class="tab-content hidden">
+     <div class="max-w-5xl mx-auto space-y-4"><!-- Period Selector -->
+      <div class="bg-white rounded-xl p-4 card-shadow">
+       <div class="flex gap-2 flex-wrap"><button class="report-period-btn active px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium" data-period="all">Geral</button> <button class="report-period-btn px-4 py-2 bg-slate-200 text-slate-700 rounded-lg text-sm font-medium" data-period="1T">1º Tempo</button> <button class="report-period-btn px-4 py-2 bg-slate-200 text-slate-700 rounded-lg text-sm font-medium" data-period="2T">2º Tempo</button> <button class="report-period-btn px-4 py-2 bg-slate-200 text-slate-700 rounded-lg text-sm font-medium" data-period="PR">Prorrogação</button>
+       </div>
+      </div><!-- Attack Stats -->
+      <div class="bg-white rounded-xl p-4 card-shadow">
+       <h3 class="text-lg font-semibold text-slate-800 mb-4">⚡ Estatísticas de Ataque - Minha Equipe</h3>
+       <div id="attack-stats-table" class="overflow-x-auto">
+        <table class="w-full text-sm">
+         <thead class="bg-slate-100">
+          <tr>
+           <th class="px-3 py-2 text-left">Atleta</th>
+           <th class="px-3 py-2 text-center">Arr.</th>
+           <th class="px-3 py-2 text-center">Gols</th>
+           <th class="px-3 py-2 text-center">Def.</th>
+           <th class="px-3 py-2 text-center">Pen.</th>
+           <th class="px-3 py-2 text-center">% Aprov.</th>
+           <th class="px-3 py-2 text-center">% Plano</th>
+          </tr>
+         </thead>
+         <tbody id="attack-stats-body">
+          <tr>
+           <td colspan="7" class="text-center py-4 text-slate-500">Sem dados</td>
+          </tr>
+         </tbody>
+        </table>
+       </div><!-- Attack Highlights -->
+       <div class="grid grid-cols-3 gap-3 mt-4" id="attack-highlights">
+        <div class="bg-green-50 rounded-lg p-3 text-center">
+         <div class="text-xs text-green-600 mb-1">
+          Mais Eficiente
+         </div>
+         <div class="font-semibold text-green-800" id="most-efficient">
+          -
+         </div>
+        </div>
+        <div class="bg-blue-50 rounded-lg p-3 text-center">
+         <div class="text-xs text-blue-600 mb-1">
+          Zona + Usada
+         </div>
+         <div class="font-semibold text-blue-800" id="most-used-zone">
+          -
+         </div>
+        </div>
+        <div class="bg-purple-50 rounded-lg p-3 text-center">
+         <div class="text-xs text-purple-600 mb-1">
+          Zona + Eficiente
+         </div>
+         <div class="font-semibold text-purple-800" id="most-efficient-zone">
+          -
+         </div>
+        </div>
+       </div>
+      </div><!-- Defense Stats -->
+      <div class="bg-white rounded-xl p-4 card-shadow">
+       <h3 class="text-lg font-semibold text-slate-800 mb-4">🛡️ Estatísticas de Defesa</h3>
+       <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div class="bg-slate-50 rounded-lg p-3 text-center">
+         <div class="text-xs text-slate-600 mb-1">
+          Bloco Correto
+         </div>
+         <div class="text-2xl font-bold text-slate-800" id="correct-blocks">
+          0
+         </div>
+        </div>
+        <div class="bg-slate-50 rounded-lg p-3 text-center">
+         <div class="text-xs text-slate-600 mb-1">
+          Bloco Incorreto
+         </div>
+         <div class="text-2xl font-bold text-slate-800" id="incorrect-blocks">
+          0
+         </div>
+        </div>
+        <div class="bg-slate-50 rounded-lg p-3 text-center">
+         <div class="text-xs text-slate-600 mb-1">
+          Cobertura
+         </div>
+         <div class="text-2xl font-bold text-slate-800" id="coverage-count">
+          0
+         </div>
+        </div>
+        <div class="bg-slate-50 rounded-lg p-3 text-center">
+         <div class="text-xs text-slate-600 mb-1">
+          % Sucesso Bloco
+         </div>
+         <div class="text-2xl font-bold text-slate-800" id="block-success">
+          0%
+         </div>
+        </div>
+       </div>
+       <div class="grid grid-cols-2 md:grid-cols-5 gap-3 mt-4">
+        <div class="bg-green-50 rounded-lg p-2 text-center">
+         <div class="text-xs text-green-600">
+          Dominada
+         </div>
+         <div class="font-bold text-green-800" id="ball-dominated">
+          0
+         </div>
+        </div>
+        <div class="bg-yellow-50 rounded-lg p-2 text-center">
+         <div class="text-xs text-yellow-600">
+          Bateu e Voltou
+         </div>
+         <div class="font-bold text-yellow-800" id="ball-returned">
+          0
+         </div>
+        </div>
+        <div class="bg-orange-50 rounded-lg p-2 text-center">
+         <div class="text-xs text-orange-600">
+          Bateu e Subiu
+         </div>
+         <div class="font-bold text-orange-800" id="ball-up">
+          0
+         </div>
+        </div>
+        <div class="bg-red-50 rounded-lg p-2 text-center">
+         <div class="text-xs text-red-600">
+          Rebote Perigoso
+         </div>
+         <div class="font-bold text-red-800" id="dangerous-rebound">
+          0
+         </div>
+        </div>
+        <div class="bg-red-100 rounded-lg p-2 text-center">
+         <div class="text-xs text-red-700">
+          Escapou
+         </div>
+         <div class="font-bold text-red-900" id="ball-escaped">
+          0
+         </div>
+        </div>
+       </div>
+       <div class="mt-4 p-3 bg-red-50 rounded-lg">
+        <div class="text-sm text-red-700">
+         Gols sofridos após bloco incorreto: <span class="font-bold" id="goals-after-bad-block">0</span>
+        </div>
+       </div>
+      </div><!-- Heat Map -->
+      <div class="bg-white rounded-xl p-4 card-shadow">
+       <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-semibold text-slate-800">🗺️ Mapa de Calor - Arremessos</h3>
+<div class="flex flex-wrap gap-2 items-center">
+  <select id="heatmap-filter" class="px-3 py-1 border rounded-lg text-sm">
+    <option value="all">Todos</option>
+    <option value="planned">Dentro do Plano</option>
+  </select>
+
+  <select id="heatmap-result-filter" class="px-3 py-1 border rounded-lg text-sm">
+    <option value="all">Todos Resultados</option>
+    <option value="goals">Apenas Gols</option>
+    <option value="defended">Apenas Defendidas</option>
+    <option value="out">Apenas Fora</option>
+    <option value="penalty">Apenas Penalidade</option>
+  </select>
+
+  <select id="heatmap-athlete-filter" class="px-3 py-1 border rounded-lg text-sm">
+    <option value="all">Todos Jogadores</option>
+  </select>
+
+  <select id="heatmap-metric" class="px-3 py-1 border rounded-lg text-sm">
+    <option value="volume">Mapa por Volume</option>
+    <option value="efficiency">Mapa por Eficiência</option>
+  </select>
+
+  <button id="heatmap-side-toggle" data-side="right" class="px-3 py-1 border rounded-lg text-sm bg-slate-50">
+    Atacando → direita
+  </button>
+</div>
+       </div><!-- Court SVG -->
+       <div class="flex justify-center">
+        <svg id="court-heatmap" viewbox="0 0 180 90" class="w-full max-w-xl border-2 border-slate-300 rounded-lg bg-gradient-to-b from-blue-100 to-slate-100"><!-- Court outline --> <rect x="0" y="0" width="180" height="90" fill="none" stroke="#334155" stroke-width="1" /> <!-- Center line --> <line x1="90" y1="0" x2="90" y2="90" stroke="#334155" stroke-width="0.5" stroke-dasharray="2,2" /> <!-- Goal areas -->
+<rect x="0" y="0" width="30" height="90" fill="rgba(239,68,68,0.08)" stroke="#ef4444" stroke-width="0.5" />
+<rect x="150" y="0" width="30" height="90" fill="rgba(59,130,246,0.08)" stroke="#3b82f6" stroke-width="0.5" />
+
+<!-- 6 faixas no comprimento (cada uma = 3m = 30 unidades no SVG) -->
+<g id="length-zones">
+  <rect class="court-zone" data-length="F1" x="0"   y="0" width="30" height="90" fill="rgba(100,116,139,0.03)" stroke="#64748b" stroke-width="0.3"/>
+  <rect class="court-zone" data-length="F2" x="30"  y="0" width="30" height="90" fill="rgba(100,116,139,0.02)" stroke="#64748b" stroke-width="0.3"/>
+  <rect class="court-zone" data-length="F3" x="60"  y="0" width="30" height="90" fill="rgba(100,116,139,0.03)" stroke="#64748b" stroke-width="0.3"/>
+  <rect class="court-zone" data-length="F4" x="90"  y="0" width="30" height="90" fill="rgba(100,116,139,0.02)" stroke="#64748b" stroke-width="0.3"/>
+  <rect class="court-zone" data-length="F5" x="120" y="0" width="30" height="90" fill="rgba(100,116,139,0.03)" stroke="#64748b" stroke-width="0.3"/>
+  <rect class="court-zone" data-length="F6" x="150" y="0" width="30" height="90" fill="rgba(100,116,139,0.02)" stroke="#64748b" stroke-width="0.3"/>
+</g>
+
+<!-- Alvos na TRAVE (faixas horizontais no lado direito, dentro da área do gol) -->
+<g id="target-zones">
+  <rect class="court-zone heat-zone" data-zone="1"   x="150" y="0"  width="30" height="10" fill="rgba(59,130,246,0.12)" stroke="#64748b" stroke-width="0.3"/>
+  <rect class="court-zone heat-zone" data-zone="2"   x="150" y="10" width="30" height="10" fill="rgba(59,130,246,0.10)" stroke="#64748b" stroke-width="0.3"/>
+  <rect class="court-zone heat-zone" data-zone="2/3" x="150" y="20" width="30" height="10" fill="rgba(59,130,246,0.10)" stroke="#64748b" stroke-width="0.3"/>
+  <rect class="court-zone heat-zone" data-zone="3"   x="150" y="30" width="30" height="10" fill="rgba(59,130,246,0.10)" stroke="#64748b" stroke-width="0.3"/>
+  <rect class="court-zone heat-zone" data-zone="M"   x="150" y="40" width="30" height="10" fill="rgba(59,130,246,0.16)" stroke="#64748b" stroke-width="0.3"/>
+  <rect class="court-zone heat-zone" data-zone="4"   x="150" y="50" width="30" height="10" fill="rgba(59,130,246,0.10)" stroke="#64748b" stroke-width="0.3"/>
+  <rect class="court-zone heat-zone" data-zone="4/5" x="150" y="60" width="30" height="10" fill="rgba(59,130,246,0.10)" stroke="#64748b" stroke-width="0.3"/>
+  <rect class="court-zone heat-zone" data-zone="5"   x="150" y="70" width="30" height="10" fill="rgba(59,130,246,0.10)" stroke="#64748b" stroke-width="0.3"/>
+  <rect class="court-zone heat-zone" data-zone="6"   x="150" y="80" width="30" height="10" fill="rgba(59,130,246,0.12)" stroke="#64748b" stroke-width="0.3"/>
+</g>
+
+<!-- Rótulos dos alvos (opcional) -->
+<g font-size="6" fill="#475569" text-anchor="middle">
+  <text x="165" y="7">1</text>
+  <text x="165" y="17">2</text>
+  <text x="165" y="27">2/3</text>
+  <text x="165" y="37">3</text>
+  <text x="165" y="47">M</text>
+  <text x="165" y="57">4</text>
+  <text x="165" y="67">4/5</text>
+  <text x="165" y="77">5</text>
+  <text x="165" y="87">6</text>
+</g>
+
+<!-- Throw points container --> <g id="throw-points"></g>
+        </svg>
+       </div><!-- Legend -->
+       <div class="flex justify-center gap-4 mt-3 text-xs">
+        <div class="flex items-center gap-1"><span class="w-3 h-3 rounded-full bg-blue-500"></span> <span>Normal</span>
+        </div>
+        <div class="flex items-center gap-1"><span class="w-3 h-3 rounded-full bg-green-500"></span> <span>No Plano</span>
+        </div>
+        <div class="flex items-center gap-1"><span class="w-3 h-3 rounded-full bg-red-500"></span> <span>Gol</span>
+        </div>
+        <div class="flex items-center gap-1"><span class="w-3 h-3 rounded-full bg-yellow-500"></span> <span>Fora do Plano</span>
+        </div>
+       </div>
+      </div>
+     </div>
+    </section><!-- Análise Tab -->
+    <section id="tab-analise" class="tab-content hidden">
+     <div class="max-w-5xl mx-auto space-y-4"><!-- Comparative Panel -->
+      <div class="bg-white rounded-xl p-4 card-shadow">
+       <h3 class="text-lg font-semibold text-slate-800 mb-4">📈 Análise Comparativa por Tempo</h3>
+       <div class="grid grid-cols-1 md:grid-cols-2 gap-4"><!-- Attack Comparison -->
+        <div>
+         <h4 class="text-sm font-medium text-slate-600 mb-2">Ataque por Tempo</h4>
+         <div class="bg-slate-50 rounded-lg p-3">
+          <svg id="attack-comparison-chart" viewbox="0 0 200 100" class="w-full"><text x="100" y="50" text-anchor="middle" font-size="8" fill="#64748b">
+            Dados serão exibidos aqui
+           </text>
+          </svg>
+         </div>
+        </div><!-- Defense Comparison -->
+        <div>
+         <h4 class="text-sm font-medium text-slate-600 mb-2">Defesa por Tempo</h4>
+         <div class="bg-slate-50 rounded-lg p-3">
+          <svg id="defense-comparison-chart" viewbox="0 0 200 100" class="w-full"><text x="100" y="50" text-anchor="middle" font-size="8" fill="#64748b">
+            Dados serão exibidos aqui
+           </text>
+          </svg>
+         </div>
+        </div>
+       </div>
+      </div><!-- Athlete Efficiency -->
+      <div class="bg-white rounded-xl p-4 card-shadow">
+       <h3 class="text-lg font-semibold text-slate-800 mb-4">👤 Eficiência por Atleta</h3>
+       <div id="athlete-efficiency-chart" class="space-y-3">
+        <p class="text-slate-500 text-sm text-center py-4">Registre lances para ver a análise</p>
+       </div>
+      </div><!-- Plan Adherence -->
+      <div class="bg-white rounded-xl p-4 card-shadow">
+       <h3 class="text-lg font-semibold text-slate-800 mb-4">🎯 Aderência ao Plano Tático</h3>
+       <div id="plan-adherence" class="grid grid-cols-2 md:grid-cols-3 gap-3">
+        <p class="col-span-full text-slate-500 text-sm text-center py-4">Configure o plano de alvos para ver a análise</p>
+       </div>
+      </div>
+     </div>
+    </section>
+   </main><!-- Toast Notification -->
+   <div id="toast" class="fixed bottom-4 left-1/2 -translate-x-1/2 bg-slate-800 text-white px-4 py-2 rounded-lg shadow-lg hidden transition-all z-50"><span id="toast-message"></span>
+   </div>
+  </div>
+  <script>
+    // =====================================================
+    // SCOUT GOALBALL PRO - MAIN APPLICATION
+    // =====================================================
+    
+    // Application State
+    const AppState = {
+      config: {
+        competition: '',
+        location: '',
+        date: '',
+        myTeam: '',
+        opponentTeam: '',
+        myAthletes: [],
+        opponentAthletes: [],
+        showOpponent: false
+      },
+      lineup: {
+        left: null,
+        center: null,
+        right: null,
+        phase: '1T'
+      },
+      targetPlans: {},
+      currentTargets: {},
+      events: [],
+      matchId: null
+    };
+    
+    // Local storage for offline persistence
+    const STORAGE_KEY = 'scout_goalball_pro_data';
+    
+    // SDK Data
+    let sdkEvents = [];
+    
+    // Default config for Element SDK
+    const defaultConfig = {
+      app_title: '⚽ Scout Goalball Pro'
+    };
+    
+    // Initialize Element SDK
+    if (window.elementSdk) {
+      window.elementSdk.init({
+        defaultConfig,
+        onConfigChange: async (config) => {
+          const title = config.app_title || defaultConfig.app_title;
+          document.getElementById('app-title').textContent = title;
+        },
+        mapToCapabilities: (config) => ({
+          recolorables: [],
+          borderables: [],
+          fontEditable: undefined,
+          fontSizeable: undefined
+        }),
+        mapToEditPanelValues: (config) => new Map([
+          ['app_title', config.app_title || defaultConfig.app_title]
+        ])
+      });
+    }
+    
+    // Data Handler for Data SDK
+    const dataHandler = {
+      onDataChanged(data) {
+        sdkEvents = data.filter(d => d.type === 'event' || d.type === 'substitution' || d.type === 'target_change');
+        AppState.events = sdkEvents;
+        updateAllStats();
+        renderHistory();
+        renderRecentEvents();
+      }
+    };
+    
+    // Initialize Data SDK
+    async function initDataSdk() {
+      if (window.dataSdk) {
+        const result = await window.dataSdk.init(dataHandler);
+        if (!result.isOk) {
+          console.error('Failed to initialize Data SDK');
+        }
+      }
+    }
+    
+    // =====================================================
+    // LOCAL STORAGE FUNCTIONS
+    // =====================================================
+    
+    function saveToLocalStorage() {
+      try {
+        const data = {
+          config: AppState.config,
+          lineup: AppState.lineup,
+          targetPlans: AppState.targetPlans,
+          currentTargets: AppState.currentTargets,
+          matchId: AppState.matchId
+        };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      } catch (e) {
+        console.error('Failed to save to localStorage:', e);
+      }
+    }
+    
+    function loadFromLocalStorage() {
+      try {
+        const data = localStorage.getItem(STORAGE_KEY);
+        if (data) {
+          const parsed = JSON.parse(data);
+          AppState.config = parsed.config || AppState.config;
+          AppState.lineup = parsed.lineup || AppState.lineup;
+          AppState.targetPlans = parsed.targetPlans || {};
+          AppState.currentTargets = parsed.currentTargets || {};
+          AppState.matchId = parsed.matchId || Date.now().toString();
+        } else {
+          AppState.matchId = Date.now().toString();
+        }
+      } catch (e) {
+        console.error('Failed to load from localStorage:', e);
+        AppState.matchId = Date.now().toString();
+      }
+    }
+    
+    // =====================================================
+    // UI HELPER FUNCTIONS
+    // =====================================================
+    
+    function showToast(message, duration = 3000) {
+      const toast = document.getElementById('toast');
+      const toastMessage = document.getElementById('toast-message');
+      toastMessage.textContent = message;
+      toast.classList.remove('hidden');
+      setTimeout(() => {
+        toast.classList.add('hidden');
+      }, duration);
+    }
+    
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-content').forEach(tab => tab.classList.add('hidden'));
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('active');
+        btn.classList.add('text-slate-600', 'hover:bg-slate-100');
+      });
+      
+      const targetTab = document.getElementById(`tab-${tabId}`);
+      const targetBtn = document.querySelector(`[data-tab="${tabId}"]`);
+      
+      if (targetTab) targetTab.classList.remove('hidden');
+      if (targetBtn) {
+        targetBtn.classList.add('active');
+        targetBtn.classList.remove('text-slate-600', 'hover:bg-slate-100');
+      }
+      
+      if (tabId === 'relatorio') {
+        updateReportStats('all');
+        renderHeatmap('all');
+      }
+      if (tabId === 'analise') {
+        renderAnalysis();
+      }
+    }
+    
+    // =====================================================
+    // CONFIG TAB FUNCTIONS
+    // =====================================================
+    
+    function renderAthleteInputs() {
+      const myTeamContainer = document.getElementById('my-team-athletes');
+      const opponentContainer = document.getElementById('opponent-athletes');
+      
+      // My team athletes
+      let myTeamHTML = '';
+      for (let i = 0; i < 6; i++) {
+        const athlete = AppState.config.myAthletes[i] || { name: '', number: '' };
+        myTeamHTML += `
+          <div class="flex gap-2 items-center">
+            <span class="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center text-xs font-medium text-blue-700">${i + 1}</span>
+            <input type="text" class="my-athlete-name flex-1 px-3 py-2 border border-slate-300 rounded-lg text-sm" placeholder="Nome do atleta" value="${athlete.name}" data-index="${i}">
+            <input type="text" class="my-athlete-number w-20 px-3 py-2 border border-slate-300 rounded-lg text-sm text-center" placeholder="Nº" value="${athlete.number}" data-index="${i}">
+          </div>
+        `;
+      }
+      myTeamContainer.innerHTML = myTeamHTML;
+      
+      // Opponent athletes
+      let opponentHTML = '';
+      for (let i = 0; i < 6; i++) {
+        const athlete = AppState.config.opponentAthletes[i] || { name: '', number: '' };
+        opponentHTML += `
+          <div class="flex gap-2 items-center">
+            <span class="w-6 h-6 bg-red-100 rounded-full flex items-center justify-center text-xs font-medium text-red-700">${i + 1}</span>
+            <input type="text" class="opp-athlete-name flex-1 px-3 py-2 border border-slate-300 rounded-lg text-sm" placeholder="Nome do atleta" value="${athlete.name}" data-index="${i}">
+            <input type="text" class="opp-athlete-number w-20 px-3 py-2 border border-slate-300 rounded-lg text-sm text-center" placeholder="Nº" value="${athlete.number}" data-index="${i}">
+          </div>
+        `;
+      }
+      opponentContainer.innerHTML = opponentHTML;
+    }
+    
+    function loadConfigToForm() {
+      document.getElementById('config-competition').value = AppState.config.competition || '';
+      document.getElementById('config-location').value = AppState.config.location || '';
+      document.getElementById('config-date').value = AppState.config.date || '';
+      document.getElementById('config-my-team').value = AppState.config.myTeam || '';
+      document.getElementById('config-opponent-team').value = AppState.config.opponentTeam || '';
+      document.getElementById('opponent-toggle').checked = AppState.config.showOpponent;
+      
+      if (AppState.config.showOpponent) {
+        document.getElementById('opponent-section').classList.remove('hidden');
+      }
+      
+      renderAthleteInputs();
+    }
+    
+    function saveConfig() {
+      AppState.config.competition = document.getElementById('config-competition').value;
+      AppState.config.location = document.getElementById('config-location').value;
+      AppState.config.date = document.getElementById('config-date').value;
+      AppState.config.myTeam = document.getElementById('config-my-team').value;
+      AppState.config.opponentTeam = document.getElementById('config-opponent-team').value;
+      
+      // Save my athletes
+      const myNames = document.querySelectorAll('.my-athlete-name');
+      const myNumbers = document.querySelectorAll('.my-athlete-number');
+      AppState.config.myAthletes = [];
+      myNames.forEach((input, i) => {
+        AppState.config.myAthletes.push({
+          name: input.value,
+          number: myNumbers[i].value
+        });
+      });
+      
+      // Save opponent athletes
+      const oppNames = document.querySelectorAll('.opp-athlete-name');
+      const oppNumbers = document.querySelectorAll('.opp-athlete-number');
+      AppState.config.opponentAthletes = [];
+      oppNames.forEach((input, i) => {
+        AppState.config.opponentAthletes.push({
+          name: oppNames[i].value,
+          number: oppNumbers[i].value
+        });
+      });
+      
+      saveToLocalStorage();
+      updateLineupSelectors();
+      renderTargetPlan();
+      showToast('✅ Configuração salva com sucesso!');
+    }
+    
+    // =====================================================
+    // ESCALAÇÃO TAB FUNCTIONS
+    // =====================================================
+    
+    function updateLineupSelectors() {
+      const athletes = AppState.config.myAthletes.filter(a => a.name || a.number);
+      
+      const selectors = ['select-left', 'select-center', 'select-right', 'sub-out', 'sub-in'];
+      selectors.forEach(id => {
+        const select = document.getElementById(id);
+        if (!select) return;
+        
+        const currentValue = select.value;
+        select.innerHTML = '<option value="">Selecionar</option>';
+        
+        athletes.forEach((athlete, idx) => {
+          const display = athlete.number ? `${athlete.number} - ${athlete.name}` : athlete.name;
+          select.innerHTML += `<option value="${idx}">${display}</option>`;
+        });
+        
+        select.value = currentValue;
+      });
+      
+      // Update attack modal selectors
+      updateAttackAthleteSelector('my');
+    }
+    
+    function updateLineupDisplay() {
+      const positions = ['left', 'center', 'right'];
+      positions.forEach(pos => {
+        const display = document.getElementById(`pos-${pos}`);
+        const idx = AppState.lineup[pos];
+        if (idx !== null && AppState.config.myAthletes[idx]) {
+          const athlete = AppState.config.myAthletes[idx];
+          display.textContent = athlete.number || '-';
+        } else {
+          display.textContent = '-';
+        }
+      });
+      
+      // Update bench
+      const benchContainer = document.getElementById('bench-players');
+      const onCourt = [AppState.lineup.left, AppState.lineup.center, AppState.lineup.right].filter(x => x !== null);
+      const benchPlayers = AppState.config.myAthletes.filter((a, idx) => (a.name || a.number) && !onCourt.includes(idx));
+      
+      if (benchPlayers.length === 0) {
+        benchContainer.innerHTML = '<span class="text-slate-400 text-sm">Nenhum reserva disponível</span>';
+      } else {
+        benchContainer.innerHTML = benchPlayers.map(a => `
+          <span class="px-3 py-1 bg-white rounded-full text-sm border">${a.number || '?'} - ${a.name || 'Sem nome'}</span>
+        `).join('');
+      }
+      
+      // Update sub-in selector to show only bench players
+      const subIn = document.getElementById('sub-in');
+      subIn.innerHTML = '<option value="">Selecionar atleta</option>';
+      AppState.config.myAthletes.forEach((athlete, idx) => {
+        if ((athlete.name || athlete.number) && !onCourt.includes(idx)) {
+          const display = athlete.number ? `${athlete.number} - ${athlete.name}` : athlete.name;
+          subIn.innerHTML += `<option value="${idx}">${display}</option>`;
+        }
+      });
+      
+      // Update sub-out to show only on court players
+      const subOut = document.getElementById('sub-out');
+      subOut.innerHTML = '<option value="">Selecionar atleta</option>';
+      onCourt.forEach(idx => {
+        const athlete = AppState.config.myAthletes[idx];
+        if (athlete) {
+          const display = athlete.number ? `${athlete.number} - ${athlete.name}` : athlete.name;
+          subOut.innerHTML += `<option value="${idx}">${display}</option>`;
+        }
+      });
+    }
+    
+    async function performSubstitution() {
+      const subOutIdx = document.getElementById('sub-out').value;
+      const subInIdx = document.getElementById('sub-in').value;
+      
+      if (!subOutIdx || !subInIdx) {
+        showToast('⚠️ Selecione os atletas para a substituição');
+        return;
+      }
+      
+      // Find position of player going out
+      let position = null;
+      if (AppState.lineup.left == subOutIdx) position = 'left';
+      else if (AppState.lineup.center == subOutIdx) position = 'center';
+      else if (AppState.lineup.right == subOutIdx) position = 'right';
+      
+      if (!position) {
+        showToast('⚠️ Atleta selecionado não está em quadra');
+        return;
+      }
+      
+      // Update lineup
+      AppState.lineup[position] = parseInt(subInIdx);
+      
+      // Record substitution event
+      if (window.dataSdk && sdkEvents.length < 999) {
+        const subEvent = {
+          type: 'substitution',
+          matchId: AppState.matchId,
+          timestamp: new Date().toISOString(),
+          phase: AppState.lineup.phase,
+          subOut: subOutIdx,
+          subIn: subInIdx,
+          position: position,
+          team: 'my',
+          athleteNumber: '',
+          athleteName: '',
+          ballType: '',
+          target: '',
+          result: '',
+          penaltyType: '',
+          defenseStructure: '',
+          ballBehavior: '',
+          plannedTargets: '',
+          newTargets: ''
+        };
+        await window.dataSdk.create(subEvent);
+      }
+      
+      saveToLocalStorage();
+      updateLineupDisplay();
+      showToast('✅ Substituição realizada!');
+      
+      document.getElementById('sub-out').value = '';
+      document.getElementById('sub-in').value = '';
+    }
+    
+    function renderTargetPlan() {
+      const container = document.getElementById('target-plan-container');
+      const athletes = AppState.config.myAthletes.filter(a => a.name || a.number);
+      
+      if (athletes.length === 0) {
+        container.innerHTML = '<p class="text-slate-500 text-sm text-center">Configure os atletas primeiro</p>';
+        return;
+      }
+      
+      const targets = ['1', '2', '2/3', '3', 'M', '4', '4/5', '5', '6'];
+      
+      container.innerHTML = athletes.map((athlete, idx) => {
+        const currentPlan = AppState.targetPlans[idx] || [];
+        return `
+          <div class="border rounded-lg p-3">
+            <div class="flex items-center gap-2 mb-2">
+              <span class="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold">${athlete.number || '?'}</span>
+              <span class="font-medium">${athlete.name || 'Sem nome'}</span>
+            </div>
+            <div class="flex flex-wrap gap-1">
+              ${targets.map(t => `
+                <button class="target-plan-btn px-3 py-1 text-sm border-2 rounded ${currentPlan.includes(t) ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-slate-300'}" data-athlete="${idx}" data-target="${t}">
+                  ${t}
+                </button>
+              `).join('')}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+    
+    function saveTargetPlan() {
+      // Initialize current targets with the plan
+      AppState.currentTargets = JSON.parse(JSON.stringify(AppState.targetPlans));
+      saveToLocalStorage();
+      showToast('✅ Plano de alvos salvo!');
+    }
+    
+    // =====================================================
+    // JOGO TAB FUNCTIONS
+    // =====================================================
+    
+    let attackState = {
+      team: 'my',
+      athlete: '',
+      ballType: '',
+      target: '',
+      result: '',
+      penaltyType: '',
+      defenseStructures: [],
+      ballBehavior: ''
+    };
+    
+    let targetChangeState = {
+      athlete: '',
+      newTargets: []
+    };
+    
+    function openAttackModal() {
+      document.getElementById('attack-modal').classList.remove('hidden');
+      resetAttackState();
+      updateAttackAthleteSelector(attackState.team);
+    }
+    
+    function closeAttackModal() {
+      document.getElementById('attack-modal').classList.add('hidden');
+    }
+    
+    function resetAttackState() {
+      attackState = {
+        team: 'my',
+        athlete: '',
+        ballType: '',
+        target: '',
+        result: '',
+        penaltyType: '',
+        defenseStructures: [],
+        ballBehavior: ''
+      };
+      
+      // Reset UI
+      document.querySelectorAll('.team-select-btn').forEach(btn => {
+        btn.classList.remove('border-blue-500', 'bg-blue-50', 'text-blue-700');
+        btn.classList.add('border-slate-300', 'text-slate-600');
+      });
+      document.querySelector('[data-team="my"]').classList.add('border-blue-500', 'bg-blue-50', 'text-blue-700');
+      
+      document.querySelectorAll('.ball-type-btn, .target-btn, .result-btn, .behavior-btn').forEach(btn => {
+        btn.classList.remove('border-blue-500', 'bg-blue-50', 'text-blue-700');
+        btn.classList.add('border-slate-300');
+      });
+      
+      document.querySelectorAll('.defense-structure').forEach(cb => cb.checked = false);
+      document.getElementById('penalty-section').classList.add('hidden');
+      document.getElementById('attack-athlete').value = '';
+      document.getElementById('penalty-type').value = '';
+    }
+    
+    function updateAttackAthleteSelector(team) {
+      const select = document.getElementById('attack-athlete');
+      select.innerHTML = '<option value="">Selecionar atleta</option>';
+      
+      const athletes = team === 'my' ? AppState.config.myAthletes : AppState.config.opponentAthletes;
+      athletes.forEach((athlete, idx) => {
+        if (athlete.name || athlete.number) {
+          const display = athlete.number ? `${athlete.number} - ${athlete.name}` : athlete.name;
+          select.innerHTML += `<option value="${idx}">${display}</option>`;
+        }
+      });
+    }
+    
+    async function saveAttack() {
+      if (!attackState.athlete || !attackState.ballType || !attackState.target || !attackState.result) {
+        showToast('⚠️ Preencha todos os campos obrigatórios');
+        return;
+      }
+      
+      if (attackState.result === 'penalidade' && !attackState.penaltyType) {
+        showToast('⚠️ Selecione o tipo de penalidade');
+        return;
+      }
+      
+      const athletes = attackState.team === 'my' ? AppState.config.myAthletes : AppState.config.opponentAthletes;
+      const athlete = athletes[attackState.athlete];
+      
+      const event = {
+        type: 'event',
+        matchId: AppState.matchId,
+        timestamp: new Date().toISOString(),
+        phase: AppState.lineup.phase,
+        team: attackState.team,
+        athleteNumber: athlete?.number || '',
+        athleteName: athlete?.name || '',
+        ballType: attackState.ballType,
+        target: attackState.target,
+        result: attackState.result,
+        penaltyType: attackState.penaltyType,
+        defenseStructure: attackState.defenseStructures.join(','),
+        ballBehavior: attackState.ballBehavior,
+        plannedTargets: JSON.stringify(AppState.currentTargets[attackState.athlete] || []),
+        subIn: '',
+        subOut: '',
+        position: '',
+        newTargets: ''
+      };
+      
+      if (window.dataSdk) {
+        if (sdkEvents.length >= 999) {
+          showToast('⚠️ Limite de 999 registros atingido!');
+          return;
+        }
+        const result = await window.dataSdk.create(event);
+        if (!result.isOk) {
+          showToast('❌ Erro ao salvar lance');
+          return;
+        }
+      }
+      
+      closeAttackModal();
+      showToast('✅ Lance registrado!');
+      updateScore();
+    }
+    
+    function openTargetChangeModal() {
+      document.getElementById('target-change-modal').classList.remove('hidden');
+      targetChangeState = { athlete: '', newTargets: [] };
+      
+      // Populate athlete selector
+      const select = document.getElementById('target-change-athlete');
+      select.innerHTML = '<option value="">Selecionar atleta</option>';
+      AppState.config.myAthletes.forEach((athlete, idx) => {
+        if (athlete.name || athlete.number) {
+          const display = athlete.number ? `${athlete.number} - ${athlete.name}` : athlete.name;
+          select.innerHTML += `<option value="${idx}">${display}</option>`;
+        }
+      });
+      
+      // Reset target buttons
+      document.querySelectorAll('.new-target-btn').forEach(btn => {
+        btn.classList.remove('border-orange-500', 'bg-orange-50', 'text-orange-700');
+        btn.classList.add('border-slate-300');
+      });
+    }
+    
+    function closeTargetChangeModal() {
+      document.getElementById('target-change-modal').classList.add('hidden');
+    }
+    
+    async function saveTargetChange() {
+      if (!targetChangeState.athlete || targetChangeState.newTargets.length === 0) {
+        showToast('⚠️ Selecione o atleta e os novos alvos');
+        return;
+      }
+      
+      // Update current targets
+      AppState.currentTargets[targetChangeState.athlete] = [...targetChangeState.newTargets];
+      
+      const athlete = AppState.config.myAthletes[targetChangeState.athlete];
+      
+      // Record target change event
+      if (window.dataSdk && sdkEvents.length < 999) {
+        const event = {
+          type: 'target_change',
+          matchId: AppState.matchId,
+          timestamp: new Date().toISOString(),
+          phase: AppState.lineup.phase,
+          team: 'my',
+          athleteNumber: athlete?.number || '',
+          athleteName: athlete?.name || '',
+          ballType: '',
+          target: '',
+          result: '',
+          penaltyType: '',
+          defenseStructure: '',
+          ballBehavior: '',
+          plannedTargets: '',
+          newTargets: targetChangeState.newTargets.join(','),
+          subIn: '',
+          subOut: '',
+          position: ''
+        };
+        await window.dataSdk.create(event);
+      }
+      
+      saveToLocalStorage();
+      closeTargetChangeModal();
+      showToast('✅ Alvos atualizados!');
+    }
+    
+    function updateScore() {
+      const events = sdkEvents.filter(e => e.type === 'event' && e.result === 'gol');
+      const myGoals = events.filter(e => e.team === 'my').length;
+      const oppGoals = events.filter(e => e.team === 'opponent').length;
+      document.getElementById('match-score').textContent = `${myGoals} - ${oppGoals}`;
+    }
+    
+    function renderRecentEvents() {
+      const container = document.getElementById('recent-events');
+      const events = sdkEvents.filter(e => e.type === 'event').slice(-5).reverse();
+      
+      if (events.length === 0) {
+        container.innerHTML = '<p class="text-slate-500 text-sm text-center py-4">Nenhum lance registrado</p>';
+        return;
+      }
+      
+      container.innerHTML = events.map(e => {
+        const teamClass = e.team === 'my' ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200';
+        const resultEmoji = e.result === 'gol' ? '⚽' : e.result === 'defendida' ? '🧤' : e.result === 'fora' ? '❌' : e.result === 'blockout' ? '🚫' : '⚠️';
+        return `
+          <div class="p-2 rounded-lg border ${teamClass} text-sm">
+            <div class="flex items-center justify-between">
+              <span>${resultEmoji} ${e.athleteNumber || '?'} - ${e.athleteName || 'N/A'}</span>
+              <span class="text-xs text-slate-500">${e.phase}</span>
+            </div>
+            <div class="text-xs text-slate-600 mt-1">
+              ${e.ballType} → Alvo ${e.target} = ${e.result}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+    
+    function updateAllStats() {
+      // Update live stats in Jogo tab
+      const myEvents = sdkEvents.filter(e => e.type === 'event' && e.team === 'my');
+      const oppEvents = sdkEvents.filter(e => e.type === 'event' && e.team === 'opponent');
+      
+      const myGoals = myEvents.filter(e => e.result === 'gol').length;
+      const oppGoals = oppEvents.filter(e => e.result === 'gol').length;
+      
+      document.getElementById('my-throws').textContent = myEvents.length;
+      document.getElementById('my-goals').textContent = myGoals;
+      document.getElementById('my-efficiency').textContent = myEvents.length > 0 ? Math.round((myGoals / myEvents.length) * 100) + '%' : '0%';
+      
+      document.getElementById('opp-throws').textContent = oppEvents.length;
+      document.getElementById('opp-goals').textContent = oppGoals;
+      document.getElementById('opp-efficiency').textContent = oppEvents.length > 0 ? Math.round((oppGoals / oppEvents.length) * 100) + '%' : '0%';
+      
+      updateScore();
+    }
+    
+    // =====================================================
+    // HISTÓRICO TAB FUNCTIONS
+    // =====================================================
+    
+    function renderHistory() {
+      const container = document.getElementById('history-list');
+      const filter = document.getElementById('history-filter').value;
+      
+      let events = sdkEvents.filter(e => e.type === 'event' || e.type === 'substitution' || e.type === 'target_change');
+      
+      if (filter !== 'all') {
+        events = events.filter(e => e.phase === filter);
+      }
+      
+      if (events.length === 0) {
+        container.innerHTML = '<p class="text-slate-500 text-sm text-center py-8">Nenhum lance registrado ainda</p>';
+        return;
+      }
+      
+      // Sort by timestamp descending
+      events.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+      
+      container.innerHTML = events.map(e => {
+        const time = new Date(e.timestamp).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+        
+        if (e.type === 'substitution') {
+          const outAthlete = AppState.config.myAthletes[e.subOut];
+          const inAthlete = AppState.config.myAthletes[e.subIn];
+          return `
+            <div class="p-3 bg-yellow-50 rounded-lg border border-yellow-200" data-id="${e.__backendId}">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <span class="text-lg">🔄</span>
+                  <div>
+                    <div class="text-sm font-medium">Substituição</div>
+                    <div class="text-xs text-slate-600">
+                      Saiu: ${outAthlete?.number || '?'} - ${outAthlete?.name || 'N/A'} → 
+                      Entrou: ${inAthlete?.number || '?'} - ${inAthlete?.name || 'N/A'}
+                    </div>
+                  </div>
+                </div>
+                <div class="flex items-center gap-2">
+                  <span class="text-xs bg-yellow-200 px-2 py-0.5 rounded">${e.phase}</span>
+                  <span class="text-xs text-slate-500">${time}</span>
+                  <button class="delete-event-btn text-red-500 hover:text-red-700 p-1" data-id="${e.__backendId}">🗑️</button>
+                </div>
+              </div>
+            </div>
+          `;
+        }
+        
+        if (e.type === 'target_change') {
+          return `
+            <div class="p-3 bg-orange-50 rounded-lg border border-orange-200" data-id="${e.__backendId}">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <span class="text-lg">🎯</span>
+                  <div>
+                    <div class="text-sm font-medium">Mudança de Alvo</div>
+                    <div class="text-xs text-slate-600">
+                      ${e.athleteNumber || '?'} - ${e.athleteName || 'N/A'} → Novos alvos: ${e.newTargets}
+                    </div>
+                  </div>
+                </div>
+                <div class="flex items-center gap-2">
+                  <span class="text-xs bg-orange-200 px-2 py-0.5 rounded">${e.phase}</span>
+                  <span class="text-xs text-slate-500">${time}</span>
+                  <button class="delete-event-btn text-red-500 hover:text-red-700 p-1" data-id="${e.__backendId}">🗑️</button>
+                </div>
+              </div>
+            </div>
+          `;
+        }
+        
+        const teamClass = e.team === 'my' ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200';
+        const resultEmoji = e.result === 'gol' ? '⚽' : e.result === 'defendida' ? '🧤' : e.result === 'fora' ? '❌' : e.result === 'blockout' ? '🚫' : '⚠️';
+        
+        return `
+          <div class="p-3 rounded-lg border ${teamClass}" data-id="${e.__backendId}">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <span class="text-lg">${resultEmoji}</span>
+                <div>
+                  <div class="text-sm font-medium">${e.athleteNumber || '?'} - ${e.athleteName || 'N/A'}</div>
+                  <div class="text-xs text-slate-600">
+                    ${e.ballType} → Alvo ${e.target} = ${e.result}
+                    ${e.penaltyType ? `(${e.penaltyType})` : ''}
+                  </div>
+                  ${e.defenseStructure ? `<div class="text-xs text-slate-500">Defesa: ${e.defenseStructure} | ${e.ballBehavior}</div>` : ''}
+                </div>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="text-xs ${e.team === 'my' ? 'bg-green-200' : 'bg-red-200'} px-2 py-0.5 rounded">${e.phase}</span>
+                <span class="text-xs text-slate-500">${time}</span>
+                <button class="edit-event-btn text-blue-500 hover:text-blue-700 p-1" data-id="${e.__backendId}">✏️</button>
+                <button class="delete-event-btn text-red-500 hover:text-red-700 p-1" data-id="${e.__backendId}">🗑️</button>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+    
+    async function deleteEvent(id) {
+      const event = sdkEvents.find(e => e.__backendId === id);
+      if (!event) return;
+      
+      if (window.dataSdk) {
+        const result = await window.dataSdk.delete(event);
+        if (!result.isOk) {
+          showToast('❌ Erro ao excluir lance');
+          return;
+        }
+      }
+      
+      showToast('✅ Lance excluído!');
+    }
+    
+    function openEditModal(id) {
+      const event = sdkEvents.find(e => e.__backendId === id);
+      if (!event || event.type !== 'event') return;
+      
+      const modal = document.getElementById('edit-event-modal');
+      const content = document.getElementById('edit-form-content');
+      
+      content.innerHTML = `
+        <input type="hidden" id="edit-event-id" value="${id}">
+        
+        <div>
+          <label class="block text-sm font-medium text-slate-600 mb-2">Tipo de Bola</label>
+          <select id="edit-ball-type" class="w-full px-3 py-2 border border-slate-300 rounded-lg">
+            <option value="lisa" ${event.ballType === 'lisa' ? 'selected' : ''}>Lisa</option>
+            <option value="quicada" ${event.ballType === 'quicada' ? 'selected' : ''}>Quicada</option>
+            <option value="curva" ${event.ballType === 'curva' ? 'selected' : ''}>Curva</option>
+            <option value="spin" ${event.ballType === 'spin' ? 'selected' : ''}>Spin</option>
+            <option value="lenta" ${event.ballType === 'lenta' ? 'selected' : ''}>Lenta</option>
+            <option value="rapida" ${event.ballType === 'rapida' ? 'selected' : ''}>Rápida</option>
+          </select>
+        </div>
+        
+        <div>
+          <label class="block text-sm font-medium text-slate-600 mb-2">Alvo</label>
+          <select id="edit-target" class="w-full px-3 py-2 border border-slate-300 rounded-lg">
+            ${['1', '2', '2/3', '3', 'M', '4', '4/5', '5', '6'].map(t => 
+              `<option value="${t}" ${event.target === t ? 'selected' : ''}>${t}</option>`
+            ).join('')}
+          </select>
+        </div>
+        
+        <div>
+          <label class="block text-sm font-medium text-slate-600 mb-2">Resultado</label>
+          <select id="edit-result" class="w-full px-3 py-2 border border-slate-300 rounded-lg">
+            <option value="gol" ${event.result === 'gol' ? 'selected' : ''}>Gol</option>
+            <option value="defendida" ${event.result === 'defendida' ? 'selected' : ''}>Defendida</option>
+            <option value="blockout" ${event.result === 'blockout' ? 'selected' : ''}>Blockout</option>
+            <option value="fora" ${event.result === 'fora' ? 'selected' : ''}>Fora</option>
+            <option value="penalidade" ${event.result === 'penalidade' ? 'selected' : ''}>Penalidade</option>
+          </select>
+        </div>
+        
+        <div>
+          <label class="block text-sm font-medium text-slate-600 mb-2">Comportamento da Bola</label>
+          <select id="edit-ball-behavior" class="w-full px-3 py-2 border border-slate-300 rounded-lg">
+            <option value="">Selecionar</option>
+            <option value="dominada" ${event.ballBehavior === 'dominada' ? 'selected' : ''}>Dominada</option>
+            <option value="voltou" ${event.ballBehavior === 'voltou' ? 'selected' : ''}>Bateu e Voltou</option>
+            <option value="subiu" ${event.ballBehavior === 'subiu' ? 'selected' : ''}>Bateu e Subiu</option>
+            <option value="rebote" ${event.ballBehavior === 'rebote' ? 'selected' : ''}>Rebote Perigoso</option>
+            <option value="escapou" ${event.ballBehavior === 'escapou' ? 'selected' : ''}>Escapou</option>
+          </select>
+        </div>
+        
+        <button id="save-edit" class="w-full btn-primary text-white py-3 rounded-xl font-semibold">
+          💾 Salvar Alterações
+        </button>
+      `;
+      
+      modal.classList.remove('hidden');
+    }
+    
+    async function saveEventEdit() {
+      const id = document.getElementById('edit-event-id').value;
+      const event = sdkEvents.find(e => e.__backendId === id);
+      if (!event) return;
+      
+      const updatedEvent = {
+        ...event,
+        ballType: document.getElementById('edit-ball-type').value,
+        target: document.getElementById('edit-target').value,
+        result: document.getElementById('edit-result').value,
+        ballBehavior: document.getElementById('edit-ball-behavior').value
+      };
+      
+      if (window.dataSdk) {
+        const result = await window.dataSdk.update(updatedEvent);
+        if (!result.isOk) {
+          showToast('❌ Erro ao atualizar lance');
+          return;
+        }
+      }
+      
+      document.getElementById('edit-event-modal').classList.add('hidden');
+      showToast('✅ Lance atualizado!');
+    }
+    
+    // =====================================================
+    // RELATÓRIO TAB FUNCTIONS
+    // =====================================================
+    
+    function updateReportStats(period) {
+      let events = sdkEvents.filter(e => e.type === 'event');
+      
+      if (period !== 'all') {
+        events = events.filter(e => e.phase === period);
+      }
+      
+      const myEvents = events.filter(e => e.team === 'my');
+      
+      // Attack stats by athlete
+      const athleteStats = {};
+      AppState.config.myAthletes.forEach((athlete, idx) => {
+        if (!athlete.name && !athlete.number) return;
+        
+        const key = athlete.number || idx.toString();
+        const athleteEvents = myEvents.filter(e => e.athleteNumber === athlete.number);
+        
+        const goals = athleteEvents.filter(e => e.result === 'gol').length;
+        const defended = athleteEvents.filter(e => e.result === 'defendida').length;
+        const penalties = athleteEvents.filter(e => e.result === 'penalidade').length;
+        
+        // Calculate plan adherence
+        let plannedHits = 0;
+        athleteEvents.forEach(e => {
+          try {
+            const planned = JSON.parse(e.plannedTargets || '[]');
+            if (planned.includes(e.target)) plannedHits++;
+          } catch {}
+        });
+        
+        athleteStats[key] = {
+          name: athlete.name,
+          number: athlete.number,
+          throws: athleteEvents.length,
+          goals,
+          defended,
+          penalties,
+          efficiency: athleteEvents.length > 0 ? Math.round((goals / athleteEvents.length) * 100) : 0,
+          planAdherence: athleteEvents.length > 0 ? Math.round((plannedHits / athleteEvents.length) * 100) : 0
+        };
+      });
+      
+      // Render attack stats table
+      const tbody = document.getElementById('attack-stats-body');
+      const statsArray = Object.values(athleteStats).filter(s => s.throws > 0);
+      
+      if (statsArray.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-slate-500">Sem dados</td></tr>';
+      } else {
+        tbody.innerHTML = statsArray.map(s => `
+          <tr class="border-b border-slate-100">
+            <td class="px-3 py-2">${s.number || '?'} - ${s.name || 'N/A'}</td>
+            <td class="px-3 py-2 text-center">${s.throws}</td>
+            <td class="px-3 py-2 text-center font-bold text-green-600">${s.goals}</td>
+            <td class="px-3 py-2 text-center">${s.defended}</td>
+            <td class="px-3 py-2 text-center text-red-600">${s.penalties}</td>
+            <td class="px-3 py-2 text-center">${s.efficiency}%</td>
+            <td class="px-3 py-2 text-center">${s.planAdherence}%</td>
+          </tr>
+        `).join('');
+      }
+      
+      // Highlights
+      if (statsArray.length > 0) {
+        const mostEfficient = statsArray.reduce((a, b) => a.efficiency > b.efficiency ? a : b);
+        document.getElementById('most-efficient').textContent = `${mostEfficient.number || '?'} (${mostEfficient.efficiency}%)`;
+      }
+      
+      // Zone stats
+      const zoneStats = {};
+      myEvents.forEach(e => {
+        if (!zoneStats[e.target]) zoneStats[e.target] = { count: 0, goals: 0 };
+        zoneStats[e.target].count++;
+        if (e.result === 'gol') zoneStats[e.target].goals++;
+      });
+      
+      const zones = Object.entries(zoneStats);
+      if (zones.length > 0) {
+        const mostUsed = zones.reduce((a, b) => a[1].count > b[1].count ? a : b);
+        document.getElementById('most-used-zone').textContent = mostUsed[0];
+        
+        const mostEfficientZone = zones.reduce((a, b) => {
+          const aEff = a[1].count > 0 ? a[1].goals / a[1].count : 0;
+          const bEff = b[1].count > 0 ? b[1].goals / b[1].count : 0;
+          return aEff > bEff ? a : b;
+        });
+        const zoneEff = mostEfficientZone[1].count > 0 ? Math.round((mostEfficientZone[1].goals / mostEfficientZone[1].count) * 100) : 0;
+        document.getElementById('most-efficient-zone').textContent = `${mostEfficientZone[0]} (${zoneEff}%)`;
+      }
+      
+      // Defense stats
+      const oppEvents = events.filter(e => e.team === 'opponent');
+      
+      const defenseStructures = {
+        'bloco-correto': 0,
+        'bloco-incorreto': 0,
+        'cobertura': 0,
+        'individual': 0
+      };
+      
+      const ballBehaviors = {
+        'dominada': 0,
+        'voltou': 0,
+        'subiu': 0,
+        'rebote': 0,
+        'escapou': 0
+      };
+      
+      let goalsAfterBadBlock = 0;
+      
+      oppEvents.forEach(e => {
+        const structures = (e.defenseStructure || '').split(',');
+        structures.forEach(s => {
+          if (defenseStructures.hasOwnProperty(s)) {
+            defenseStructures[s]++;
+          }
+        });
+        
+        if (ballBehaviors.hasOwnProperty(e.ballBehavior)) {
+          ballBehaviors[e.ballBehavior]++;
+        }
+        
+        if (structures.includes('bloco-incorreto') && e.result === 'gol') {
+          goalsAfterBadBlock++;
+        }
+      });
+      
+      document.getElementById('correct-blocks').textContent = defenseStructures['bloco-correto'];
+      document.getElementById('incorrect-blocks').textContent = defenseStructures['bloco-incorreto'];
+      document.getElementById('coverage-count').textContent = defenseStructures['cobertura'];
+      
+      const totalBlocks = defenseStructures['bloco-correto'] + defenseStructures['bloco-incorreto'];
+      const blockSuccess = totalBlocks > 0 ? Math.round((defenseStructures['bloco-correto'] / totalBlocks) * 100) : 0;
+      document.getElementById('block-success').textContent = blockSuccess + '%';
+      
+      document.getElementById('ball-dominated').textContent = ballBehaviors['dominada'];
+      document.getElementById('ball-returned').textContent = ballBehaviors['voltou'];
+      document.getElementById('ball-up').textContent = ballBehaviors['subiu'];
+      document.getElementById('dangerous-rebound').textContent = ballBehaviors['rebote'];
+      document.getElementById('ball-escaped').textContent = ballBehaviors['escapou'];
+      
+      document.getElementById('goals-after-bad-block').textContent = goalsAfterBadBlock;
+    }
+
+
+function getHeatmapOptions() {
+  return {
+    scope: document.getElementById('heatmap-filter')?.value || 'all',            // all | planned
+    result: document.getElementById('heatmap-result-filter')?.value || 'all',    // all | goals | defended | out | penalty
+    athlete: document.getElementById('heatmap-athlete-filter')?.value || 'all',  // all | athleteNumber
+    metric: document.getElementById('heatmap-metric')?.value || 'volume',        // volume | efficiency
+    side: document.getElementById('heatmap-side-toggle')?.dataset.side || 'right'// right | left
+  };
+}
+
+function mirrorTarget(target) {
+  // Regra do espelho: 1↔6, 2↔5, 2/3↔4/5, 3↔4, M fica M
+  const map = { '1':'6','6':'1','2':'5','5':'2','2/3':'4/5','4/5':'2/3','3':'4','4':'3','M':'M' };
+  return map[target] || target;
+}
+
+function populateHeatmapAthletes() {
+  const sel = document.getElementById('heatmap-athlete-filter');
+  if (!sel) return;
+  // preserva "Todos Jogadores"
+  sel.innerHTML = '<option value="all">Todos Jogadores</option>';
+  (AppState?.config?.myAthletes || []).forEach((a) => {
+    if (!a || (!a.name && !a.number)) return;
+    const val = a.number || a.name;
+    const label = a.number ? `${a.number} - ${a.name || ''}` : (a.name || val);
+    sel.innerHTML += `<option value="${val}">${label}</option>`;
+  });
+}
+
+    
+    
+function renderHeatmap(optionsOrFilter) {
+  const options = (typeof optionsOrFilter === 'string')
+    ? { scope: optionsOrFilter, result: 'all', athlete: 'all', metric: 'volume', side: 'right' }
+    : (optionsOrFilter || getHeatmapOptions());
+
+  const pointsContainer = document.getElementById('throw-points');
+  pointsContainer.innerHTML = '';
+
+  let events = sdkEvents.filter(e => e.type === 'event' && e.team === 'my');
+
+  // Scope filter (planejado vs todos)
+  if (options.scope === 'planned') {
+    events = events.filter(e => {
+      try {
+        const planned = JSON.parse(e.plannedTargets || '[]');
+        return planned.includes(e.target);
+      } catch {
+        return false;
+      }
+    });
+  }
+
+  // Result filter
+  if (options.result === 'goals') events = events.filter(e => e.result === 'gol');
+  if (options.result === 'defended') events = events.filter(e => e.result === 'defendida');
+  if (options.result === 'out') events = events.filter(e => e.result === 'fora');
+  if (options.result === 'penalty') events = events.filter(e => e.result === 'penalidade');
+
+  // Athlete filter (usa athleteNumber quando existir)
+  if (options.athlete !== 'all') {
+    events = events.filter(e => (e.athleteNumber || e.athleteName) === options.athlete);
+  }
+
+  // Target Y positions (centro de cada faixa de 10 unidades)
+  const targetYPositions = {
+    '1': 5,
+    '2': 15,
+    '2/3': 25,
+    '3': 35,
+    'M': 45,
+    '4': 55,
+    '4/5': 65,
+    '5': 75,
+    '6': 85
+  };
+
+  // Contagens por alvo (volume) e gols por alvo (eficiência)
+  const throwCounts = {};
+  const goalCounts = {};
+
+  events.forEach(e => {
+    const tRaw = (e.target || '').trim();
+    const t = (options.side === 'left') ? mirrorTarget(tRaw) : tRaw;
+
+    if (!targetYPositions.hasOwnProperty(t)) return;
+
+    throwCounts[t] = (throwCounts[t] || 0) + 1;
+    if (e.result === 'gol') goalCounts[t] = (goalCounts[t] || 0) + 1;
+  });
+
+  const maxThrows = Math.max(...Object.values(throwCounts), 1);
+
+  // Plot throw points (pontos perto da trave do lado escolhido)
+  events.forEach((e) => {
+    const tRaw = (e.target || '').trim();
+    const t = (options.side === 'left') ? mirrorTarget(tRaw) : tRaw;
+
+    const targetY = targetYPositions[t];
+    if (targetY === undefined) return;
+
+    // X perto da trave: direita (x ~ 175) ou esquerda (x ~ 5)
+    const throwX = (options.side === 'left')
+      ? (2 + Math.random() * 6)     // 2..8
+      : (172 + Math.random() * 6);  // 172..178
+
+    const throwY = targetY + (Math.random() * 4 - 2);
+
+    // Cor por resultado / plano
+    let color = '#3b82f6'; // normal
+    if (e.result === 'gol') {
+      color = '#ef4444';
+    } else {
+      try {
+        const planned = JSON.parse(e.plannedTargets || '[]');
+        // Atenção: plannedTargets é salvo pelo alvo original do lance.
+        const plannedCheck = (options.side === 'left') ? mirrorTarget(tRaw) : tRaw;
+        if (planned.includes(plannedCheck)) {
+          color = '#22c55e';
+        } else if (planned.length > 0) {
+          color = '#eab308';
+        }
+      } catch {}
+    }
+
+    const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    circle.setAttribute('cx', throwX);
+    circle.setAttribute('cy', throwY);
+    circle.setAttribute('r', '2');
+    circle.setAttribute('fill', color);
+    circle.setAttribute('opacity', '0.7');
+    pointsContainer.appendChild(circle);
+
+    if (e.result === 'gol') {
+      const glow = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      glow.setAttribute('cx', throwX);
+      glow.setAttribute('cy', throwY);
+      glow.setAttribute('r', '3.5');
+      glow.setAttribute('fill', 'none');
+      glow.setAttribute('stroke', '#ef4444');
+      glow.setAttribute('stroke-width', '0.8');
+      glow.setAttribute('opacity', '0.4');
+      pointsContainer.appendChild(glow);
+    }
+  });
+
+  // Atualiza intensidade nas faixas (rects .heat-zone)
+  document.querySelectorAll('.heat-zone').forEach(zone => {
+    const z = zone.getAttribute('data-zone');
+    const t = (options.side === 'left') ? mirrorTarget(z) : z;
+
+    const throws = throwCounts[t] || 0;
+    const goals = goalCounts[t] || 0;
+
+    let intensity = 0.12; // base
+    if (options.metric === 'efficiency') {
+      const eff = throws > 0 ? (goals / throws) : 0;
+      intensity = 0.12 + (eff * 0.75); // 0.12..0.87
+    } else {
+      intensity = throws > 0 ? (0.12 + Math.min((throws / maxThrows) * 0.75, 0.75)) : 0.12;
+    }
+
+    zone.setAttribute('fill', `rgba(59,130,246,${intensity.toFixed(3)})`);
+  });
+}
+
+    // =====================================================
+    // ANÁLISE TAB FUNCTIONS
+    // =====================================================
+    
+    function renderAnalysis() {
+      // Attack comparison chart
+      const attackChart = document.getElementById('attack-comparison-chart');
+      const periods = ['1T', '2T', 'PR'];
+      
+      const periodData = periods.map(p => {
+        const events = sdkEvents.filter(e => e.type === 'event' && e.team === 'my' && e.phase === p);
+        const goals = events.filter(e => e.result === 'gol').length;
+        return { period: p, throws: events.length, goals };
+      });
+      
+      const maxThrows = Math.max(...periodData.map(d => d.throws), 1);
+      
+      attackChart.innerHTML = `
+        <rect x="0" y="0" width="200" height="100" fill="#f8fafc"/>
+        ${periodData.map((d, i) => {
+          const barHeight = (d.throws / maxThrows) * 60;
+          const goalHeight = (d.goals / maxThrows) * 60;
+          const x = 30 + i * 50;
+          return `
+            <rect x="${x}" y="${80 - barHeight}" width="20" height="${barHeight}" fill="#93c5fd" rx="2"/>
+            <rect x="${x}" y="${80 - goalHeight}" width="20" height="${goalHeight}" fill="#22c55e" rx="2"/>
+            <text x="${x + 10}" y="95" text-anchor="middle" font-size="8" fill="#475569">${d.period}</text>
+            <text x="${x + 10}" y="${75 - barHeight}" text-anchor="middle" font-size="6" fill="#334155">${d.throws}</text>
+          `;
+        }).join('')}
+        <text x="15" y="12" font-size="7" fill="#64748b">Arremessos</text>
+      `;
+      
+      // Defense comparison chart
+      const defenseChart = document.getElementById('defense-comparison-chart');
+      const defenseData = periods.map(p => {
+        const events = sdkEvents.filter(e => e.type === 'event' && e.team === 'opponent' && e.phase === p);
+        const goalsAgainst = events.filter(e => e.result === 'gol').length;
+        const defended = events.filter(e => e.result === 'defendida').length;
+        return { period: p, total: events.length, goalsAgainst, defended };
+      });
+      
+      const maxDef = Math.max(...defenseData.map(d => d.total), 1);
+      
+      defenseChart.innerHTML = `
+        <rect x="0" y="0" width="200" height="100" fill="#f8fafc"/>
+        ${defenseData.map((d, i) => {
+          const barHeight = (d.total / maxDef) * 60;
+          const goalHeight = (d.goalsAgainst / maxDef) * 60;
+          const x = 30 + i * 50;
+          return `
+            <rect x="${x}" y="${80 - barHeight}" width="20" height="${barHeight}" fill="#fca5a5" rx="2"/>
+            <rect x="${x}" y="${80 - goalHeight}" width="20" height="${goalHeight}" fill="#ef4444" rx="2"/>
+            <text x="${x + 10}" y="95" text-anchor="middle" font-size="8" fill="#475569">${d.period}</text>
+            <text x="${x + 10}" y="${75 - barHeight}" text-anchor="middle" font-size="6" fill="#334155">${d.total}</text>
+          `;
+        }).join('')}
+        <text x="15" y="12" font-size="7" fill="#64748b">Ataques Adversários</text>
+      `;
+      
+      // Athlete efficiency
+      const efficiencyContainer = document.getElementById('athlete-efficiency-chart');
+      const athleteStats = [];
+      
+      AppState.config.myAthletes.forEach((athlete, idx) => {
+        if (!athlete.name && !athlete.number) return;
+        
+        const events = sdkEvents.filter(e => e.type === 'event' && e.team === 'my' && e.athleteNumber === athlete.number);
+        if (events.length === 0) return;
+        
+        const goals = events.filter(e => e.result === 'gol').length;
+        const efficiency = Math.round((goals / events.length) * 100);
+        
+        athleteStats.push({
+          name: athlete.name,
+          number: athlete.number,
+          throws: events.length,
+          goals,
+          efficiency
+        });
+      });
+      
+      if (athleteStats.length === 0) {
+        efficiencyContainer.innerHTML = '<p class="text-slate-500 text-sm text-center py-4">Registre lances para ver a análise</p>';
+      } else {
+        const maxEff = Math.max(...athleteStats.map(s => s.efficiency), 1);
+        efficiencyContainer.innerHTML = athleteStats.map(s => `
+          <div class="flex items-center gap-3">
+            <span class="w-16 text-sm font-medium truncate">${s.number || '?'} - ${s.name?.split(' ')[0] || 'N/A'}</span>
+            <div class="flex-1 bg-slate-200 rounded-full h-4 overflow-hidden">
+              <div class="h-full bg-gradient-to-r from-blue-500 to-green-500 rounded-full transition-all" style="width: ${s.efficiency}%"></div>
+            </div>
+            <span class="w-12 text-right text-sm font-bold">${s.efficiency}%</span>
+          </div>
+        `).join('');
+      }
+      
+      // Plan adherence
+      const planContainer = document.getElementById('plan-adherence');
+      const planStats = [];
+      
+      AppState.config.myAthletes.forEach((athlete, idx) => {
+        if (!athlete.name && !athlete.number) return;
+        
+        const events = sdkEvents.filter(e => e.type === 'event' && e.team === 'my' && e.athleteNumber === athlete.number);
+        if (events.length === 0) return;
+        
+        let adherentCount = 0;
+        events.forEach(e => {
+          try {
+            const planned = JSON.parse(e.plannedTargets || '[]');
+            if (planned.includes(e.target)) adherentCount++;
+          } catch {}
+        });
+        
+        const adherence = Math.round((adherentCount / events.length) * 100);
+        
+        planStats.push({
+          name: athlete.name,
+          number: athlete.number,
+          adherence,
+          total: events.length,
+          adherent: adherentCount
+        });
+      });
+      
+      if (planStats.length === 0) {
+        planContainer.innerHTML = '<p class="col-span-full text-slate-500 text-sm text-center py-4">Configure o plano de alvos para ver a análise</p>';
+      } else {
+        planContainer.innerHTML = planStats.map(s => `
+          <div class="bg-slate-50 rounded-lg p-3 text-center">
+            <div class="text-xs text-slate-600 mb-1">${s.number || '?'} - ${s.name?.split(' ')[0] || 'N/A'}</div>
+            <div class="text-2xl font-bold ${s.adherence >= 70 ? 'text-green-600' : s.adherence >= 50 ? 'text-yellow-600' : 'text-red-600'}">${s.adherence}%</div>
+            <div class="text-xs text-slate-500">${s.adherent}/${s.total} no plano</div>
+          </div>
+        `).join('');
+      }
+    }
+    
+    // =====================================================
+    // EVENT LISTENERS
+    // =====================================================
+    
+    function initializeEventListeners() {
+      // Tab navigation
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+      });
+      
+      // Config tab
+      document.getElementById('opponent-toggle').addEventListener('change', (e) => {
+        AppState.config.showOpponent = e.target.checked;
+        document.getElementById('opponent-section').classList.toggle('hidden', !e.target.checked);
+        saveToLocalStorage();
+      });
+      
+      document.getElementById('save-config').addEventListener('click', saveConfig);
+      
+      // Escalação tab
+      document.querySelectorAll('.phase-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.phase-btn').forEach(b => {
+            b.classList.remove('bg-blue-600', 'text-white');
+            b.classList.add('bg-slate-200', 'text-slate-700');
+          });
+          btn.classList.remove('bg-slate-200', 'text-slate-700');
+          btn.classList.add('bg-blue-600', 'text-white');
+          AppState.lineup.phase = btn.dataset.phase;
+          document.getElementById('current-phase').textContent = 
+            btn.dataset.phase === '1T' ? '1º Tempo' : 
+            btn.dataset.phase === '2T' ? '2º Tempo' : 'Prorrogação';
+          saveToLocalStorage();
+        });
+      });
+      
+      ['left', 'center', 'right'].forEach(pos => {
+        document.getElementById(`select-${pos}`).addEventListener('change', (e) => {
+          AppState.lineup[pos] = e.target.value ? parseInt(e.target.value) : null;
+          saveToLocalStorage();
+          updateLineupDisplay();
+        });
+      });
+      
+      document.getElementById('confirm-sub').addEventListener('click', performSubstitution);
+      
+      // Target plan buttons (delegated)
+      document.getElementById('target-plan-container').addEventListener('click', (e) => {
+        if (e.target.classList.contains('target-plan-btn')) {
+          const athlete = e.target.dataset.athlete;
+          const target = e.target.dataset.target;
+          
+          if (!AppState.targetPlans[athlete]) AppState.targetPlans[athlete] = [];
+          
+          const idx = AppState.targetPlans[athlete].indexOf(target);
+          if (idx > -1) {
+            AppState.targetPlans[athlete].splice(idx, 1);
+            e.target.classList.remove('border-blue-500', 'bg-blue-50', 'text-blue-700');
+            e.target.classList.add('border-slate-300');
+          } else {
+            AppState.targetPlans[athlete].push(target);
+            e.target.classList.add('border-blue-500', 'bg-blue-50', 'text-blue-700');
+            e.target.classList.remove('border-slate-300');
+          }
+          
+          saveToLocalStorage();
+        }
+      });
+      
+      document.getElementById('save-target-plan').addEventListener('click', saveTargetPlan);
+      
+      // Jogo tab
+      document.getElementById('btn-attack').addEventListener('click', openAttackModal);
+      document.getElementById('btn-change-target').addEventListener('click', openTargetChangeModal);
+      document.getElementById('close-attack-modal').addEventListener('click', closeAttackModal);
+      document.getElementById('close-target-modal').addEventListener('click', closeTargetChangeModal);
+      
+      // Team selection in attack modal
+      document.querySelectorAll('.team-select-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.team-select-btn').forEach(b => {
+            b.classList.remove('border-blue-500', 'bg-blue-50', 'text-blue-700');
+            b.classList.add('border-slate-300', 'text-slate-600');
+          });
+          btn.classList.add('border-blue-500', 'bg-blue-50', 'text-blue-700');
+          btn.classList.remove('border-slate-300', 'text-slate-600');
+          attackState.team = btn.dataset.team;
+          updateAttackAthleteSelector(btn.dataset.team);
+        });
+      });
+      
+      document.getElementById('attack-athlete').addEventListener('change', (e) => {
+        attackState.athlete = e.target.value;
+      });
+      
+      document.querySelectorAll('.ball-type-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.ball-type-btn').forEach(b => {
+            b.classList.remove('border-blue-500', 'bg-blue-50', 'text-blue-700');
+            b.classList.add('border-slate-300');
+          });
+          btn.classList.add('border-blue-500', 'bg-blue-50', 'text-blue-700');
+          btn.classList.remove('border-slate-300');
+          attackState.ballType = btn.dataset.type;
+        });
+      });
+      
+      document.querySelectorAll('.target-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.target-btn').forEach(b => {
+            b.classList.remove('border-blue-500', 'bg-blue-50', 'text-blue-700');
+            b.classList.add('border-slate-300');
+          });
+          btn.classList.add('border-blue-500', 'bg-blue-50', 'text-blue-700');
+          btn.classList.remove('border-slate-300');
+          attackState.target = btn.dataset.target;
+        });
+      });
+      
+      document.querySelectorAll('.result-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.result-btn').forEach(b => {
+            b.classList.remove('border-blue-500', 'bg-blue-50', 'text-blue-700');
+            b.classList.add('border-slate-300');
+          });
+          btn.classList.add('border-blue-500', 'bg-blue-50', 'text-blue-700');
+          btn.classList.remove('border-slate-300');
+          attackState.result = btn.dataset.result;
+          
+          document.getElementById('penalty-section').classList.toggle('hidden', btn.dataset.result !== 'penalidade');
+        });
+      });
+      
+      document.getElementById('penalty-type').addEventListener('change', (e) => {
+        attackState.penaltyType = e.target.value;
+      });
+      
+      document.querySelectorAll('.defense-structure').forEach(cb => {
+        cb.addEventListener('change', () => {
+          attackState.defenseStructures = Array.from(document.querySelectorAll('.defense-structure:checked')).map(c => c.value);
+        });
+      });
+      
+      document.querySelectorAll('.behavior-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.behavior-btn').forEach(b => {
+            b.classList.remove('border-blue-500', 'bg-blue-50', 'text-blue-700');
+            b.classList.add('border-slate-300');
+          });
+          btn.classList.add('border-blue-500', 'bg-blue-50', 'text-blue-700');
+          btn.classList.remove('border-slate-300');
+          attackState.ballBehavior = btn.dataset.behavior;
+        });
+      });
+      
+      document.getElementById('save-attack').addEventListener('click', saveAttack);
+      
+      // Target change modal
+      document.getElementById('target-change-athlete').addEventListener('change', (e) => {
+        targetChangeState.athlete = e.target.value;
+      });
+      
+      document.querySelectorAll('.new-target-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const target = btn.dataset.target;
+          const idx = targetChangeState.newTargets.indexOf(target);
+          
+          if (idx > -1) {
+            targetChangeState.newTargets.splice(idx, 1);
+            btn.classList.remove('border-orange-500', 'bg-orange-50', 'text-orange-700');
+            btn.classList.add('border-slate-300');
+          } else {
+            targetChangeState.newTargets.push(target);
+            btn.classList.add('border-orange-500', 'bg-orange-50', 'text-orange-700');
+            btn.classList.remove('border-slate-300');
+          }
+        });
+      });
+      
+      document.getElementById('save-target-change').addEventListener('click', saveTargetChange);
+      
+      // Histórico tab
+      document.getElementById('history-filter').addEventListener('change', renderHistory);
+      
+      document.getElementById('history-list').addEventListener('click', (e) => {
+        if (e.target.classList.contains('delete-event-btn')) {
+          const id = e.target.dataset.id;
+          deleteEvent(id);
+        }
+        if (e.target.classList.contains('edit-event-btn')) {
+          const id = e.target.dataset.id;
+          openEditModal(id);
+        }
+      });
+      
+      document.getElementById('close-edit-modal').addEventListener('click', () => {
+        document.getElementById('edit-event-modal').classList.add('hidden');
+      });
+      
+      document.getElementById('edit-form-content').addEventListener('click', (e) => {
+        if (e.target.id === 'save-edit') {
+          saveEventEdit();
+        }
+      });
+      
+      // Relatório tab
+      document.querySelectorAll('.report-period-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.report-period-btn').forEach(b => {
+            b.classList.remove('bg-blue-600', 'text-white');
+            b.classList.add('bg-slate-200', 'text-slate-700');
+          });
+          btn.classList.remove('bg-slate-200', 'text-slate-700');
+          btn.classList.add('bg-blue-600', 'text-white');
+          updateReportStats(btn.dataset.period);
+          renderHeatmap(getHeatmapOptions());
+        });
+      });
+      
+      document.getElementById('heatmap-filter').addEventListener('change', () => {
+  renderHeatmap(getHeatmapOptions());
+});
+
+document.getElementById('heatmap-result-filter').addEventListener('change', () => {
+  renderHeatmap(getHeatmapOptions());
+});
+
+document.getElementById('heatmap-athlete-filter').addEventListener('change', () => {
+  renderHeatmap(getHeatmapOptions());
+});
+
+document.getElementById('heatmap-metric').addEventListener('change', () => {
+  renderHeatmap(getHeatmapOptions());
+});
+
+document.getElementById('heatmap-side-toggle').addEventListener('click', (e) => {
+  const btn = e.currentTarget;
+  const side = btn.dataset.side === 'right' ? 'left' : 'right';
+  btn.dataset.side = side;
+  btn.textContent = side === 'right' ? 'Atacando → direita' : 'Atacando → esquerda';
+  renderHeatmap(getHeatmapOptions());
+});
+
+populateHeatmapAthletes();
+
+}
+    
+    // =====================================================
+    // INITIALIZATION
+    // =====================================================
+    
+    async function init() {
+      loadFromLocalStorage();
+      loadConfigToForm();
+      renderAthleteInputs();
+      updateLineupSelectors();
+      updateLineupDisplay();
+      renderTargetPlan();
+      initializeEventListeners();
+      await initDataSdk();
+    }
+    
+    init();
+  </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9d605fe99238b8fb',t:'MTc3MjQ1NDIyNy4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
