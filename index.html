@@ -191,6 +191,8 @@
     <section id="tab-jogo" class="tab-content hidden">
      <div class="max-w-4xl mx-auto space-y-4"><!-- Quick Actions -->
       <div class="grid grid-cols-2 gap-3"><button id="btn-attack" class="bg-gradient-to-br from-green-500 to-green-700 text-white p-4 rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transition-all"> ⚡ Registrar Ataque </button> <button id="btn-change-target" class="bg-gradient-to-br from-orange-500 to-orange-700 text-white p-4 rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transition-all"> 🎯 Mudança de Alvo </button>
+      </div>
+      <div class="grid grid-cols-1 gap-3"><button id="btn-end-match" class="bg-gradient-to-br from-red-500 to-red-700 text-white p-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all"> 🏁 Encerrar Partida </button>
       </div><!-- Attack Modal -->
       <div id="attack-modal" class="hidden fixed inset-0 modal-overlay z-50 flex items-center justify-center p-4">
        <div class="bg-white rounded-2xl w-full max-w-lg max-h-[90%] overflow-y-auto">
@@ -293,9 +295,10 @@
       <div class="bg-white rounded-xl p-4 card-shadow">
        <div class="flex items-center justify-between mb-4">
         <h2 class="text-lg font-semibold text-slate-800">📋 Histórico de Lances</h2>
-        <div class="flex gap-2"><select id="history-filter" class="px-3 py-1 border rounded-lg text-sm"> <option value="all">Todos</option> <option value="1T">1º Tempo</option> <option value="2T">2º Tempo</option> <option value="PR">Prorrogação</option> </select>
+        <div class="flex gap-2 flex-wrap"><select id="history-match-select" class="px-3 py-1 border rounded-lg text-sm"> <option value="current">Partida atual</option> </select> <select id="history-filter" class="px-3 py-1 border rounded-lg text-sm"> <option value="all">Todos</option> <option value="1T">1º Tempo</option> <option value="2T">2º Tempo</option> <option value="PR">Prorrogação</option> </select>
         </div>
        </div>
+      <div id="history-match-meta" class="text-xs text-slate-500 mb-3"></div>
        <div id="history-list" class="space-y-2 max-h-[60vh] overflow-y-auto scrollbar-thin">
         <p class="text-slate-500 text-sm text-center py-8">Nenhum lance registrado ainda</p>
        </div>
@@ -607,7 +610,8 @@
       targetPlans: {},
       currentTargets: {},
       events: [],
-      matchId: null
+      matchId: null,
+      archivedMatches: []
     };
     
     // Local storage for offline persistence
@@ -646,6 +650,7 @@
       onDataChanged(data) {
         sdkEvents = data.filter(d => d.type === 'event' || d.type === 'substitution' || d.type === 'target_change');
         AppState.events = sdkEvents;
+        saveToLocalStorage();
         updateAllStats();
         renderHistory();
         renderRecentEvents();
@@ -658,7 +663,16 @@
         const result = await window.dataSdk.init(dataHandler);
         if (!result.isOk) {
           console.error('Failed to initialize Data SDK');
+          sdkEvents = [...AppState.events];
+          updateAllStats();
+          renderHistory();
+          renderRecentEvents();
         }
+      } else {
+        sdkEvents = [...AppState.events];
+        updateAllStats();
+        renderHistory();
+        renderRecentEvents();
       }
     }
     
@@ -673,6 +687,8 @@
           lineup: AppState.lineup,
           targetPlans: AppState.targetPlans,
           currentTargets: AppState.currentTargets,
+          events: AppState.events,
+          archivedMatches: AppState.archivedMatches,
           matchId: AppState.matchId
         };
         localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
@@ -690,6 +706,9 @@
           AppState.lineup = parsed.lineup || AppState.lineup;
           AppState.targetPlans = parsed.targetPlans || {};
           AppState.currentTargets = parsed.currentTargets || {};
+          AppState.events = Array.isArray(parsed.events) ? parsed.events : [];
+          AppState.archivedMatches = Array.isArray(parsed.archivedMatches) ? parsed.archivedMatches : [];
+          sdkEvents = [...AppState.events];
           AppState.matchId = parsed.matchId || Date.now().toString();
         } else {
           AppState.matchId = Date.now().toString();
@@ -698,6 +717,132 @@
         console.error('Failed to load from localStorage:', e);
         AppState.matchId = Date.now().toString();
       }
+    }
+
+    function getEventId(event) {
+      return event.__backendId || event.__localId;
+    }
+
+    function createLocalEvent(event) {
+      const localEvent = {
+        ...event,
+        __localId: event.__localId || `local-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`
+      };
+      sdkEvents.push(localEvent);
+      AppState.events = [...sdkEvents];
+      saveToLocalStorage();
+      updateAllStats();
+      renderHistory();
+      renderRecentEvents();
+      return localEvent;
+    }
+
+    function syncEventsToLocalStorage() {
+      AppState.events = [...sdkEvents];
+      saveToLocalStorage();
+    }
+
+
+    function getCurrentMatchEvents() {
+      return sdkEvents.filter(e => e.matchId === AppState.matchId);
+    }
+
+    function getScoreForMatch(matchId) {
+      const events = sdkEvents.filter(e => e.type === 'event' && e.matchId === matchId && e.result === 'gol');
+      const myGoals = events.filter(e => e.team === 'my').length;
+      const oppGoals = events.filter(e => e.team === 'opponent').length;
+      return { myGoals, oppGoals };
+    }
+
+    function formatMatchLabel(match) {
+      const score = `${match.myGoals ?? 0} x ${match.oppGoals ?? 0}`;
+      const date = match.date || new Date(match.endedAt || Date.now()).toLocaleDateString('pt-BR');
+      const myTeam = match.myTeam || 'Minha Equipe';
+      const opponentTeam = match.opponentTeam || 'Adversário';
+      return `${date} • ${myTeam} ${score} ${opponentTeam}`;
+    }
+
+    function renderHistoryMatchSelector() {
+      const select = document.getElementById('history-match-select');
+      if (!select) return;
+
+      const currentOption = `<option value="current">Partida atual</option>`;
+      const archived = [...AppState.archivedMatches]
+        .sort((a, b) => new Date(b.endedAt || 0) - new Date(a.endedAt || 0))
+        .map(match => `<option value="${match.id}">${formatMatchLabel(match)}</option>`)
+        .join('');
+
+      const selectedValue = select.value;
+      select.innerHTML = currentOption + archived;
+      if (selectedValue && [...select.options].some(o => o.value === selectedValue)) {
+        select.value = selectedValue;
+      }
+
+      renderHistoryMeta();
+    }
+
+    function renderHistoryMeta() {
+      const meta = document.getElementById('history-match-meta');
+      const select = document.getElementById('history-match-select');
+      if (!meta || !select) return;
+
+      if (select.value === 'current') {
+        const score = getScoreForMatch(AppState.matchId);
+        meta.textContent = `Partida atual • ID ${AppState.matchId} • Placar: ${score.myGoals} x ${score.oppGoals}`;
+        return;
+      }
+
+      const match = AppState.archivedMatches.find(m => m.id === select.value);
+      if (!match) {
+        meta.textContent = '';
+        return;
+      }
+
+      meta.textContent = `Encerrada em ${new Date(match.endedAt).toLocaleString('pt-BR')} • ${formatMatchLabel(match)} • ${match.eventsCount || 0} registros`;
+    }
+
+    function getSelectedHistoryMatchId() {
+      const select = document.getElementById('history-match-select');
+      if (!select || select.value === 'current') return AppState.matchId;
+      return select.value;
+    }
+
+    function endMatch() {
+      const currentEvents = getCurrentMatchEvents();
+      const score = getScoreForMatch(AppState.matchId);
+      const matchSummary = {
+        id: AppState.matchId,
+        competition: AppState.config.competition || '',
+        date: AppState.config.date || '',
+        location: AppState.config.location || '',
+        myTeam: AppState.config.myTeam || 'Minha Equipe',
+        opponentTeam: AppState.config.opponentTeam || 'Adversário',
+        myGoals: score.myGoals,
+        oppGoals: score.oppGoals,
+        eventsCount: currentEvents.length,
+        endedAt: new Date().toISOString()
+      };
+
+      AppState.archivedMatches = [
+        ...AppState.archivedMatches.filter(m => m.id !== AppState.matchId),
+        matchSummary
+      ];
+
+      const previousMatchId = AppState.matchId;
+      AppState.matchId = Date.now().toString();
+      saveToLocalStorage();
+      renderHistoryMatchSelector();
+
+      const select = document.getElementById('history-match-select');
+      if (select) {
+        select.value = previousMatchId;
+        renderHistoryMeta();
+      }
+
+      renderHistory();
+      updateAllStats();
+      renderRecentEvents();
+      showToast('🏁 Partida encerrada e salva! Nova partida iniciada.');
     }
     
     // =====================================================
@@ -923,30 +1068,41 @@
       
       // Update lineup
       AppState.lineup[position] = parseInt(subInIdx);
+
+      const subEvent = {
+        type: 'substitution',
+        matchId: AppState.matchId,
+        timestamp: new Date().toISOString(),
+        phase: AppState.lineup.phase,
+        subOut: subOutIdx,
+        subIn: subInIdx,
+        position: position,
+        team: 'my',
+        athleteNumber: '',
+        athleteName: '',
+        ballType: '',
+        target: '',
+        result: '',
+        penaltyType: '',
+        defenseStructure: '',
+        ballBehavior: '',
+        plannedTargets: '',
+        newTargets: ''
+      };
+
+      const canRegisterEvent = sdkEvents.length < 999;
+      if (!canRegisterEvent) {
+        showToast('⚠️ Limite de 999 registros atingido! Substituição aplicada sem registro no histórico.');
+      }
       
       // Record substitution event
-      if (window.dataSdk && sdkEvents.length < 999) {
-        const subEvent = {
-          type: 'substitution',
-          matchId: AppState.matchId,
-          timestamp: new Date().toISOString(),
-          phase: AppState.lineup.phase,
-          subOut: subOutIdx,
-          subIn: subInIdx,
-          position: position,
-          team: 'my',
-          athleteNumber: '',
-          athleteName: '',
-          ballType: '',
-          target: '',
-          result: '',
-          penaltyType: '',
-          defenseStructure: '',
-          ballBehavior: '',
-          plannedTargets: '',
-          newTargets: ''
-        };
-        await window.dataSdk.create(subEvent);
+      if (canRegisterEvent && window.dataSdk) {
+        const result = await window.dataSdk.create(subEvent);
+        if (!result.isOk) {
+          createLocalEvent(subEvent);
+        }
+      } else if (canRegisterEvent) {
+        createLocalEvent(subEvent);
       }
       
       saveToLocalStorage();
@@ -1103,16 +1259,22 @@
         newTargets: ''
       };
       
+      if (sdkEvents.length >= 999) {
+        showToast('⚠️ Limite de 999 registros atingido!');
+        return;
+      }
+
       if (window.dataSdk) {
-        if (sdkEvents.length >= 999) {
-          showToast('⚠️ Limite de 999 registros atingido!');
-          return;
-        }
         const result = await window.dataSdk.create(event);
         if (!result.isOk) {
-          showToast('❌ Erro ao salvar lance');
+          createLocalEvent(event);
+          showToast('⚠️ Lance salvo localmente (modo offline)');
+          closeAttackModal();
+          updateScore();
           return;
         }
+      } else {
+        createLocalEvent(event);
       }
       
       closeAttackModal();
@@ -1157,28 +1319,39 @@
       const athlete = AppState.config.myAthletes[targetChangeState.athlete];
       
       // Record target change event
-      if (window.dataSdk && sdkEvents.length < 999) {
-        const event = {
-          type: 'target_change',
-          matchId: AppState.matchId,
-          timestamp: new Date().toISOString(),
-          phase: AppState.lineup.phase,
-          team: 'my',
-          athleteNumber: athlete?.number || '',
-          athleteName: athlete?.name || '',
-          ballType: '',
-          target: '',
-          result: '',
-          penaltyType: '',
-          defenseStructure: '',
-          ballBehavior: '',
-          plannedTargets: '',
-          newTargets: targetChangeState.newTargets.join(','),
-          subIn: '',
-          subOut: '',
-          position: ''
-        };
-        await window.dataSdk.create(event);
+      const canRegisterEvent = sdkEvents.length < 999;
+      if (!canRegisterEvent) {
+        showToast('⚠️ Limite de 999 registros atingido! Alvos atualizados sem registro no histórico.');
+      }
+
+      const event = {
+        type: 'target_change',
+        matchId: AppState.matchId,
+        timestamp: new Date().toISOString(),
+        phase: AppState.lineup.phase,
+        team: 'my',
+        athleteNumber: athlete?.number || '',
+        athleteName: athlete?.name || '',
+        ballType: '',
+        target: '',
+        result: '',
+        penaltyType: '',
+        defenseStructure: '',
+        ballBehavior: '',
+        plannedTargets: '',
+        newTargets: targetChangeState.newTargets.join(','),
+        subIn: '',
+        subOut: '',
+        position: ''
+      };
+
+      if (canRegisterEvent && window.dataSdk) {
+        const result = await window.dataSdk.create(event);
+        if (!result.isOk) {
+          createLocalEvent(event);
+        }
+      } else if (canRegisterEvent) {
+        createLocalEvent(event);
       }
       
       saveToLocalStorage();
@@ -1187,15 +1360,13 @@
     }
     
     function updateScore() {
-      const events = sdkEvents.filter(e => e.type === 'event' && e.result === 'gol');
-      const myGoals = events.filter(e => e.team === 'my').length;
-      const oppGoals = events.filter(e => e.team === 'opponent').length;
-      document.getElementById('match-score').textContent = `${myGoals} - ${oppGoals}`;
+      const score = getScoreForMatch(AppState.matchId);
+      document.getElementById('match-score').textContent = `${score.myGoals} - ${score.oppGoals}`;
     }
     
     function renderRecentEvents() {
       const container = document.getElementById('recent-events');
-      const events = sdkEvents.filter(e => e.type === 'event').slice(-5).reverse();
+      const events = getCurrentMatchEvents().filter(e => e.type === 'event').slice(-5).reverse();
       
       if (events.length === 0) {
         container.innerHTML = '<p class="text-slate-500 text-sm text-center py-4">Nenhum lance registrado</p>';
@@ -1221,8 +1392,9 @@
     
     function updateAllStats() {
       // Update live stats in Jogo tab
-      const myEvents = sdkEvents.filter(e => e.type === 'event' && e.team === 'my');
-      const oppEvents = sdkEvents.filter(e => e.type === 'event' && e.team === 'opponent');
+      const matchEvents = getCurrentMatchEvents();
+      const myEvents = matchEvents.filter(e => e.type === 'event' && e.team === 'my');
+      const oppEvents = matchEvents.filter(e => e.type === 'event' && e.team === 'opponent');
       
       const myGoals = myEvents.filter(e => e.result === 'gol').length;
       const oppGoals = oppEvents.filter(e => e.result === 'gol').length;
@@ -1246,7 +1418,9 @@
       const container = document.getElementById('history-list');
       const filter = document.getElementById('history-filter').value;
       
-      let events = sdkEvents.filter(e => e.type === 'event' || e.type === 'substitution' || e.type === 'target_change');
+      const selectedMatchId = getSelectedHistoryMatchId();
+      renderHistoryMeta();
+      let events = sdkEvents.filter(e => (e.type === 'event' || e.type === 'substitution' || e.type === 'target_change') && e.matchId === selectedMatchId);
       
       if (filter !== 'all') {
         events = events.filter(e => e.phase === filter);
@@ -1267,7 +1441,7 @@
           const outAthlete = AppState.config.myAthletes[e.subOut];
           const inAthlete = AppState.config.myAthletes[e.subIn];
           return `
-            <div class="p-3 bg-yellow-50 rounded-lg border border-yellow-200" data-id="${e.__backendId}">
+            <div class="p-3 bg-yellow-50 rounded-lg border border-yellow-200" data-id="${getEventId(e)}">
               <div class="flex items-center justify-between">
                 <div class="flex items-center gap-2">
                   <span class="text-lg">🔄</span>
@@ -1282,7 +1456,7 @@
                 <div class="flex items-center gap-2">
                   <span class="text-xs bg-yellow-200 px-2 py-0.5 rounded">${e.phase}</span>
                   <span class="text-xs text-slate-500">${time}</span>
-                  <button class="delete-event-btn text-red-500 hover:text-red-700 p-1" data-id="${e.__backendId}">🗑️</button>
+                  <button class="delete-event-btn text-red-500 hover:text-red-700 p-1" data-id="${getEventId(e)}">🗑️</button>
                 </div>
               </div>
             </div>
@@ -1291,7 +1465,7 @@
         
         if (e.type === 'target_change') {
           return `
-            <div class="p-3 bg-orange-50 rounded-lg border border-orange-200" data-id="${e.__backendId}">
+            <div class="p-3 bg-orange-50 rounded-lg border border-orange-200" data-id="${getEventId(e)}">
               <div class="flex items-center justify-between">
                 <div class="flex items-center gap-2">
                   <span class="text-lg">🎯</span>
@@ -1305,7 +1479,7 @@
                 <div class="flex items-center gap-2">
                   <span class="text-xs bg-orange-200 px-2 py-0.5 rounded">${e.phase}</span>
                   <span class="text-xs text-slate-500">${time}</span>
-                  <button class="delete-event-btn text-red-500 hover:text-red-700 p-1" data-id="${e.__backendId}">🗑️</button>
+                  <button class="delete-event-btn text-red-500 hover:text-red-700 p-1" data-id="${getEventId(e)}">🗑️</button>
                 </div>
               </div>
             </div>
@@ -1316,7 +1490,7 @@
         const resultEmoji = e.result === 'gol' ? '⚽' : e.result === 'defendida' ? '🧤' : e.result === 'fora' ? '❌' : e.result === 'blockout' ? '🚫' : '⚠️';
         
         return `
-          <div class="p-3 rounded-lg border ${teamClass}" data-id="${e.__backendId}">
+          <div class="p-3 rounded-lg border ${teamClass}" data-id="${getEventId(e)}">
             <div class="flex items-center justify-between">
               <div class="flex items-center gap-2">
                 <span class="text-lg">${resultEmoji}</span>
@@ -1332,8 +1506,8 @@
               <div class="flex items-center gap-2">
                 <span class="text-xs ${e.team === 'my' ? 'bg-green-200' : 'bg-red-200'} px-2 py-0.5 rounded">${e.phase}</span>
                 <span class="text-xs text-slate-500">${time}</span>
-                <button class="edit-event-btn text-blue-500 hover:text-blue-700 p-1" data-id="${e.__backendId}">✏️</button>
-                <button class="delete-event-btn text-red-500 hover:text-red-700 p-1" data-id="${e.__backendId}">🗑️</button>
+                <button class="edit-event-btn text-blue-500 hover:text-blue-700 p-1" data-id="${getEventId(e)}">✏️</button>
+                <button class="delete-event-btn text-red-500 hover:text-red-700 p-1" data-id="${getEventId(e)}">🗑️</button>
               </div>
             </div>
           </div>
@@ -1342,22 +1516,28 @@
     }
     
     async function deleteEvent(id) {
-      const event = sdkEvents.find(e => e.__backendId === id);
+      const event = sdkEvents.find(e => getEventId(e) === id);
       if (!event) return;
       
-      if (window.dataSdk) {
+      if (window.dataSdk && event.__backendId) {
         const result = await window.dataSdk.delete(event);
         if (!result.isOk) {
           showToast('❌ Erro ao excluir lance');
           return;
         }
+      } else {
+        sdkEvents = sdkEvents.filter(e => getEventId(e) !== id);
+        syncEventsToLocalStorage();
+        updateAllStats();
+        renderHistory();
+        renderRecentEvents();
       }
       
       showToast('✅ Lance excluído!');
     }
     
     function openEditModal(id) {
-      const event = sdkEvents.find(e => e.__backendId === id);
+      const event = sdkEvents.find(e => getEventId(e) === id);
       if (!event || event.type !== 'event') return;
       
       const modal = document.getElementById('edit-event-modal');
@@ -1420,7 +1600,7 @@
     
     async function saveEventEdit() {
       const id = document.getElementById('edit-event-id').value;
-      const event = sdkEvents.find(e => e.__backendId === id);
+      const event = sdkEvents.find(e => getEventId(e) === id);
       if (!event) return;
       
       const updatedEvent = {
@@ -1431,12 +1611,18 @@
         ballBehavior: document.getElementById('edit-ball-behavior').value
       };
       
-      if (window.dataSdk) {
+      if (window.dataSdk && event.__backendId) {
         const result = await window.dataSdk.update(updatedEvent);
         if (!result.isOk) {
           showToast('❌ Erro ao atualizar lance');
           return;
         }
+      } else {
+        sdkEvents = sdkEvents.map(e => getEventId(e) === id ? updatedEvent : e);
+        syncEventsToLocalStorage();
+        updateAllStats();
+        renderHistory();
+        renderRecentEvents();
       }
       
       document.getElementById('edit-event-modal').classList.add('hidden');
@@ -1971,6 +2157,10 @@ function renderHeatmap(optionsOrFilter) {
       // Jogo tab
       document.getElementById('btn-attack').addEventListener('click', openAttackModal);
       document.getElementById('btn-change-target').addEventListener('click', openTargetChangeModal);
+      document.getElementById('btn-end-match').addEventListener('click', () => {
+        if (!confirm('Deseja encerrar a partida atual e iniciar uma nova?')) return;
+        endMatch();
+      });
       document.getElementById('close-attack-modal').addEventListener('click', closeAttackModal);
       document.getElementById('close-target-modal').addEventListener('click', closeTargetChangeModal);
       
@@ -2079,6 +2269,7 @@ function renderHeatmap(optionsOrFilter) {
       document.getElementById('save-target-change').addEventListener('click', saveTargetChange);
       
       // Histórico tab
+      document.getElementById('history-match-select').addEventListener('change', renderHistory);
       document.getElementById('history-filter').addEventListener('change', renderHistory);
       
       document.getElementById('history-list').addEventListener('click', (e) => {
@@ -2155,6 +2346,7 @@ populateHeatmapAthletes();
       updateLineupSelectors();
       updateLineupDisplay();
       renderTargetPlan();
+      renderHistoryMatchSelector();
       initializeEventListeners();
       await initDataSdk();
     }
