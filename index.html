@@ -145,7 +145,15 @@
      <div class="max-w-4xl mx-auto space-y-4"><!-- Current Lineup -->
       <div class="bg-white rounded-xl p-5 card-shadow">
        <h2 class="text-lg font-semibold text-slate-800 mb-4">🏐 Escalação Atual</h2><!-- Phase Selector -->
-       <div class="flex gap-2 mb-4"><button class="phase-btn active px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium" data-phase="1T">1º Tempo</button> <button class="phase-btn px-4 py-2 bg-slate-200 text-slate-700 rounded-lg text-sm font-medium" data-phase="2T">2º Tempo</button> <button class="phase-btn px-4 py-2 bg-slate-200 text-slate-700 rounded-lg text-sm font-medium" data-phase="PR">Prorrogação</button>
+       <div class="flex gap-2 mb-4 flex-wrap"><button class="phase-btn active px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium" data-phase="1T">1º Tempo</button> <button class="phase-btn px-4 py-2 bg-slate-200 text-slate-700 rounded-lg text-sm font-medium" data-phase="2T">2º Tempo</button> <button class="phase-btn px-4 py-2 bg-slate-200 text-slate-700 rounded-lg text-sm font-medium" data-phase="PR">Prorrogação</button> <button class="phase-btn px-4 py-2 bg-slate-200 text-slate-700 rounded-lg text-sm font-medium" data-phase="PN">Penalidades</button>
+       </div><div class="bg-slate-50 border rounded-lg p-3 mb-4">
+        <h3 class="text-sm font-semibold text-slate-700 mb-2">⚽ Posse inicial por tempo</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
+         <label>1º Tempo <select id="starter-1T" class="w-full mt-1 px-2 py-1 border rounded"><option value="my">Minha Equipe</option><option value="opponent">Adversário</option></select></label>
+         <label>2º Tempo <select id="starter-2T" class="w-full mt-1 px-2 py-1 border rounded"><option value="my">Minha Equipe</option><option value="opponent">Adversário</option></select></label>
+         <label>Prorrogação <select id="starter-PR" class="w-full mt-1 px-2 py-1 border rounded"><option value="my">Minha Equipe</option><option value="opponent">Adversário</option></select></label>
+         <label>Penalidades <select id="starter-PN" class="w-full mt-1 px-2 py-1 border rounded"><option value="my">Minha Equipe</option><option value="opponent">Adversário</option></select></label>
+        </div>       
        </div><!-- Court Representation -->
        <div class="bg-gradient-to-b from-blue-50 to-slate-50 rounded-xl p-4 border-2 border-blue-200 mb-4">
         <div class="grid grid-cols-3 gap-4 max-w-md mx-auto">
@@ -191,8 +199,11 @@
     <section id="tab-jogo" class="tab-content hidden">
      <div class="max-w-4xl mx-auto space-y-4"><!-- Quick Actions -->
       <div class="grid grid-cols-2 gap-3"><button id="btn-attack" class="bg-gradient-to-br from-green-500 to-green-700 text-white p-4 rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transition-all"> ⚡ Registrar Ataque </button> <button id="btn-change-target" class="bg-gradient-to-br from-orange-500 to-orange-700 text-white p-4 rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transition-all"> 🎯 Mudança de Alvo </button>
-      </div>
-      <div class="grid grid-cols-1 gap-3"><button id="btn-end-match" class="bg-gradient-to-br from-red-500 to-red-700 text-white p-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all"> 🏁 Encerrar Partida </button>
+     </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-3"><button id="btn-end-match" class="bg-gradient-to-br from-red-500 to-red-700 text-white p-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all"> 🏁 Encerrar Partida </button> <button id="btn-new-match" class="bg-gradient-to-br from-indigo-500 to-indigo-700 text-white p-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all"> 🆕 Nova Partida </button>
+      </div><div class="bg-white rounded-xl p-3 card-shadow border border-slate-200">
+       <div class="text-sm text-slate-600">Posse de bola atual</div>
+       <div id="possession-indicator" class="text-lg font-bold text-blue-700">Minha Equipe</div>
       </div><!-- Attack Modal -->
       <div id="attack-modal" class="hidden fixed inset-0 modal-overlay z-50 flex items-center justify-center p-4">
        <div class="bg-white rounded-2xl w-full max-w-lg max-h-[90%] overflow-y-auto">
@@ -215,8 +226,8 @@
           </div>
          </div><!-- Result -->
          <div><label class="block text-sm font-medium text-slate-600 mb-2">Resultado</label>
-          <div class="grid grid-cols-3 gap-2" id="result-grid"><button class="result-btn px-3 py-2 border-2 border-slate-300 rounded-lg text-sm" data-result="gol">⚽ Gol</button> <button class="result-btn px-3 py-2 border-2 border-slate-300 rounded-lg text-sm" data-result="defendida">🧤 Defendida</button> <button class="result-btn px-3 py-2 border-2 border-slate-300 rounded-lg text-sm" data-result="blockout">🚫 Blockout</button> <button class="result-btn px-3 py-2 border-2 border-slate-300 rounded-lg text-sm" data-result="fora">❌ Fora</button> <button class="result-btn px-3 py-2 border-2 border-slate-300 rounded-lg text-sm" data-result="penalidade">⚠️ Penalidade</button>
-          </div>
+         <div class="grid grid-cols-3 gap-2" id="result-grid"><button class="result-btn px-3 py-2 border-2 border-slate-300 rounded-lg text-sm" data-result="gol">⚽ Gol</button> <button class="result-btn px-3 py-2 border-2 border-slate-300 rounded-lg text-sm" data-result="defendida">🧤 Defendida</button> <button class="result-btn px-3 py-2 border-2 border-slate-300 rounded-lg text-sm" data-result="blockout">🚫 Blockout</button> <button class="result-btn px-3 py-2 border-2 border-slate-300 rounded-lg text-sm" data-result="fora">❌ Fora</button> <button class="result-btn px-3 py-2 border-2 border-slate-300 rounded-lg text-sm" data-result="penalidade">⚠️ Penalidade</button> <button class="result-btn px-3 py-2 border-2 border-slate-300 rounded-lg text-sm" data-result="ballover">🔁 Ball Over</button>
+         </div>
          </div><!-- Penalty Type (conditional) -->
          <div id="penalty-section" class="hidden"><label class="block text-sm font-medium text-slate-600 mb-2">Tipo de Penalidade</label> <select id="penalty-type" class="w-full px-3 py-2 border border-slate-300 rounded-lg"> <option value="">Selecionar tipo</option> <option value="highball">Highball</option> <option value="longball">Longball</option> <option value="noise">Noise</option> <option value="eyeshade">Eyeshade</option> <option value="delay">Delay</option> <option value="10sec">10 Segundos</option> <option value="illegal-defense">Defesa Ilegal</option> <option value="other">Outra</option> </select>
          </div><!-- Defense Section -->
@@ -295,7 +306,7 @@
       <div class="bg-white rounded-xl p-4 card-shadow">
        <div class="flex items-center justify-between mb-4">
         <h2 class="text-lg font-semibold text-slate-800">📋 Histórico de Lances</h2>
-        <div class="flex gap-2 flex-wrap"><select id="history-match-select" class="px-3 py-1 border rounded-lg text-sm"> <option value="current">Partida atual</option> </select> <select id="history-filter" class="px-3 py-1 border rounded-lg text-sm"> <option value="all">Todos</option> <option value="1T">1º Tempo</option> <option value="2T">2º Tempo</option> <option value="PR">Prorrogação</option> </select>
+         <div class="flex gap-2 flex-wrap"><select id="history-match-select" class="px-3 py-1 border rounded-lg text-sm"> <option value="current">Partida atual</option> </select> <select id="history-filter" class="px-3 py-1 border rounded-lg text-sm"> <option value="all">Todos</option> <option value="1T">1º Tempo</option> <option value="2T">2º Tempo</option> <option value="PR">Prorrogação</option> <option value="PN">Penalidades</option> </select>
         </div>
        </div>
       <div id="history-match-meta" class="text-xs text-slate-500 mb-3"></div>
@@ -317,7 +328,7 @@
     <section id="tab-relatorio" class="tab-content hidden">
      <div class="max-w-5xl mx-auto space-y-4"><!-- Period Selector -->
       <div class="bg-white rounded-xl p-4 card-shadow">
-       <div class="flex gap-2 flex-wrap"><button class="report-period-btn active px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium" data-period="all">Geral</button> <button class="report-period-btn px-4 py-2 bg-slate-200 text-slate-700 rounded-lg text-sm font-medium" data-period="1T">1º Tempo</button> <button class="report-period-btn px-4 py-2 bg-slate-200 text-slate-700 rounded-lg text-sm font-medium" data-period="2T">2º Tempo</button> <button class="report-period-btn px-4 py-2 bg-slate-200 text-slate-700 rounded-lg text-sm font-medium" data-period="PR">Prorrogação</button>
+       <div class="flex gap-2 flex-wrap items-center"><select id="report-match-select" class="px-3 py-2 border rounded-lg text-sm"><option value="current">Partida atual</option></select> <button id="export-report-pdf" class="px-3 py-2 bg-red-600 text-white rounded-lg text-sm">Exportar PDF</button> <button id="export-report-excel" class="px-3 py-2 bg-green-600 text-white rounded-lg text-sm">Exportar Excel</button> <button class="report-period-btn active px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium" data-period="all">Geral</button> <button class="report-period-btn px-4 py-2 bg-slate-200 text-slate-700 rounded-lg text-sm font-medium" data-period="1T">1º Tempo</button> <button class="report-period-btn px-4 py-2 bg-slate-200 text-slate-700 rounded-lg text-sm font-medium" data-period="2T">2º Tempo</button> <button class="report-period-btn px-4 py-2 bg-slate-200 text-slate-700 rounded-lg text-sm font-medium" data-period="PR">Prorrogação</button> <button class="report-period-btn px-4 py-2 bg-slate-200 text-slate-700 rounded-lg text-sm font-medium" data-period="PN">Penalidades</button>
        </div>
       </div><!-- Attack Stats -->
       <div class="bg-white rounded-xl p-4 card-shadow">
@@ -605,7 +616,14 @@
         left: null,
         center: null,
         right: null,
-        phase: '1T'
+        phase: '1T',
+        phaseStarters: {
+          '1T': 'my',
+          '2T': 'opponent',
+          'PR': 'my',
+          'PN': 'my'
+        },
+        possessionTeam: 'my'
       },
       targetPlans: {},
       currentTargets: {},
@@ -705,6 +723,13 @@
           const parsed = JSON.parse(data);
           AppState.config = parsed.config || AppState.config;
           AppState.lineup = parsed.lineup || AppState.lineup;
+         AppState.lineup.phaseStarters = {
+            '1T': parsed?.lineup?.phaseStarters?.['1T'] || AppState.lineup.phaseStarters['1T'],
+            '2T': parsed?.lineup?.phaseStarters?.['2T'] || AppState.lineup.phaseStarters['2T'],
+            'PR': parsed?.lineup?.phaseStarters?.['PR'] || AppState.lineup.phaseStarters['PR'],
+            'PN': parsed?.lineup?.phaseStarters?.['PN'] || AppState.lineup.phaseStarters['PN']
+          };
+          AppState.lineup.possessionTeam = parsed?.lineup?.possessionTeam || AppState.lineup.phaseStarters[AppState.lineup.phase] || 'my';
           AppState.targetPlans = parsed.targetPlans || {};
           AppState.currentTargets = parsed.currentTargets || {};
           AppState.events = Array.isArray(parsed.events) ? parsed.events : [];
@@ -741,6 +766,115 @@
     function syncEventsToLocalStorage() {
       AppState.events = [...sdkEvents];
       saveToLocalStorage();
+    }
+
+
+    function getTeamLabel(team) {
+      return team === 'my'
+        ? (AppState.config.myTeam || 'Minha Equipe')
+        : (AppState.config.opponentTeam || 'Adversário');
+    }
+
+    function updatePossessionDisplay() {
+      const el = document.getElementById('possession-indicator');
+      if (!el) return;
+      const team = AppState.lineup.possessionTeam || 'my';
+      el.textContent = getTeamLabel(team);
+      el.className = `text-lg font-bold ${team === 'my' ? 'text-blue-700' : 'text-red-700'}`;
+    }
+
+    function setPossessionForPhase(phase) {
+      AppState.lineup.possessionTeam = AppState.lineup.phaseStarters[phase] || 'my';
+      updatePossessionDisplay();
+      saveToLocalStorage();
+    }
+
+    function applyAttackPossessionRule(event) {
+      if (event.result === 'ballover') {
+        AppState.lineup.possessionTeam = event.team;
+      } else {
+        AppState.lineup.possessionTeam = event.team === 'my' ? 'opponent' : 'my';
+      }
+      updatePossessionDisplay();
+      saveToLocalStorage();
+    }
+
+    function getSelectedReportMatchId() {
+      const sel = document.getElementById('report-match-select');
+      if (!sel || sel.value === 'current') return AppState.matchId;
+      return sel.value;
+    }
+
+    function getReportEvents(period = 'all') {
+      const selectedMatchId = getSelectedReportMatchId();
+      let events = sdkEvents.filter(e => e.type === 'event' && e.matchId === selectedMatchId);
+      if (period !== 'all') {
+        events = events.filter(e => e.phase === period);
+      }
+      return events;
+    }
+
+    function renderReportMatchSelector() {
+      const select = document.getElementById('report-match-select');
+      if (!select) return;
+      const currentValue = select.value;
+      const options = ['<option value="current">Partida atual</option>'];
+      [...AppState.archivedMatches]
+        .sort((a, b) => new Date(b.endedAt || 0) - new Date(a.endedAt || 0))
+        .forEach(match => options.push(`<option value="${match.id}">${formatMatchLabel(match)}</option>`));
+      select.innerHTML = options.join('');
+      if (currentValue && [...select.options].some(o => o.value === currentValue)) {
+        select.value = currentValue;
+      }
+    }
+
+    function downloadExcelReport() {
+      const activePeriod = document.querySelector('.report-period-btn.bg-blue-600')?.dataset.period || 'all';
+      const events = getReportEvents(activePeriod);
+      const headers = ['Data/Hora','Tempo','Equipe','Atleta','Tipo Bola','Alvo','Resultado','Penalidade','Defesa','Comportamento'];
+      const rows = events.map(e => [
+        e.timestamp || '', e.phase || '', getTeamLabel(e.team), `${e.athleteNumber || ''} ${e.athleteName || ''}`.trim(),
+        e.ballType || '', e.target || '', e.result || '', e.penaltyType || '', e.defenseStructure || '', e.ballBehavior || ''
+      ]);
+      const csv = [headers, ...rows].map(r => r.map(v => `"${String(v).replaceAll('"','""')}"`).join(';')).join('\n');
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `relatorio-goalball-${new Date().toISOString().slice(0,10)}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function downloadPdfReport() {
+      window.print();
+    }
+
+    function startNewMatch() {
+      if (getCurrentMatchEvents().length > 0) {
+        AppState.archivedMatches = [
+          ...AppState.archivedMatches.filter(m => m.id !== AppState.matchId),
+          {
+            id: AppState.matchId,
+            competition: AppState.config.competition || '',
+            date: AppState.config.date || '',
+            location: AppState.config.location || '',
+            myTeam: AppState.config.myTeam || 'Minha Equipe',
+            opponentTeam: AppState.config.opponentTeam || 'Adversário',
+            ...getScoreForMatch(AppState.matchId),
+            eventsCount: getCurrentMatchEvents().length,
+            endedAt: new Date().toISOString()
+          }
+        ];
+      }
+      AppState.matchId = Date.now().toString();
+      setPossessionForPhase(AppState.lineup.phase);
+      renderHistoryMatchSelector();
+      renderReportMatchSelector();
+      renderHistory();
+      updateAllStats();
+      renderRecentEvents();
+      showToast('🆕 Nova partida iniciada!');
     }
 
 
@@ -831,8 +965,10 @@
 
       const previousMatchId = AppState.matchId;
       AppState.matchId = Date.now().toString();
+      setPossessionForPhase(AppState.lineup.phase);
       saveToLocalStorage();
       renderHistoryMatchSelector();
+      renderReportMatchSelector();
 
       const select = document.getElementById('history-match-select');
       if (select) {
@@ -1069,7 +1205,7 @@
       
       // Update lineup
       AppState.lineup[position] = parseInt(subInIdx);
-
+      
       const subEvent = {
         type: 'substitution',
         matchId: AppState.matchId,
@@ -1097,7 +1233,7 @@
       }
       
       // Record substitution event
-      if (canRegisterEvent && window.dataSdk) {
+     if (canRegisterEvent && window.dataSdk) {
         const result = await window.dataSdk.create(subEvent);
         if (!result.isOk) {
           createLocalEvent(subEvent);
@@ -1175,7 +1311,10 @@
     function openAttackModal() {
       document.getElementById('attack-modal').classList.remove('hidden');
       resetAttackState();
+      attackState.team = AppState.lineup.possessionTeam || 'my';
       updateAttackAthleteSelector(attackState.team);
+      const preferredBtn = document.querySelector(`.team-select-btn[data-team="${attackState.team}"]`);
+      if (preferredBtn) preferredBtn.click();
     }
     
     function closeAttackModal() {
@@ -1260,7 +1399,7 @@
         newTargets: ''
       };
       
-      if (sdkEvents.length >= 999) {
+     if (sdkEvents.length >= 999) {
         showToast('⚠️ Limite de 999 registros atingido!');
         return;
       }
@@ -1269,6 +1408,7 @@
         const result = await window.dataSdk.create(event);
         if (!result.isOk) {
           createLocalEvent(event);
+          applyAttackPossessionRule(event);
           showToast('⚠️ Lance salvo localmente (modo offline)');
           closeAttackModal();
           updateScore();
@@ -1277,7 +1417,8 @@
       } else {
         createLocalEvent(event);
       }
-      
+
+      applyAttackPossessionRule(event);
       closeAttackModal();
       showToast('✅ Lance registrado!');
       updateScore();
@@ -1379,7 +1520,7 @@
       
       container.innerHTML = events.map(e => {
         const teamClass = e.team === 'my' ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200';
-        const resultEmoji = e.result === 'gol' ? '⚽' : e.result === 'defendida' ? '🧤' : e.result === 'fora' ? '❌' : e.result === 'blockout' ? '🚫' : '⚠️';
+        const resultEmoji = e.result === 'gol' ? '⚽' : e.result === 'defendida' ? '🧤' : e.result === 'fora' ? '❌' : e.result === 'blockout' ? '🚫' : e.result === 'ballover' ? '🔁' : '⚠️';        
         return `
           <div class="p-2 rounded-lg border ${teamClass} text-sm">
             <div class="flex items-center justify-between">
@@ -1491,10 +1632,10 @@
         }
         
         const teamClass = e.team === 'my' ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200';
-        const resultEmoji = e.result === 'gol' ? '⚽' : e.result === 'defendida' ? '🧤' : e.result === 'fora' ? '❌' : e.result === 'blockout' ? '🚫' : '⚠️';
+        const resultEmoji = e.result === 'gol' ? '⚽' : e.result === 'defendida' ? '🧤' : e.result === 'fora' ? '❌' : e.result === 'blockout' ? '🚫' : e.result === 'ballover' ? '🔁' : '⚠️';
         
         return `
-          <div class="p-3 rounded-lg border ${teamClass}" data-id="${getEventId(e)}">
+         <div class="p-3 rounded-lg border ${teamClass}" data-id="${getEventId(e)}">
             <div class="flex items-center justify-between">
               <div class="flex items-center gap-2">
                 <span class="text-lg">${resultEmoji}</span>
@@ -1529,7 +1670,7 @@
           showToast('❌ Erro ao excluir lance');
           return;
         }
-      } else {
+       } else {
         sdkEvents = sdkEvents.filter(e => getEventId(e) !== id);
         syncEventsToLocalStorage();
         updateAllStats();
@@ -1579,6 +1720,7 @@
             <option value="blockout" ${event.result === 'blockout' ? 'selected' : ''}>Blockout</option>
             <option value="fora" ${event.result === 'fora' ? 'selected' : ''}>Fora</option>
             <option value="penalidade" ${event.result === 'penalidade' ? 'selected' : ''}>Penalidade</option>
+            <option value="ballover" ${event.result === 'ballover' ? 'selected' : ''}>Ball Over</option>
           </select>
         </div>
         
@@ -1621,7 +1763,7 @@
           showToast('❌ Erro ao atualizar lance');
           return;
         }
-      } else {
+        } else {
         sdkEvents = sdkEvents.map(e => getEventId(e) === id ? updatedEvent : e);
         syncEventsToLocalStorage();
         updateAllStats();
@@ -1638,11 +1780,7 @@
     // =====================================================
     
     function updateReportStats(period) {
-      let events = sdkEvents.filter(e => e.type === 'event');
-      
-      if (period !== 'all') {
-        events = events.filter(e => e.phase === period);
-      }
+      let events = getReportEvents(period);
       
       const myEvents = events.filter(e => e.team === 'my');
       
@@ -1821,7 +1959,8 @@ function renderHeatmap(optionsOrFilter) {
   const pointsContainer = document.getElementById('throw-points');
   pointsContainer.innerHTML = '';
 
-  let events = sdkEvents.filter(e => e.type === 'event' && e.team === 'my');
+  const activePeriod = document.querySelector('.report-period-btn.bg-blue-600')?.dataset.period || 'all';
+  let events = getReportEvents(activePeriod).filter(e => e.team === 'my');
 
   // Scope filter (planejado vs todos)
   if (options.scope === 'planned') {
@@ -2118,11 +2257,26 @@ function renderHeatmap(optionsOrFilter) {
           AppState.lineup.phase = btn.dataset.phase;
           document.getElementById('current-phase').textContent = 
             btn.dataset.phase === '1T' ? '1º Tempo' : 
-            btn.dataset.phase === '2T' ? '2º Tempo' : 'Prorrogação';
-          saveToLocalStorage();
+            btn.dataset.phase === '2T' ? '2º Tempo' : 
+            btn.dataset.phase === 'PR' ? 'Prorrogação' : 'Penalidades';
+          setPossessionForPhase(btn.dataset.phase);
         });
       });
       
+      ['1T','2T','PR','PN'].forEach(phase => {
+        const sel = document.getElementById(`starter-${phase}`);
+        if (!sel) return;
+        sel.value = AppState.lineup.phaseStarters[phase] || 'my';
+        sel.addEventListener('change', (e) => {
+          AppState.lineup.phaseStarters[phase] = e.target.value;
+          if (AppState.lineup.phase === phase) {
+            setPossessionForPhase(phase);
+          } else {
+            saveToLocalStorage();
+          }
+        });
+      });
+
       ['left', 'center', 'right'].forEach(pos => {
         document.getElementById(`select-${pos}`).addEventListener('change', (e) => {
           AppState.lineup[pos] = e.target.value ? parseInt(e.target.value) : null;
@@ -2165,9 +2319,13 @@ function renderHeatmap(optionsOrFilter) {
         if (!confirm('Deseja encerrar a partida atual e iniciar uma nova?')) return;
         endMatch();
       });
+      document.getElementById('btn-new-match').addEventListener('click', () => {
+        if (!confirm('Deseja iniciar nova partida agora?')) return;
+        startNewMatch();
+      });
       document.getElementById('close-attack-modal').addEventListener('click', closeAttackModal);
       document.getElementById('close-target-modal').addEventListener('click', closeTargetChangeModal);
-      
+     
       // Team selection in attack modal
       document.querySelectorAll('.team-select-btn').forEach(btn => {
         btn.addEventListener('click', () => {
@@ -2298,6 +2456,15 @@ function renderHeatmap(optionsOrFilter) {
       });
       
       // Relatório tab
+      document.getElementById('report-match-select').addEventListener('change', () => {
+        const active = document.querySelector('.report-period-btn.bg-blue-600')?.dataset.period || 'all';
+        updateReportStats(active);
+        renderHeatmap(getHeatmapOptions());
+      });
+
+      document.getElementById('export-report-pdf').addEventListener('click', downloadPdfReport);
+      document.getElementById('export-report-excel').addEventListener('click', downloadExcelReport);
+
       document.querySelectorAll('.report-period-btn').forEach(btn => {
         btn.addEventListener('click', () => {
           document.querySelectorAll('.report-period-btn').forEach(b => {
@@ -2351,6 +2518,12 @@ populateHeatmapAthletes();
       updateLineupDisplay();
       renderTargetPlan();
       renderHistoryMatchSelector();
+      renderReportMatchSelector();
+      ['1T','2T','PR','PN'].forEach(phase => {
+        const sel = document.getElementById(`starter-${phase}`);
+        if (sel) sel.value = AppState.lineup.phaseStarters[phase] || 'my';
+      });
+      updatePossessionDisplay();
       initializeEventListeners();
       await initDataSdk();
     }
