@@ -991,8 +991,206 @@
       URL.revokeObjectURL(url);
     }
 
+    function escapeHtml(value) {
+      return String(value ?? '')
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#39;');
+    }
+
+    function getActiveReportPeriod() {
+      return document.querySelector('.report-period-btn.bg-blue-600')?.dataset.period || 'all';
+    }
+
+    function formatPeriodLabel(period) {
+      return period === 'all' ? 'Geral' : getPhaseLabel(period);
+    }
+
+    function getTopZones(events) {
+      const counts = {};
+      events.filter(e => e.team === 'my').forEach(event => {
+        const zone = event.target || 'N/D';
+        counts[zone] = (counts[zone] || 0) + 1;
+      });
+      return Object.entries(counts)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 3)
+        .map(([zone, count]) => `${zone} (${count})`)
+        .join(' • ') || 'Sem dados';
+    }
+
+    function getLatestRelevantEvents(events) {
+      return [...events]
+        .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+        .slice(0, 8)
+        .map(event => {
+          const when = new Date(event.timestamp).toLocaleString('pt-BR', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' });
+          return `<tr>
+            <td>${escapeHtml(when)}</td>
+            <td>${escapeHtml(getPhaseLabel(event.phase))}</td>
+            <td>${escapeHtml(getTeamLabel(event.team))}</td>
+            <td>${escapeHtml(`${event.athleteNumber || '?'} ${event.athleteName || ''}`.trim())}</td>
+            <td>${escapeHtml(event.ballType || '-')}</td>
+            <td>${escapeHtml(event.target || '-')}</td>
+            <td>${escapeHtml(event.result || '-')}</td>
+          </tr>`;
+        }).join('') || '<tr><td colspan="7" class="muted">Sem lances registrados no período.</td></tr>';
+    }
+
+    function buildPdfReportDocument() {
+      const period = getActiveReportPeriod();
+      updateReportStats(period);
+      renderHeatmap(getHeatmapOptions());
+
+      const selectedMatchId = getSelectedReportMatchId();
+      const events = getReportEvents(period);
+      const score = getScoreForMatch(selectedMatchId);
+      const generatedAt = new Date().toLocaleString('pt-BR');
+      const myTeam = AppState.config.myTeam || 'Minha Equipe';
+      const oppTeam = AppState.config.opponentTeam || 'Adversário';
+      const attackRows = document.getElementById('attack-stats-body')?.innerHTML || '<tr><td colspan="7">Sem dados</td></tr>';
+      const heatmapSvg = document.getElementById('court-heatmap')?.outerHTML || '<p class="muted">Mapa indisponível.</p>';
+
+      const myAttackCount = events.filter(e => e.team === 'my').length;
+      const oppAttackCount = events.filter(e => e.team === 'opponent').length;
+      const myGoals = events.filter(e => e.team === 'my' && e.result === 'gol').length;
+      const oppGoals = events.filter(e => e.team === 'opponent' && e.result === 'gol').length;
+      const defendedCount = events.filter(e => e.result === 'defendida').length;
+      const outCount = events.filter(e => e.result === 'fora').length;
+      const ballOverCount = events.filter(e => e.result === 'ballover').length;
+      const topZones = getTopZones(events);
+
+      const highlights = {
+        mostEfficient: document.getElementById('most-efficient')?.textContent?.trim() || '-',
+        mostUsedZone: document.getElementById('most-used-zone')?.textContent?.trim() || '-',
+        mostEfficientZone: document.getElementById('most-efficient-zone')?.textContent?.trim() || '-',
+        correctBlocks: document.getElementById('correct-blocks')?.textContent?.trim() || '0',
+        incorrectBlocks: document.getElementById('incorrect-blocks')?.textContent?.trim() || '0',
+        coverageCount: document.getElementById('coverage-count')?.textContent?.trim() || '0',
+        blockSuccess: document.getElementById('block-success')?.textContent?.trim() || '0%',
+        goalsAfterBadBlock: document.getElementById('goals-after-bad-block')?.textContent?.trim() || '0'
+      };
+
+      const latestRows = getLatestRelevantEvents(events);
+
+      return `<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Relatório Goalball</title>
+  <style>
+    @page { size: A4; margin: 12mm; }
+    body { font-family: Inter, Arial, sans-serif; color: #0f172a; margin: 0; font-size: 12px; }
+    .sheet { width: 100%; }
+    .header { border-bottom: 2px solid #1e3a8a; padding-bottom: 8px; margin-bottom: 12px; }
+    .title { font-size: 20px; font-weight: 700; color: #1e3a8a; margin: 0; }
+    .subtitle { margin-top: 4px; color: #475569; font-size: 11px; }
+    .score { margin-top: 8px; font-size: 16px; font-weight: 700; }
+    .grid { display: grid; gap: 8px; }
+    .grid-4 { grid-template-columns: repeat(4, minmax(0,1fr)); }
+    .grid-2 { grid-template-columns: repeat(2, minmax(0,1fr)); }
+    .card { border: 1px solid #cbd5e1; border-radius: 8px; padding: 8px; background: #f8fafc; }
+    .card h3 { margin: 0 0 6px 0; font-size: 12px; color: #1e293b; }
+    .metric { font-size: 18px; font-weight: 700; margin-top: 2px; }
+    .section { margin-top: 12px; }
+    .section-title { font-size: 14px; font-weight: 700; color: #1e3a8a; margin: 0 0 8px 0; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { border: 1px solid #cbd5e1; padding: 6px; font-size: 11px; }
+    th { background: #e2e8f0; text-align: left; }
+    .muted { color: #64748b; }
+    .page-break { page-break-before: always; }
+    .heatmap-box { border: 1px solid #cbd5e1; border-radius: 8px; padding: 8px; background: #fff; }
+    .legend { font-size: 10px; color: #64748b; margin-top: 4px; }
+    #pdf-heatmap svg { width: 100%; max-width: 600px; height: auto; display: block; margin: 0 auto; }
+  </style>
+</head>
+<body>
+  <div class="sheet">
+    <header class="header">
+      <h1 class="title">Scout Goalball Pro • Relatório de Partida</h1>
+      <div class="subtitle">Gerado em ${escapeHtml(generatedAt)} • Período: ${escapeHtml(formatPeriodLabel(period))}</div>
+      <div class="subtitle">Competição: ${escapeHtml(AppState.config.competition || 'Não informada')} • Local: ${escapeHtml(AppState.config.location || 'Não informado')}</div>
+      <div class="score">${escapeHtml(myTeam)} ${score.myGoals} x ${score.oppGoals} ${escapeHtml(oppTeam)}</div>
+    </header>
+
+    <section class="grid grid-4">
+      <div class="card"><h3>Total de lances</h3><div class="metric">${events.length}</div></div>
+      <div class="card"><h3>Ataques (minha equipe)</h3><div class="metric">${myAttackCount}</div></div>
+      <div class="card"><h3>Ataques (adversário)</h3><div class="metric">${oppAttackCount}</div></div>
+      <div class="card"><h3>Top zonas exploradas</h3><div>${escapeHtml(topZones)}</div></div>
+    </section>
+
+    <section class="section grid grid-4">
+      <div class="card"><h3>Gols minha equipe</h3><div class="metric">${myGoals}</div></div>
+      <div class="card"><h3>Gols adversário</h3><div class="metric">${oppGoals}</div></div>
+      <div class="card"><h3>Defendidas</h3><div class="metric">${defendedCount}</div></div>
+      <div class="card"><h3>Fora + Ball over</h3><div class="metric">${outCount + ballOverCount}</div></div>
+    </section>
+
+    <section class="section">
+      <h2 class="section-title">Estatísticas de ataque (minha equipe)</h2>
+      <table>
+        <thead>
+          <tr><th>Atleta</th><th>Arr.</th><th>Gols</th><th>Def.</th><th>Pen.</th><th>% Aprov.</th><th>% Plano</th></tr>
+        </thead>
+        <tbody>${attackRows}</tbody>
+      </table>
+      <div class="grid grid-4" style="margin-top:8px;">
+        <div class="card"><h3>Mais eficiente</h3><div>${escapeHtml(highlights.mostEfficient)}</div></div>
+        <div class="card"><h3>Zona mais usada</h3><div>${escapeHtml(highlights.mostUsedZone)}</div></div>
+        <div class="card"><h3>Zona mais eficiente</h3><div>${escapeHtml(highlights.mostEfficientZone)}</div></div>
+        <div class="card"><h3>Defesa: sucesso de bloco</h3><div>${escapeHtml(highlights.blockSuccess)}</div></div>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2 class="section-title">Defesa e tendências relevantes</h2>
+      <div class="grid grid-4">
+        <div class="card"><h3>Bloco correto</h3><div class="metric">${escapeHtml(highlights.correctBlocks)}</div></div>
+        <div class="card"><h3>Bloco incorreto</h3><div class="metric">${escapeHtml(highlights.incorrectBlocks)}</div></div>
+        <div class="card"><h3>Cobertura</h3><div class="metric">${escapeHtml(highlights.coverageCount)}</div></div>
+        <div class="card"><h3>Gols após bloco incorreto</h3><div class="metric">${escapeHtml(highlights.goalsAfterBadBlock)}</div></div>
+      </div>
+    </section>
+
+    <section class="section page-break">
+      <h2 class="section-title">Mapa de calor / quadra</h2>
+      <div class="heatmap-box" id="pdf-heatmap">${heatmapSvg}</div>
+      <div class="legend">Mapa exportado com os filtros ativos no momento da geração do PDF.</div>
+    </section>
+
+    <section class="section">
+      <h2 class="section-title">Últimos lances relevantes</h2>
+      <table>
+        <thead>
+          <tr><th>Horário</th><th>Fase</th><th>Equipe</th><th>Atleta</th><th>Tipo bola</th><th>Alvo</th><th>Resultado</th></tr>
+        </thead>
+        <tbody>${latestRows}</tbody>
+      </table>
+    </section>
+  </div>
+</body>
+</html>`;
+    }
+
     function downloadPdfReport() {
-      window.print();
+      const printWindow = window.open('', '_blank');
+      if (!printWindow) {
+        showToast('⚠️ Não foi possível abrir a janela de impressão. Verifique bloqueio de pop-up.');
+        return;
+      }
+
+      const reportDocument = buildPdfReportDocument();
+      printWindow.document.open();
+      printWindow.document.write(reportDocument);
+      printWindow.document.close();
+
+      printWindow.onload = () => {
+        printWindow.focus();
+        printWindow.print();
+      };
     }
 
     function startNewMatch() {
