@@ -64,6 +64,15 @@
     .btn-danger {
       background: linear-gradient(135deg, #b91c1c 0%, #ef4444 100%);
     }
+
+    .tactical-canvas,
+    .tactical-player {
+      touch-action: none;
+    }
+
+    .tactical-player {
+      user-select: none;
+    }
     
     input:focus, select:focus, textarea:focus {
       outline: none;
@@ -104,7 +113,7 @@
 </header>
 <!-- Navigation -->
    <nav class="bg-white border-b border-slate-200 px-2 py-2 flex-shrink-0 overflow-x-auto">
-    <div class="flex gap-1 min-w-max"><button class="tab-btn active px-4 py-2 rounded-lg text-sm font-medium transition-all" data-tab="config">⚙️ Config</button> <button class="tab-btn px-4 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 transition-all" data-tab="escalacao">👥 Escalação</button> <button class="tab-btn px-4 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 transition-all" data-tab="jogo">🎮 Jogo</button> <button class="tab-btn px-4 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 transition-all" data-tab="historico">📋 Histórico</button> <button class="tab-btn px-4 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 transition-all" data-tab="relatorio">📊 Relatório</button> <button class="tab-btn px-4 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 transition-all" data-tab="analise">📈 Análise</button>
+    <div class="flex gap-1 min-w-max"><button class="tab-btn active px-4 py-2 rounded-lg text-sm font-medium transition-all" data-tab="config">⚙️ Config</button> <button class="tab-btn px-4 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 transition-all" data-tab="escalacao">👥 Escalação</button> <button class="tab-btn px-4 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 transition-all" data-tab="jogo">🎮 Jogo</button> <button class="tab-btn px-4 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 transition-all" data-tab="historico">📋 Histórico</button> <button class="tab-btn px-4 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 transition-all" data-tab="relatorio">📊 Relatório</button> <button class="tab-btn px-4 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 transition-all" data-tab="analise">📈 Análise</button> <button class="tab-btn px-4 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 transition-all" data-tab="prancheta">🧠 Prancheta</button>
     </div>
    </nav><!-- Main Content -->
    <main class="flex-1 overflow-auto p-4"><!-- Config Tab -->
@@ -658,6 +667,50 @@
        <div id="plan-adherence" class="grid grid-cols-2 md:grid-cols-3 gap-3">
         <p class="col-span-full text-slate-500 text-sm text-center py-4">Configure o plano de alvos para ver a análise</p>
        </div>
+      </div>
+     </div>
+    </section><!-- Prancheta Tab -->
+    <section id="tab-prancheta" class="tab-content hidden">
+     <div class="max-w-6xl mx-auto space-y-4">
+      <div class="bg-white rounded-xl p-4 card-shadow">
+       <div class="flex flex-wrap gap-2 items-end">
+        <div>
+         <label class="block text-sm font-medium text-slate-600 mb-1">Ferramenta</label>
+         <select id="tactical-tool" class="px-3 py-2 border border-slate-300 rounded-lg text-sm">
+          <option value="arrow">Seta</option>
+          <option value="line">Linha</option>
+          <option value="path">Trajetória</option>
+          <option value="erase">Apagar</option>
+          <option value="move">Reposicionar atletas</option>
+         </select>
+        </div>
+        <div>
+         <label class="block text-sm font-medium text-slate-600 mb-1">Sistema ofensivo</label>
+         <select id="tactical-system" class="px-3 py-2 border border-slate-300 rounded-lg text-sm">
+          <option value="Livre">Modo Livre</option>
+          <option value="Cone Aberto">Cone Aberto</option>
+          <option value="Cone Fechado">Cone Fechado</option>
+          <option value="Espelho">Espelho</option>
+          <option value="Arrasta">Arrasta</option>
+          <option value="Diagonal Direita">Diagonal Direita</option>
+          <option value="Diagonal Esquerda">Diagonal Esquerda</option>
+          <option value="X">X</option>
+          <option value="Bloco Direito">Bloco Direito</option>
+          <option value="Bloco Esquerdo">Bloco Esquerdo</option>
+         </select>
+        </div>
+        <button id="tactical-apply-system" class="px-3 py-2 rounded-lg bg-blue-600 text-white text-sm">Aplicar sistema</button>
+        <button id="tactical-clear-drawings" class="px-3 py-2 rounded-lg bg-slate-200 text-slate-700 text-sm">Limpar desenhos</button>
+        <button id="tactical-reset-court" class="px-3 py-2 rounded-lg bg-red-100 text-red-700 text-sm">Resetar quadra</button>
+       </div>
+      </div>
+      <div class="bg-white rounded-xl p-3 card-shadow">
+       <div id="tactical-board" class="relative w-full rounded-xl overflow-hidden border border-slate-200 bg-emerald-50" style="aspect-ratio: 2 / 1;">
+        <canvas id="tactical-court-canvas" class="absolute inset-0 w-full h-full"></canvas>
+        <canvas id="tactical-draw-canvas" class="tactical-canvas absolute inset-0 w-full h-full"></canvas>
+        <div id="tactical-players-layer" class="absolute inset-0"></div>
+       </div>
+       <p class="text-xs text-slate-500 mt-2">Use toque ou mouse para desenhar. Para mover atletas, selecione "Reposicionar atletas".</p>
       </div>
      </div>
     </section>
@@ -3222,6 +3275,265 @@ populateHeatmapAthletes();
 }
     
     // =====================================================
+    // PRANCHETA TÁTICA
+    // =====================================================
+    const TacticalBoard = {
+      tool: 'arrow',
+      system: 'Livre',
+      drawings: [],
+      players: [],
+      dragPlayerId: null,
+      drawingActive: false,
+      currentDrawing: null,
+      defaultPlayers: [
+        { id: 'L', label: 'Ala E', x: 0.2, y: 0.82 },
+        { id: 'C', label: 'Pivô', x: 0.5, y: 0.84 },
+        { id: 'R', label: 'Ala D', x: 0.8, y: 0.82 }
+      ]
+    };
+
+    function tacticalSystemsTemplate() {
+      return {
+        'Livre': { players: TacticalBoard.defaultPlayers, drawings: [] },
+        'Cone Aberto': { players: TacticalBoard.defaultPlayers, drawings: [{ tool:'arrow', points:[{x:0.5,y:0.84},{x:0.5,y:0.4}] },{ tool:'arrow', points:[{x:0.2,y:0.82},{x:0.35,y:0.55}] },{ tool:'arrow', points:[{x:0.8,y:0.82},{x:0.65,y:0.55}] }] },
+        'Cone Fechado': { players: TacticalBoard.defaultPlayers, drawings: [{ tool:'arrow', points:[{x:0.2,y:0.82},{x:0.45,y:0.62}] },{ tool:'arrow', points:[{x:0.8,y:0.82},{x:0.55,y:0.62}] },{ tool:'arrow', points:[{x:0.5,y:0.84},{x:0.5,y:0.58}] }] },
+        'Espelho': { players: TacticalBoard.defaultPlayers, drawings: [{ tool:'arrow', points:[{x:0.2,y:0.82},{x:0.7,y:0.62}] },{ tool:'arrow', points:[{x:0.8,y:0.82},{x:0.3,y:0.62}] }] },
+        'Arrasta': { players: TacticalBoard.defaultPlayers, drawings: [{ tool:'path', points:[{x:0.2,y:0.82},{x:0.3,y:0.72},{x:0.38,y:0.65},{x:0.48,y:0.62}] },{ tool:'arrow', points:[{x:0.8,y:0.82},{x:0.62,y:0.52}] }] },
+        'Diagonal Direita': { players: TacticalBoard.defaultPlayers, drawings: [{ tool:'arrow', points:[{x:0.2,y:0.82},{x:0.75,y:0.45}] },{ tool:'arrow', points:[{x:0.5,y:0.84},{x:0.7,y:0.6}] }] },
+        'Diagonal Esquerda': { players: TacticalBoard.defaultPlayers, drawings: [{ tool:'arrow', points:[{x:0.8,y:0.82},{x:0.25,y:0.45}] },{ tool:'arrow', points:[{x:0.5,y:0.84},{x:0.3,y:0.6}] }] },
+        'X': { players: TacticalBoard.defaultPlayers, drawings: [{ tool:'arrow', points:[{x:0.2,y:0.82},{x:0.7,y:0.5}] },{ tool:'arrow', points:[{x:0.8,y:0.82},{x:0.3,y:0.5}] }] },
+        'Bloco Direito': { players: TacticalBoard.defaultPlayers, drawings: [{ tool:'line', points:[{x:0.62,y:0.68},{x:0.9,y:0.68}] },{ tool:'arrow', points:[{x:0.5,y:0.84},{x:0.76,y:0.6}] }] },
+        'Bloco Esquerdo': { players: TacticalBoard.defaultPlayers, drawings: [{ tool:'line', points:[{x:0.1,y:0.68},{x:0.38,y:0.68}] },{ tool:'arrow', points:[{x:0.5,y:0.84},{x:0.24,y:0.6}] }] }
+      };
+    }
+
+    function initTacticalBoard() {
+      TacticalBoard.players = TacticalBoard.defaultPlayers.map(p => ({ ...p }));
+      setupTacticalBoardSize();
+      renderTacticalPlayers();
+      drawTacticalCourt();
+      redrawTacticalDrawings();
+      bindTacticalEvents();
+      window.addEventListener('resize', () => {
+        setupTacticalBoardSize();
+        drawTacticalCourt();
+        redrawTacticalDrawings();
+        renderTacticalPlayers();
+      });
+    }
+
+    function setupTacticalBoardSize() {
+      const board = document.getElementById('tactical-board');
+      const courtCanvas = document.getElementById('tactical-court-canvas');
+      const drawCanvas = document.getElementById('tactical-draw-canvas');
+      const rect = board.getBoundingClientRect();
+      [courtCanvas, drawCanvas].forEach(c => {
+        c.width = rect.width;
+        c.height = rect.height;
+      });
+    }
+
+    function drawTacticalCourt() {
+      const canvas = document.getElementById('tactical-court-canvas');
+      const ctx = canvas.getContext('2d');
+      const { width:w, height:h } = canvas;
+      ctx.clearRect(0,0,w,h);
+      ctx.fillStyle = '#dcfce7';
+      ctx.fillRect(0,0,w,h);
+      ctx.strokeStyle = '#1f2937';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(2,2,w-4,h-4);
+      ctx.strokeStyle = '#16a34a';
+      ctx.lineWidth = 1.2;
+      for (let i=1;i<6;i++) {
+        const x = (w/6)*i;
+        ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,h); ctx.stroke();
+      }
+      for (let i=1;i<3;i++) {
+        const y = (h/3)*i;
+        ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(w,y); ctx.stroke();
+      }
+      ctx.strokeStyle = '#0f766e';
+      ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(0,h*0.8); ctx.lineTo(w,h*0.8); ctx.stroke();
+      ctx.fillStyle = '#334155';
+      ctx.font = '12px sans-serif';
+      ctx.fillText('Defesa', 10, h*0.78);
+      ctx.fillText('Ataque', 10, 16);
+    }
+
+    function drawShape(ctx, drawing) {
+      const points = drawing.points || [];
+      if (points.length < 2) return;
+      ctx.strokeStyle = '#1d4ed8';
+      ctx.lineWidth = 3;
+      ctx.lineCap = 'round';
+      if (drawing.tool === 'path') ctx.setLineDash([8,6]); else ctx.setLineDash([]);
+      ctx.beginPath();
+      ctx.moveTo(points[0].x, points[0].y);
+      for (let i=1;i<points.length;i++) ctx.lineTo(points[i].x, points[i].y);
+      ctx.stroke();
+      if (drawing.tool === 'arrow') {
+        const p1 = points[points.length-2], p2 = points[points.length-1];
+        const angle = Math.atan2(p2.y-p1.y,p2.x-p1.x);
+        const len = 12;
+        ctx.setLineDash([]);
+        ctx.beginPath();
+        ctx.moveTo(p2.x,p2.y);
+        ctx.lineTo(p2.x-len*Math.cos(angle-Math.PI/6), p2.y-len*Math.sin(angle-Math.PI/6));
+        ctx.moveTo(p2.x,p2.y);
+        ctx.lineTo(p2.x-len*Math.cos(angle+Math.PI/6), p2.y-len*Math.sin(angle+Math.PI/6));
+        ctx.stroke();
+      }
+    }
+
+    function redrawTacticalDrawings() {
+      const canvas = document.getElementById('tactical-draw-canvas');
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      TacticalBoard.drawings.forEach(d => {
+        const scaled = { ...d, points: d.points.map(p => ({ x: p.x * canvas.width, y: p.y * canvas.height })) };
+        drawShape(ctx, scaled);
+      });
+      if (TacticalBoard.currentDrawing?.points?.length > 1) {
+        drawShape(ctx, TacticalBoard.currentDrawing);
+      }
+    }
+
+    function renderTacticalPlayers() {
+      const layer = document.getElementById('tactical-players-layer');
+      const board = document.getElementById('tactical-board').getBoundingClientRect();
+      layer.innerHTML = '';
+      TacticalBoard.players.forEach(p => {
+        const el = document.createElement('button');
+        el.type = 'button';
+        el.className = 'tactical-player absolute w-12 h-12 rounded-full bg-blue-700 text-white text-xs font-semibold shadow';
+        el.style.left = `${p.x * board.width - 24}px`;
+        el.style.top = `${p.y * board.height - 24}px`;
+        el.textContent = p.label;
+        el.dataset.id = p.id;
+        layer.appendChild(el);
+      });
+    }
+
+    function tacticalPointerPosition(e) {
+      const canvas = document.getElementById('tactical-draw-canvas');
+      const rect = canvas.getBoundingClientRect();
+      return { x: e.clientX - rect.left, y: e.clientY - rect.top, nx: (e.clientX - rect.left)/rect.width, ny: (e.clientY - rect.top)/rect.height };
+    }
+
+    function pointSegmentDistance(px, py, ax, ay, bx, by) {
+      const dx = bx - ax; const dy = by - ay;
+      const t = Math.max(0, Math.min(1, ((px-ax)*dx + (py-ay)*dy) / ((dx*dx+dy*dy) || 1)));
+      const cx = ax + t * dx; const cy = ay + t * dy;
+      return Math.hypot(px-cx, py-cy);
+    }
+
+    function eraseAt(x,y) {
+      const canvas = document.getElementById('tactical-draw-canvas');
+      const nx = x / canvas.width, ny = y / canvas.height;
+      TacticalBoard.drawings = TacticalBoard.drawings.filter(d => {
+        for (let i=1;i<d.points.length;i++) {
+          if (pointSegmentDistance(nx, ny, d.points[i-1].x, d.points[i-1].y, d.points[i].x, d.points[i].y) < 0.04) return false;
+        }
+        return true;
+      });
+      redrawTacticalDrawings();
+    }
+
+    function applyTacticalSystem(name) {
+      const sys = tacticalSystemsTemplate()[name] || tacticalSystemsTemplate()['Livre'];
+      TacticalBoard.system = name;
+      TacticalBoard.players = sys.players.map(p => ({ ...p }));
+      TacticalBoard.drawings = sys.drawings.map(d => ({ ...d, points: d.points.map(p => ({...p})) }));
+      TacticalBoard.currentDrawing = null;
+      renderTacticalPlayers();
+      redrawTacticalDrawings();
+    }
+
+    function bindTacticalEvents() {
+      const drawCanvas = document.getElementById('tactical-draw-canvas');
+      const board = document.getElementById('tactical-board');
+
+      document.getElementById('tactical-tool').addEventListener('change', (e) => TacticalBoard.tool = e.target.value);
+      document.getElementById('tactical-system').addEventListener('change', (e) => TacticalBoard.system = normalizeOffensiveSystem(e.target.value));
+      document.getElementById('tactical-apply-system').addEventListener('click', () => {
+        applyTacticalSystem(TacticalBoard.system);
+        showToast(`✅ Sistema ${TacticalBoard.system} aplicado`);
+      });
+      document.getElementById('tactical-clear-drawings').addEventListener('click', () => {
+        TacticalBoard.drawings = [];
+        TacticalBoard.currentDrawing = null;
+        redrawTacticalDrawings();
+      });
+      document.getElementById('tactical-reset-court').addEventListener('click', () => {
+        document.getElementById('tactical-system').value = 'Livre';
+        applyTacticalSystem('Livre');
+      });
+
+      drawCanvas.addEventListener('pointerdown', (e) => {
+        if (TacticalBoard.tool === 'move') return;
+        const pos = tacticalPointerPosition(e);
+        TacticalBoard.drawingActive = true;
+        if (TacticalBoard.tool === 'erase') {
+          eraseAt(pos.x, pos.y);
+          return;
+        }
+        TacticalBoard.currentDrawing = { tool: TacticalBoard.tool, points: [{ x: pos.x, y: pos.y }] };
+      });
+
+      drawCanvas.addEventListener('pointermove', (e) => {
+        if (!TacticalBoard.drawingActive) return;
+        const pos = tacticalPointerPosition(e);
+        if (TacticalBoard.tool === 'erase') {
+          eraseAt(pos.x, pos.y);
+          return;
+        }
+        if (!TacticalBoard.currentDrawing) return;
+        if (TacticalBoard.tool === 'path') {
+          TacticalBoard.currentDrawing.points.push({ x: pos.x, y: pos.y });
+        } else {
+          TacticalBoard.currentDrawing.points[1] = { x: pos.x, y: pos.y };
+        }
+        redrawTacticalDrawings();
+      });
+
+      const finishDraw = () => {
+        if (!TacticalBoard.drawingActive) return;
+        TacticalBoard.drawingActive = false;
+        const canvas = document.getElementById('tactical-draw-canvas');
+        if (TacticalBoard.currentDrawing && TacticalBoard.currentDrawing.points.length > 1) {
+          TacticalBoard.drawings.push({
+            ...TacticalBoard.currentDrawing,
+            points: TacticalBoard.currentDrawing.points.map(p => ({ x: p.x / canvas.width, y: p.y / canvas.height }))
+          });
+        }
+        TacticalBoard.currentDrawing = null;
+        redrawTacticalDrawings();
+      };
+      drawCanvas.addEventListener('pointerup', finishDraw);
+      drawCanvas.addEventListener('pointerleave', finishDraw);
+
+      board.addEventListener('pointerdown', (e) => {
+        if (TacticalBoard.tool !== 'move') return;
+        const target = e.target.closest('.tactical-player');
+        if (!target) return;
+        TacticalBoard.dragPlayerId = target.dataset.id;
+      });
+      board.addEventListener('pointermove', (e) => {
+        if (TacticalBoard.tool !== 'move' || !TacticalBoard.dragPlayerId) return;
+        const rect = board.getBoundingClientRect();
+        const px = Math.min(rect.width, Math.max(0, e.clientX - rect.left));
+        const py = Math.min(rect.height, Math.max(0, e.clientY - rect.top));
+        TacticalBoard.players = TacticalBoard.players.map(p => p.id === TacticalBoard.dragPlayerId ? { ...p, x: px/rect.width, y: py/rect.height } : p);
+        renderTacticalPlayers();
+      });
+      board.addEventListener('pointerup', () => TacticalBoard.dragPlayerId = null);
+      board.addEventListener('pointerleave', () => TacticalBoard.dragPlayerId = null);
+    }
+
+
+    // =====================================================
     // INITIALIZATION
     // =====================================================
     
@@ -3240,6 +3552,7 @@ populateHeatmapAthletes();
       });
       updatePossessionDisplay();
       initializeEventListeners();
+      initTacticalBoard();
       await initDataSdk();
     }
     
