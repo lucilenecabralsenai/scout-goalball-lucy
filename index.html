@@ -755,7 +755,6 @@
       currentTargets: {},
       events: [],
       matchId: null,
-      archivedMatches: []
       archivedMatches: [],
       matchRules: {
         firstHalfPenaltyApplied: { my: false, opponent: false }
@@ -874,7 +873,6 @@
           currentTargets: AppState.currentTargets,
           events: AppState.events,
           archivedMatches: AppState.archivedMatches,
-          matchId: AppState.matchId
           matchId: AppState.matchId,
           matchRules: AppState.matchRules
         };
@@ -1978,7 +1976,6 @@
       };
       
       if (sdkEvents.length >= 999) {
-     if (sdkEvents.length >= 999) {
         showToast('⚠️ Limite de 999 registros atingido!');
         return;
       }
@@ -2324,7 +2321,6 @@
       
       const selectedMatchId = getSelectedHistoryMatchId();
       renderHistoryMeta();
-      let events = sdkEvents.filter(e => (e.type === 'event' || e.type === 'substitution' || e.type === 'target_change') && e.matchId === selectedMatchId);
       let events = sdkEvents.filter(e => (e.type === 'event' || e.type === 'substitution' || e.type === 'target_change' || e.type === 'timeout') && e.matchId === selectedMatchId);
       
       if (filter !== 'all') {
@@ -2455,7 +2451,6 @@
           return;
         }
       } else {
-       } else {
         sdkEvents = sdkEvents.filter(e => getEventId(e) !== id);
         syncEventsToLocalStorage();
         updateAllStats();
@@ -2557,7 +2552,6 @@
           return;
         }
       } else {
-        } else {
         sdkEvents = sdkEvents.map(e => getEventId(e) === id ? updatedEvent : e);
         syncEventsToLocalStorage();
         updateAllStats();
@@ -3628,22 +3622,17 @@ populateHeatmapAthletes();
         if (!ensureTacticalBoardReady()) return;
         const activeTool = syncTacticalToolFromUI();
         if (activeTool === 'move') return;
-        const activeTool = syncTacticalToolFromUI();
-        if (activeTool === 'move') return;
-        if (TacticalBoard.tool === 'move') return;
         event.preventDefault();
         const pos = getBoardEventPosition(event);
         TacticalBoard.drawingActive = true;
 
         if (activeTool === 'erase') {
-        if (TacticalBoard.tool === 'erase') {
           eraseAt(pos.x, pos.y);
           return;
         }
 
         TacticalBoard.currentDrawing = {
           tool: activeTool,
-          tool: TacticalBoard.tool,
           points: [{ x: pos.x, y: pos.y }, { x: pos.x, y: pos.y }]
         };
         redrawTacticalDrawings();
@@ -3656,18 +3645,12 @@ populateHeatmapAthletes();
         const pos = getBoardEventPosition(event);
 
         if (activeTool === 'erase') {
-        if (!TacticalBoard.drawingActive || TacticalBoard.tool === 'move') return;
-        event.preventDefault();
-        const pos = getBoardEventPosition(event);
-
-        if (TacticalBoard.tool === 'erase') {
           eraseAt(pos.x, pos.y);
           return;
         }
 
         if (!TacticalBoard.currentDrawing) return;
         if (activeTool === 'path') {
-        if (TacticalBoard.tool === 'path') {
           TacticalBoard.currentDrawing.points.push({ x: pos.x, y: pos.y });
         } else {
           TacticalBoard.currentDrawing.points[1] = { x: pos.x, y: pos.y };
@@ -3696,9 +3679,6 @@ populateHeatmapAthletes();
         if (!ensureTacticalBoardReady()) return;
         const activeTool = syncTacticalToolFromUI();
         if (activeTool !== 'move') return;
-        const activeTool = syncTacticalToolFromUI();
-        if (activeTool !== 'move') return;
-        if (TacticalBoard.tool !== 'move') return;
         const target = event.target.closest('.tactical-player');
         if (!target) return;
         event.preventDefault();
@@ -3708,7 +3688,6 @@ populateHeatmapAthletes();
       const moveAthlete = (event) => {
         const activeTool = syncTacticalToolFromUI();
         if (activeTool !== 'move' || !TacticalBoard.dragPlayerId) return;
-        if (TacticalBoard.tool !== 'move' || !TacticalBoard.dragPlayerId) return;
         event.preventDefault();
         const rect = board.getBoundingClientRect();
         const src = event.touches?.[0] || event.changedTouches?.[0] || event;
