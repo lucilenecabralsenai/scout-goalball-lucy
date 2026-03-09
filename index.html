@@ -224,8 +224,10 @@
           </div>
          </div><!-- Target Zone -->
          <div><label class="block text-sm font-medium text-slate-600 mb-2">Alvo</label>
-          <div class="grid grid-cols-9 gap-1" id="target-grid"><button class="target-btn px-2 py-2 border-2 border-slate-300 rounded text-xs font-medium" data-target="1">1</button> <button class="target-btn px-2 py-2 border-2 border-slate-300 rounded text-xs font-medium" data-target="2">2</button> <button class="target-btn px-2 py-2 border-2 border-slate-300 rounded text-xs font-medium" data-target="2/3">2/3</button> <button class="target-btn px-2 py-2 border-2 border-slate-300 rounded text-xs font-medium" data-target="3">3</button> <button class="target-btn px-2 py-2 border-2 border-slate-300 rounded text-xs font-medium" data-target="M">M</button> <button class="target-btn px-2 py-2 border-2 border-slate-300 rounded text-xs font-medium" data-target="4">4</button> <button class="target-btn px-2 py-2 border-2 border-slate-300 rounded text-xs font-medium" data-target="4/5">4/5</button> <button class="target-btn px-2 py-2 border-2 border-slate-300 rounded text-xs font-medium" data-target="5">5</button> <button class="target-btn px-2 py-2 border-2 border-slate-300 rounded text-xs font-medium" data-target="6">6</button>
+          <div class="grid grid-cols-6 gap-1" id="target-grid"><button class="target-btn px-2 py-2 border-2 border-slate-300 rounded text-xs font-medium" data-target="1">1</button> <button class="target-btn px-2 py-2 border-2 border-slate-300 rounded text-xs font-medium" data-target="2">2</button> <button class="target-btn px-2 py-2 border-2 border-slate-300 rounded text-xs font-medium" data-target="3">3</button> <button class="target-btn px-2 py-2 border-2 border-slate-300 rounded text-xs font-medium" data-target="4">4</button> <button class="target-btn px-2 py-2 border-2 border-slate-300 rounded text-xs font-medium" data-target="5">5</button> <button class="target-btn px-2 py-2 border-2 border-slate-300 rounded text-xs font-medium" data-target="6">6</button>
           </div>
+         </div>
+         <div><label class="block text-sm font-medium text-slate-600 mb-2">Sistema ofensivo</label> <select id="attack-offensive-system" class="w-full px-3 py-2 border border-slate-300 rounded-lg"><option value="Livre">Livre</option><option value="Cone Aberto">Cone Aberto</option><option value="Cone Fechado">Cone Fechado</option><option value="Espelho">Espelho</option><option value="Arrasta">Arrasta</option><option value="Diagonal Direita">Diagonal Direita</option><option value="Diagonal Esquerda">Diagonal Esquerda</option><option value="X">X</option><option value="Bloco Direito">Bloco Direito</option><option value="Bloco Esquerdo">Bloco Esquerdo</option></select>
          </div><!-- Result -->
          <div><label class="block text-sm font-medium text-slate-600 mb-2">Resultado</label>
          <div class="grid grid-cols-3 gap-2" id="result-grid"><button class="result-btn px-3 py-2 border-2 border-slate-300 rounded-lg text-sm" data-result="gol">⚽ Gol</button> <button class="result-btn px-3 py-2 border-2 border-slate-300 rounded-lg text-sm" data-result="defendida">🧤 Defendida</button> <button class="result-btn px-3 py-2 border-2 border-slate-300 rounded-lg text-sm" data-result="blockout">🚫 Blockout</button> <button class="result-btn px-3 py-2 border-2 border-slate-300 rounded-lg text-sm" data-result="fora">❌ Fora</button> <button class="result-btn px-3 py-2 border-2 border-slate-300 rounded-lg text-sm" data-result="penalidade">⚠️ Penalidade</button> <button class="result-btn px-3 py-2 border-2 border-slate-300 rounded-lg text-sm" data-result="ballover">🔁 Ball Over</button>
@@ -256,7 +258,7 @@
          <div><label class="block text-sm font-medium text-slate-600 mb-2">Atleta</label> <select id="target-change-athlete" class="w-full px-3 py-2 border border-slate-300 rounded-lg"> <option value="">Selecionar atleta</option> </select>
          </div>
          <div><label class="block text-sm font-medium text-slate-600 mb-2">Novos Alvos</label>
-          <div class="grid grid-cols-9 gap-1" id="new-target-grid"><button class="new-target-btn px-2 py-2 border-2 border-slate-300 rounded text-xs font-medium" data-target="1">1</button> <button class="new-target-btn px-2 py-2 border-2 border-slate-300 rounded text-xs font-medium" data-target="2">2</button> <button class="new-target-btn px-2 py-2 border-2 border-slate-300 rounded text-xs font-medium" data-target="2/3">2/3</button> <button class="new-target-btn px-2 py-2 border-2 border-slate-300 rounded text-xs font-medium" data-target="3">3</button> <button class="new-target-btn px-2 py-2 border-2 border-slate-300 rounded text-xs font-medium" data-target="M">M</button> <button class="new-target-btn px-2 py-2 border-2 border-slate-300 rounded text-xs font-medium" data-target="4">4</button> <button class="new-target-btn px-2 py-2 border-2 border-slate-300 rounded text-xs font-medium" data-target="4/5">4/5</button> <button class="new-target-btn px-2 py-2 border-2 border-slate-300 rounded text-xs font-medium" data-target="5">5</button> <button class="new-target-btn px-2 py-2 border-2 border-slate-300 rounded text-xs font-medium" data-target="6">6</button>
+          <div class="grid grid-cols-6 gap-1" id="new-target-grid"><button class="new-target-btn px-2 py-2 border-2 border-slate-300 rounded text-xs font-medium" data-target="1">1</button> <button class="new-target-btn px-2 py-2 border-2 border-slate-300 rounded text-xs font-medium" data-target="2">2</button> <button class="new-target-btn px-2 py-2 border-2 border-slate-300 rounded text-xs font-medium" data-target="3">3</button> <button class="new-target-btn px-2 py-2 border-2 border-slate-300 rounded text-xs font-medium" data-target="4">4</button> <button class="new-target-btn px-2 py-2 border-2 border-slate-300 rounded text-xs font-medium" data-target="5">5</button> <button class="new-target-btn px-2 py-2 border-2 border-slate-300 rounded text-xs font-medium" data-target="6">6</button>
           </div>
          </div><button id="save-target-change" class="w-full btn-primary text-white py-3 rounded-xl font-semibold"> 💾 Salvar Mudança </button>
         </div>
@@ -442,6 +444,17 @@
          </div>
         </div>
        </div>
+
+      </div>
+
+      <div class="bg-white rounded-xl p-4 card-shadow">
+       <h3 class="text-lg font-semibold text-slate-800 mb-4">🧩 Análise por Sistema Ofensivo</h3>
+       <div id="offensive-system-stats" class="overflow-x-auto text-sm"></div>
+      </div>
+
+      <div class="bg-white rounded-xl p-4 card-shadow">
+       <h3 class="text-lg font-semibold text-slate-800 mb-4">👤 Análise Individual (Ofensiva/Defensiva)</h3>
+       <div id="athlete-detailed-stats" class="overflow-x-auto text-sm"></div>
       </div><!-- Defense Stats -->
       <div class="bg-white rounded-xl p-4 card-shadow">
        <h3 class="text-lg font-semibold text-slate-800 mb-4">🛡️ Estatísticas de Defesa</h3>
@@ -575,28 +588,22 @@
 
 <!-- Alvos na TRAVE (faixas horizontais no lado direito, dentro da área do gol) -->
 <g id="target-zones">
-  <rect class="court-zone heat-zone" data-zone="1"   x="150" y="0"  width="30" height="10" fill="rgba(59,130,246,0.12)" stroke="#64748b" stroke-width="0.3"/>
-  <rect class="court-zone heat-zone" data-zone="2"   x="150" y="10" width="30" height="10" fill="rgba(59,130,246,0.10)" stroke="#64748b" stroke-width="0.3"/>
-  <rect class="court-zone heat-zone" data-zone="2/3" x="150" y="20" width="30" height="10" fill="rgba(59,130,246,0.10)" stroke="#64748b" stroke-width="0.3"/>
-  <rect class="court-zone heat-zone" data-zone="3"   x="150" y="30" width="30" height="10" fill="rgba(59,130,246,0.10)" stroke="#64748b" stroke-width="0.3"/>
-  <rect class="court-zone heat-zone" data-zone="M"   x="150" y="40" width="30" height="10" fill="rgba(59,130,246,0.16)" stroke="#64748b" stroke-width="0.3"/>
-  <rect class="court-zone heat-zone" data-zone="4"   x="150" y="50" width="30" height="10" fill="rgba(59,130,246,0.10)" stroke="#64748b" stroke-width="0.3"/>
-  <rect class="court-zone heat-zone" data-zone="4/5" x="150" y="60" width="30" height="10" fill="rgba(59,130,246,0.10)" stroke="#64748b" stroke-width="0.3"/>
-  <rect class="court-zone heat-zone" data-zone="5"   x="150" y="70" width="30" height="10" fill="rgba(59,130,246,0.10)" stroke="#64748b" stroke-width="0.3"/>
-  <rect class="court-zone heat-zone" data-zone="6"   x="150" y="80" width="30" height="10" fill="rgba(59,130,246,0.12)" stroke="#64748b" stroke-width="0.3"/>
+  <rect class="court-zone heat-zone" data-zone="1" x="150" y="0" width="30" height="15" fill="rgba(59,130,246,0.12)" stroke="#64748b" stroke-width="0.3"/>
+  <rect class="court-zone heat-zone" data-zone="2" x="150" y="15" width="30" height="15" fill="rgba(59,130,246,0.10)" stroke="#64748b" stroke-width="0.3"/>
+  <rect class="court-zone heat-zone" data-zone="3" x="150" y="30" width="30" height="15" fill="rgba(59,130,246,0.10)" stroke="#64748b" stroke-width="0.3"/>
+  <rect class="court-zone heat-zone" data-zone="4" x="150" y="45" width="30" height="15" fill="rgba(59,130,246,0.10)" stroke="#64748b" stroke-width="0.3"/>
+  <rect class="court-zone heat-zone" data-zone="5" x="150" y="60" width="30" height="15" fill="rgba(59,130,246,0.10)" stroke="#64748b" stroke-width="0.3"/>
+  <rect class="court-zone heat-zone" data-zone="6" x="150" y="75" width="30" height="15" fill="rgba(59,130,246,0.12)" stroke="#64748b" stroke-width="0.3"/>
 </g>
 
 <!-- Rótulos dos alvos (opcional) -->
 <g font-size="6" fill="#475569" text-anchor="middle">
-  <text x="165" y="7">1</text>
-  <text x="165" y="17">2</text>
-  <text x="165" y="27">2/3</text>
-  <text x="165" y="37">3</text>
-  <text x="165" y="47">M</text>
-  <text x="165" y="57">4</text>
-  <text x="165" y="67">4/5</text>
-  <text x="165" y="77">5</text>
-  <text x="165" y="87">6</text>
+  <text x="165" y="9">1</text>
+  <text x="165" y="24">2</text>
+  <text x="165" y="39">3</text>
+  <text x="165" y="54">4</text>
+  <text x="165" y="69">5</text>
+  <text x="165" y="84">6</text>
 </g>
 
 <!-- Throw points container --> <g id="throw-points"></g>
@@ -703,6 +710,42 @@
     
     // SDK Data
     let sdkEvents = [];
+
+
+    const OFFICIAL_TARGETS = ['1', '2', '3', '4', '5', '6'];
+    const OFFENSIVE_SYSTEMS = ['Livre', 'Cone Aberto', 'Cone Fechado', 'Espelho', 'Arrasta', 'Diagonal Direita', 'Diagonal Esquerda', 'X', 'Bloco Direito', 'Bloco Esquerdo'];
+    const LEGACY_TARGET_MAP = { '2/3': '3', '4/5': '4', 'M': '3' };
+
+    function normalizeTarget(target) {
+      const normalized = String(target || '').trim();
+      if (OFFICIAL_TARGETS.includes(normalized)) return normalized;
+      return LEGACY_TARGET_MAP[normalized] || '';
+    }
+
+    function sanitizeTargets(targets) {
+      if (!Array.isArray(targets)) return [];
+      return [...new Set(targets.map(normalizeTarget).filter(t => OFFICIAL_TARGETS.includes(t)))];
+    }
+
+    function normalizeOffensiveSystem(value) {
+      const normalized = String(value || '').trim();
+      return OFFENSIVE_SYSTEMS.includes(normalized) ? normalized : 'Livre';
+    }
+
+    function normalizeStoredEvent(event) {
+      if (!event || typeof event !== 'object') return event;
+      const cloned = { ...event };
+      if (cloned.type === 'event') {
+        cloned.target = normalizeTarget(cloned.target);
+        cloned.offensiveSystem = normalizeOffensiveSystem(cloned.offensiveSystem);
+      }
+      if (cloned.type === 'target_change') {
+        const targets = sanitizeTargets(String(cloned.newTargets || '').split(','));
+        cloned.newTargets = targets.join(',');
+      }
+      return cloned;
+    }
+
     
     // Default config for Element SDK
     const defaultConfig = {
@@ -733,7 +776,7 @@
     // Data Handler for Data SDK
     const dataHandler = {
       onDataChanged(data) {
-        sdkEvents = data.filter(d => d.type === 'event' || d.type === 'substitution' || d.type === 'target_change' || d.type === 'timeout');
+        sdkEvents = data.filter(d => d.type === 'event' || d.type === 'substitution' || d.type === 'target_change' || d.type === 'timeout').map(normalizeStoredEvent);
         AppState.events = sdkEvents;
         saveToLocalStorage();
         updateAllStats();
@@ -797,9 +840,9 @@
             'PN': parsed?.lineup?.phaseStarters?.['PN'] || AppState.lineup.phaseStarters['PN']
           };
           AppState.lineup.possessionTeam = parsed?.lineup?.possessionTeam || AppState.lineup.phaseStarters[AppState.lineup.phase] || 'my';
-          AppState.targetPlans = parsed.targetPlans || {};
-          AppState.currentTargets = parsed.currentTargets || {};
-          AppState.events = Array.isArray(parsed.events) ? parsed.events : [];
+          AppState.targetPlans = Object.fromEntries(Object.entries(parsed.targetPlans || {}).map(([k,v]) => [k, sanitizeTargets(v)]));
+          AppState.currentTargets = Object.fromEntries(Object.entries(parsed.currentTargets || {}).map(([k,v]) => [k, sanitizeTargets(v)]));
+          AppState.events = Array.isArray(parsed.events) ? parsed.events.map(normalizeStoredEvent) : [];
           AppState.archivedMatches = Array.isArray(parsed.archivedMatches) ? parsed.archivedMatches : [];
           AppState.matchRules = parsed.matchRules || AppState.matchRules;
           AppState.matchRules.firstHalfPenaltyApplied = {
@@ -976,10 +1019,10 @@
     function downloadExcelReport() {
       const activePeriod = document.querySelector('.report-period-btn.bg-blue-600')?.dataset.period || 'all';
       const events = getReportEvents(activePeriod);
-      const headers = ['Data/Hora','Tempo','Equipe','Atleta','Tipo Bola','Alvo','Resultado','Penalidade','Defesa','Comportamento'];
+      const headers = ['Data/Hora','Tempo','Equipe','Atleta','Tipo Bola','Alvo','Sistema Ofensivo','Resultado','Penalidade','Defesa','Comportamento'];
       const rows = events.map(e => [
         e.timestamp || '', e.phase || '', getTeamLabel(e.team), `${e.athleteNumber || ''} ${e.athleteName || ''}`.trim(),
-        e.ballType || '', e.target || '', e.result || '', e.penaltyType || '', e.defenseStructure || '', e.ballBehavior || ''
+        e.ballType || '', normalizeTarget(e.target) || '-', normalizeOffensiveSystem(e.offensiveSystem), e.result || '', e.penaltyType || '', e.defenseStructure || '', e.ballBehavior || ''
       ]);
       const csv = [headers, ...rows].map(r => r.map(v => `"${String(v).replaceAll('"','""')}"`).join(';')).join('\n');
       const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -1011,7 +1054,7 @@
     function getTopZones(events) {
       const counts = {};
       events.filter(e => e.team === 'my').forEach(event => {
-        const zone = event.target || 'N/D';
+        const zone = normalizeTarget(event.target) || 'N/D';
         counts[zone] = (counts[zone] || 0) + 1;
       });
       return Object.entries(counts)
@@ -1033,10 +1076,11 @@
             <td>${escapeHtml(getTeamLabel(event.team))}</td>
             <td>${escapeHtml(`${event.athleteNumber || '?'} ${event.athleteName || ''}`.trim())}</td>
             <td>${escapeHtml(event.ballType || '-')}</td>
-            <td>${escapeHtml(event.target || '-')}</td>
+            <td>${escapeHtml(normalizeTarget(event.target) || '-')}</td>
+            <td>${escapeHtml(normalizeOffensiveSystem(event.offensiveSystem))}</td>
             <td>${escapeHtml(event.result || '-')}</td>
           </tr>`;
-        }).join('') || '<tr><td colspan="7" class="muted">Sem lances registrados no período.</td></tr>';
+        }).join('') || '<tr><td colspan="8" class="muted">Sem lances registrados no período.</td></tr>';
     }
 
     function buildPdfReportDocument() {
@@ -1052,6 +1096,8 @@
       const oppTeam = AppState.config.opponentTeam || 'Adversário';
       const attackRows = document.getElementById('attack-stats-body')?.innerHTML || '<tr><td colspan="7">Sem dados</td></tr>';
       const heatmapSvg = document.getElementById('court-heatmap')?.outerHTML || '<p class="muted">Mapa indisponível.</p>';
+      const systemStatsHtml = document.getElementById('offensive-system-stats')?.innerHTML || '<p class="muted">Sem dados.</p>';
+      const athleteDetailedHtml = document.getElementById('athlete-detailed-stats')?.innerHTML || '<p class="muted">Sem dados.</p>';
 
       const myAttackCount = events.filter(e => e.team === 'my').length;
       const oppAttackCount = events.filter(e => e.team === 'opponent').length;
@@ -1146,6 +1192,16 @@
     </section>
 
     <section class="section">
+      <h2 class="section-title">Análise por sistema ofensivo</h2>
+      <div>${systemStatsHtml}</div>
+    </section>
+
+    <section class="section">
+      <h2 class="section-title">Análise ofensiva individual</h2>
+      <div>${athleteDetailedHtml}</div>
+    </section>
+
+    <section class="section">
       <h2 class="section-title">Defesa e tendências relevantes</h2>
       <div class="grid grid-4">
         <div class="card"><h3>Bloco correto</h3><div class="metric">${escapeHtml(highlights.correctBlocks)}</div></div>
@@ -1165,7 +1221,7 @@
       <h2 class="section-title">Últimos lances relevantes</h2>
       <table>
         <thead>
-          <tr><th>Horário</th><th>Fase</th><th>Equipe</th><th>Atleta</th><th>Tipo bola</th><th>Alvo</th><th>Resultado</th></tr>
+          <tr><th>Horário</th><th>Fase</th><th>Equipe</th><th>Atleta</th><th>Tipo bola</th><th>Alvo</th><th>Sistema</th><th>Resultado</th></tr>
         </thead>
         <tbody>${latestRows}</tbody>
       </table>
@@ -1565,6 +1621,7 @@
         penaltyType: '',
         defenseStructure: '',
         ballBehavior: '',
+        offensiveSystem: 'Livre',
         plannedTargets: '',
         newTargets: ''
       };
@@ -1653,7 +1710,7 @@
         return;
       }
       
-      const targets = ['1', '2', '2/3', '3', 'M', '4', '4/5', '5', '6'];
+      const targets = OFFICIAL_TARGETS;
       
       container.innerHTML = athletes.map((athlete, idx) => {
         const currentPlan = AppState.targetPlans[idx] || [];
@@ -1694,7 +1751,8 @@
       result: '',
       penaltyType: '',
       defenseStructures: [],
-      ballBehavior: ''
+      ballBehavior: '',
+      offensiveSystem: 'Livre'
     };
     
     let targetChangeState = {
@@ -1724,7 +1782,8 @@
         result: '',
         penaltyType: '',
         defenseStructures: [],
-        ballBehavior: ''
+        ballBehavior: '',
+        offensiveSystem: 'Livre'
       };
       
       // Reset UI
@@ -1743,6 +1802,7 @@
       document.getElementById('penalty-section').classList.add('hidden');
       document.getElementById('attack-athlete').value = '';
       document.getElementById('penalty-type').value = '';
+      document.getElementById('attack-offensive-system').value = 'Livre';
     }
     
     function updateAttackAthleteSelector(team) {
@@ -1786,6 +1846,7 @@
         penaltyType: attackState.penaltyType,
         defenseStructure: attackState.defenseStructures.join(','),
         ballBehavior: attackState.ballBehavior,
+        offensiveSystem: normalizeOffensiveSystem(attackState.offensiveSystem),
         plannedTargets: JSON.stringify(AppState.currentTargets[attackState.athlete] || []),
         subIn: '',
         subOut: '',
@@ -1828,13 +1889,14 @@
     }
 
     function buildTimeoutCourt(events) {
-      const targets = ['1','2','2/3','3','M','4','4/5','5','6'];
+      const targets = OFFICIAL_TARGETS;
       const myCounts = Object.fromEntries(targets.map(t => [t, 0]));
       const oppCounts = Object.fromEntries(targets.map(t => [t, 0]));
       events.forEach(event => {
-        if (!targets.includes(event.target)) return;
-        if (event.team === 'my') myCounts[event.target] += 1;
-        if (event.team === 'opponent') oppCounts[event.target] += 1;
+        const target = normalizeTarget(event.target);
+        if (!targets.includes(target)) return;
+        if (event.team === 'my') myCounts[target] += 1;
+        if (event.team === 'opponent') oppCounts[target] += 1;
       });
 
       const maxCount = Math.max(1, ...targets.map(t => Math.max(myCounts[t], oppCounts[t])));
@@ -1911,6 +1973,7 @@
         penaltyType: '',
         defenseStructure: '',
         ballBehavior: '',
+        offensiveSystem: 'Livre',
         plannedTargets: '',
         newTargets: '',
         subIn: '',
@@ -2024,7 +2087,7 @@
       }
       
       // Update current targets
-      AppState.currentTargets[targetChangeState.athlete] = [...targetChangeState.newTargets];
+      AppState.currentTargets[targetChangeState.athlete] = sanitizeTargets(targetChangeState.newTargets);
       
       const athlete = AppState.config.myAthletes[targetChangeState.athlete];
       
@@ -2048,8 +2111,9 @@
         penaltyType: '',
         defenseStructure: '',
         ballBehavior: '',
+        offensiveSystem: 'Livre',
         plannedTargets: '',
-        newTargets: targetChangeState.newTargets.join(','),
+        newTargets: sanitizeTargets(targetChangeState.newTargets).join(','),
         subIn: '',
         subOut: '',
         position: ''
@@ -2097,7 +2161,7 @@
               <span class="text-xs text-slate-500">${e.phase}</span>
             </div>
             <div class="text-xs text-slate-600 mt-1">
-              ${e.ballType} → Alvo ${e.target} = ${e.result}
+              ${e.ballType} → Alvo ${normalizeTarget(e.target) || '-'} • Sist. ${normalizeOffensiveSystem(e.offensiveSystem)} = ${e.result}
             </div>
           </div>
         `;
@@ -2187,7 +2251,7 @@
                   <div>
                     <div class="text-sm font-medium">Mudança de Alvo</div>
                     <div class="text-xs text-slate-600">
-                      ${e.athleteNumber || '?'} - ${e.athleteName || 'N/A'} → Novos alvos: ${e.newTargets}
+                      ${e.athleteNumber || '?'} - ${e.athleteName || 'N/A'} → Novos alvos: ${sanitizeTargets((e.newTargets || '').split(',')).join(', ')}
                     </div>
                   </div>
                 </div>
@@ -2234,7 +2298,7 @@
                 <div>
                   <div class="text-sm font-medium">${e.athleteNumber || '?'} - ${e.athleteName || 'N/A'}</div>
                   <div class="text-xs text-slate-600">
-                    ${e.ballType} → Alvo ${e.target} = ${e.result}
+                    ${e.ballType} → Alvo ${normalizeTarget(e.target) || '-'} • Sist. ${normalizeOffensiveSystem(e.offensiveSystem)} = ${e.result}
                     ${e.penaltyType ? `(${e.penaltyType})` : ''}
                   </div>
                   ${e.defenseStructure ? `<div class="text-xs text-slate-500">Defesa: ${e.defenseStructure} | ${e.ballBehavior}</div>` : ''}
@@ -2298,12 +2362,19 @@
         <div>
           <label class="block text-sm font-medium text-slate-600 mb-2">Alvo</label>
           <select id="edit-target" class="w-full px-3 py-2 border border-slate-300 rounded-lg">
-            ${['1', '2', '2/3', '3', 'M', '4', '4/5', '5', '6'].map(t => 
-              `<option value="${t}" ${event.target === t ? 'selected' : ''}>${t}</option>`
+            ${OFFICIAL_TARGETS.map(t => 
+              `<option value="${t}" ${normalizeTarget(event.target) === t ? 'selected' : ''}>${t}</option>`
             ).join('')}
           </select>
         </div>
         
+        <div>
+          <label class="block text-sm font-medium text-slate-600 mb-2">Sistema ofensivo</label>
+          <select id="edit-offensive-system" class="w-full px-3 py-2 border border-slate-300 rounded-lg">
+            ${OFFENSIVE_SYSTEMS.map(sys => `<option value="${sys}" ${normalizeOffensiveSystem(event.offensiveSystem) === sys ? 'selected' : ''}>${sys}</option>`).join('')}
+          </select>
+        </div>
+
         <div>
           <label class="block text-sm font-medium text-slate-600 mb-2">Resultado</label>
           <select id="edit-result" class="w-full px-3 py-2 border border-slate-300 rounded-lg">
@@ -2344,7 +2415,8 @@
       const updatedEvent = {
         ...event,
         ballType: document.getElementById('edit-ball-type').value,
-        target: document.getElementById('edit-target').value,
+        target: normalizeTarget(document.getElementById('edit-target').value),
+        offensiveSystem: normalizeOffensiveSystem(document.getElementById('edit-offensive-system').value),
         result: document.getElementById('edit-result').value,
         ballBehavior: document.getElementById('edit-ball-behavior').value
       };
@@ -2393,7 +2465,7 @@
         athleteEvents.forEach(e => {
           try {
             const planned = JSON.parse(e.plannedTargets || '[]');
-            if (planned.includes(e.target)) plannedHits++;
+            if (sanitizeTargets(planned).includes(normalizeTarget(e.target))) plannedHits++;
           } catch {}
         });
         
@@ -2438,9 +2510,11 @@
       // Zone stats
       const zoneStats = {};
       myEvents.forEach(e => {
-        if (!zoneStats[e.target]) zoneStats[e.target] = { count: 0, goals: 0 };
-        zoneStats[e.target].count++;
-        if (e.result === 'gol') zoneStats[e.target].goals++;
+        const target = normalizeTarget(e.target);
+        if (!target) return;
+        if (!zoneStats[target]) zoneStats[target] = { count: 0, goals: 0 };
+        zoneStats[target].count++;
+        if (e.result === 'gol') zoneStats[target].goals++;
       });
       
       const zones = Object.entries(zoneStats);
@@ -2457,6 +2531,51 @@
         document.getElementById('most-efficient-zone').textContent = `${mostEfficientZone[0]} (${zoneEff}%)`;
       }
       
+
+      // Offensive system stats
+      const systemStats = {};
+      myEvents.forEach(e => {
+        const sys = normalizeOffensiveSystem(e.offensiveSystem);
+        const target = normalizeTarget(e.target);
+        if (!target) return;
+        if (!systemStats[sys]) systemStats[sys] = { attacks: 0, goals: 0, targets: {}, athletes: {} };
+        systemStats[sys].attacks++;
+        if (e.result === 'gol') systemStats[sys].goals++;
+        systemStats[sys].targets[target] = (systemStats[sys].targets[target] || 0) + 1;
+        const athleteLabel = `${e.athleteNumber || '?'} - ${e.athleteName || 'N/A'}`;
+        systemStats[sys].athletes[athleteLabel] = (systemStats[sys].athletes[athleteLabel] || 0) + 1;
+      });
+
+      const sysContainer = document.getElementById('offensive-system-stats');
+      const sysRows = Object.entries(systemStats);
+      if (sysRows.length === 0) {
+        sysContainer.innerHTML = '<p class="text-slate-500">Sem dados de sistema ofensivo.</p>';
+      } else {
+        sysContainer.innerHTML = `<table class="w-full"><thead class="bg-slate-100"><tr><th class="px-2 py-1 text-left">Sistema</th><th class="px-2 py-1 text-center">Ataques</th><th class="px-2 py-1 text-center">Gols</th><th class="px-2 py-1 text-center">Aproveit.</th><th class="px-2 py-1 text-center">Alvo + usado</th><th class="px-2 py-1 text-center">Atleta + usado</th></tr></thead><tbody>${sysRows.map(([sys, data]) => { const bestTarget = Object.entries(data.targets).sort((a,b)=>b[1]-a[1])[0]?.[0] || '-'; const bestAthlete = Object.entries(data.athletes).sort((a,b)=>b[1]-a[1])[0]?.[0] || '-'; const eff = data.attacks ? ((data.goals/data.attacks)*100).toFixed(1).replace('.',',') : '0,0'; return `<tr class="border-b"><td class="px-2 py-1">${sys}</td><td class="px-2 py-1 text-center">${data.attacks}</td><td class="px-2 py-1 text-center">${data.goals}</td><td class="px-2 py-1 text-center">${eff}%</td><td class="px-2 py-1 text-center">${bestTarget}</td><td class="px-2 py-1 text-center">${bestAthlete}</td></tr>`; }).join('')}</tbody></table>`;
+      }
+
+      const athleteDetailContainer = document.getElementById('athlete-detailed-stats');
+      const athleteRows = Object.values(athleteStats).filter(s => s.throws > 0).map(s => {
+        const athleteEvents = myEvents.filter(e => e.athleteNumber === s.number);
+        const targetUsage = {};
+        const systemUsage = {};
+        athleteEvents.forEach(e => {
+          const t = normalizeTarget(e.target);
+          if (t) targetUsage[t] = (targetUsage[t] || 0) + 1;
+          const sys = normalizeOffensiveSystem(e.offensiveSystem);
+          systemUsage[sys] = (systemUsage[sys] || 0) + 1;
+        });
+        const bestTarget = Object.entries(targetUsage).sort((a,b)=>b[1]-a[1])[0]?.[0] || '-';
+        const bestSystem = Object.entries(systemUsage).sort((a,b)=>b[1]-a[1])[0]?.[0] || 'Livre';
+        return { ...s, bestTarget, bestSystem };
+      });
+
+      if (athleteRows.length === 0) {
+        athleteDetailContainer.innerHTML = '<p class="text-slate-500">Sem dados individuais.</p>';
+      } else {
+        athleteDetailContainer.innerHTML = `<table class="w-full"><thead class="bg-slate-100"><tr><th class="px-2 py-1 text-left">Atleta</th><th class="px-2 py-1 text-center">Arr.</th><th class="px-2 py-1 text-center">Gols</th><th class="px-2 py-1 text-center">% Aprov.</th><th class="px-2 py-1 text-center">Alvo + usado</th><th class="px-2 py-1 text-center">Sistema + usado</th></tr></thead><tbody>${athleteRows.map(r => `<tr class="border-b"><td class="px-2 py-1">${r.number || '?'} - ${r.name || 'N/A'}</td><td class="px-2 py-1 text-center">${r.throws}</td><td class="px-2 py-1 text-center">${r.goals}</td><td class="px-2 py-1 text-center">${r.efficiency}%</td><td class="px-2 py-1 text-center">${r.bestTarget}</td><td class="px-2 py-1 text-center">${r.bestSystem}</td></tr>`).join('')}</tbody></table>`;
+      }
+
       // Defense stats
       const oppEvents = events.filter(e => e.team === 'opponent');
       
@@ -2523,8 +2642,8 @@ function getHeatmapOptions() {
 }
 
 function mirrorTarget(target) {
-  // Regra do espelho: 1↔6, 2↔5, 2/3↔4/5, 3↔4, M fica M
-  const map = { '1':'6','6':'1','2':'5','5':'2','2/3':'4/5','4/5':'2/3','3':'4','4':'3','M':'M' };
+  // Regra do espelho para 6 setores oficiais
+  const map = { '1':'6','6':'1','2':'5','5':'2','3':'4','4':'3' };
   return map[target] || target;
 }
 
@@ -2578,24 +2697,14 @@ function renderHeatmap(optionsOrFilter) {
   }
 
   // Target Y positions (centro de cada faixa de 10 unidades)
-  const targetYPositions = {
-    '1': 5,
-    '2': 15,
-    '2/3': 25,
-    '3': 35,
-    'M': 45,
-    '4': 55,
-    '4/5': 65,
-    '5': 75,
-    '6': 85
-  };
+  const targetYPositions = { '1': 7.5, '2': 22.5, '3': 37.5, '4': 52.5, '5': 67.5, '6': 82.5 };
 
   // Contagens por alvo (volume) e gols por alvo (eficiência)
   const throwCounts = {};
   const goalCounts = {};
 
   events.forEach(e => {
-    const tRaw = (e.target || '').trim();
+    const tRaw = normalizeTarget(e.target);
     const t = (options.side === 'left') ? mirrorTarget(tRaw) : tRaw;
 
     if (!targetYPositions.hasOwnProperty(t)) return;
@@ -2608,7 +2717,7 @@ function renderHeatmap(optionsOrFilter) {
 
   // Plot throw points (pontos perto da trave do lado escolhido)
   events.forEach((e) => {
-    const tRaw = (e.target || '').trim();
+    const tRaw = normalizeTarget(e.target);
     const t = (options.side === 'left') ? mirrorTarget(tRaw) : tRaw;
 
     const targetY = targetYPositions[t];
@@ -2629,8 +2738,9 @@ function renderHeatmap(optionsOrFilter) {
       try {
         const planned = JSON.parse(e.plannedTargets || '[]');
         // Atenção: plannedTargets é salvo pelo alvo original do lance.
+        const normalizedPlanned = sanitizeTargets(planned);
         const plannedCheck = (options.side === 'left') ? mirrorTarget(tRaw) : tRaw;
-        if (planned.includes(plannedCheck)) {
+        if (normalizedPlanned.includes(plannedCheck)) {
           color = '#22c55e';
         } else if (planned.length > 0) {
           color = '#eab308';
@@ -2790,7 +2900,7 @@ function renderHeatmap(optionsOrFilter) {
         events.forEach(e => {
           try {
             const planned = JSON.parse(e.plannedTargets || '[]');
-            if (planned.includes(e.target)) adherentCount++;
+            if (sanitizeTargets(planned).includes(normalizeTarget(e.target))) adherentCount++;
           } catch {}
         });
         
@@ -2985,6 +3095,10 @@ function renderHeatmap(optionsOrFilter) {
       
       document.getElementById('penalty-type').addEventListener('change', (e) => {
         attackState.penaltyType = e.target.value;
+      });
+
+      document.getElementById('attack-offensive-system').addEventListener('change', (e) => {
+        attackState.offensiveSystem = normalizeOffensiveSystem(e.target.value);
       });
       
       document.querySelectorAll('.defense-structure').forEach(cb => {
