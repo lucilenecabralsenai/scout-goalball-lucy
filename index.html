@@ -3488,17 +3488,20 @@ populateHeatmapAthletes();
       const startDraw = (event) => {
         const activeTool = syncTacticalToolFromUI();
         if (activeTool === 'move') return;
+        if (TacticalBoard.tool === 'move') return;
         event.preventDefault();
         const pos = getBoardEventPosition(event);
         TacticalBoard.drawingActive = true;
 
         if (activeTool === 'erase') {
+        if (TacticalBoard.tool === 'erase') {
           eraseAt(pos.x, pos.y);
           return;
         }
 
         TacticalBoard.currentDrawing = {
           tool: activeTool,
+          tool: TacticalBoard.tool,
           points: [{ x: pos.x, y: pos.y }, { x: pos.x, y: pos.y }]
         };
         redrawTacticalDrawings();
@@ -3511,12 +3514,18 @@ populateHeatmapAthletes();
         const pos = getBoardEventPosition(event);
 
         if (activeTool === 'erase') {
+        if (!TacticalBoard.drawingActive || TacticalBoard.tool === 'move') return;
+        event.preventDefault();
+        const pos = getBoardEventPosition(event);
+
+        if (TacticalBoard.tool === 'erase') {
           eraseAt(pos.x, pos.y);
           return;
         }
 
         if (!TacticalBoard.currentDrawing) return;
         if (activeTool === 'path') {
+        if (TacticalBoard.tool === 'path') {
           TacticalBoard.currentDrawing.points.push({ x: pos.x, y: pos.y });
         } else {
           TacticalBoard.currentDrawing.points[1] = { x: pos.x, y: pos.y };
@@ -3544,6 +3553,7 @@ populateHeatmapAthletes();
       const startMoveAthlete = (event) => {
         const activeTool = syncTacticalToolFromUI();
         if (activeTool !== 'move') return;
+        if (TacticalBoard.tool !== 'move') return;
         const target = event.target.closest('.tactical-player');
         if (!target) return;
         event.preventDefault();
@@ -3553,6 +3563,7 @@ populateHeatmapAthletes();
       const moveAthlete = (event) => {
         const activeTool = syncTacticalToolFromUI();
         if (activeTool !== 'move' || !TacticalBoard.dragPlayerId) return;
+        if (TacticalBoard.tool !== 'move' || !TacticalBoard.dragPlayerId) return;
         event.preventDefault();
         const rect = board.getBoundingClientRect();
         const src = event.touches?.[0] || event.changedTouches?.[0] || event;
@@ -3575,6 +3586,10 @@ populateHeatmapAthletes();
       };
       toolSelect.addEventListener('change', onToolChange);
       toolSelect.addEventListener('input', onToolChange);
+      document.getElementById('tactical-tool').addEventListener('change', (e) => {
+        TacticalBoard.tool = e.target.value;
+        updateTacticalInteractionMode();
+      });
       document.getElementById('tactical-system').addEventListener('change', (e) => {
         TacticalBoard.system = normalizeOffensiveSystem(e.target.value);
       });
