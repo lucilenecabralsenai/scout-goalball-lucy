@@ -3728,33 +3728,38 @@ populateHeatmapAthletes();
         applyTacticalSystem('Livre');
       });
 
-      // Drawing input (desktop + tablet)
-      drawCanvas.addEventListener('pointerdown', startDraw);
-      window.addEventListener('pointermove', moveDraw);
-      window.addEventListener('pointerup', endDraw);
+      const supportsPointerEvents = 'PointerEvent' in window;
 
-      drawCanvas.addEventListener('mousedown', startDraw);
-      window.addEventListener('mousemove', moveDraw);
-      window.addEventListener('mouseup', endDraw);
+      if (supportsPointerEvents) {
+        // Drawing input (desktop + tablet)
+        drawCanvas.addEventListener('pointerdown', startDraw);
+        window.addEventListener('pointermove', moveDraw);
+        window.addEventListener('pointerup', endDraw);
 
-      drawCanvas.addEventListener('touchstart', startDraw, { passive: false });
-      window.addEventListener('touchmove', moveDraw, { passive: false });
-      window.addEventListener('touchend', endDraw);
-      window.addEventListener('touchcancel', endDraw);
+        // Athlete movement input (desktop + tablet)
+        playersLayer.addEventListener('pointerdown', startMoveAthlete);
+        window.addEventListener('pointermove', moveAthlete);
+        window.addEventListener('pointerup', endMoveAthlete);
+      } else {
+        // Fallback for legacy browsers without Pointer Events.
+        drawCanvas.addEventListener('mousedown', startDraw);
+        window.addEventListener('mousemove', moveDraw);
+        window.addEventListener('mouseup', endDraw);
 
-      // Athlete movement input (desktop + tablet)
-      playersLayer.addEventListener('pointerdown', startMoveAthlete);
-      window.addEventListener('pointermove', moveAthlete);
-      window.addEventListener('pointerup', endMoveAthlete);
+        drawCanvas.addEventListener('touchstart', startDraw, { passive: false });
+        window.addEventListener('touchmove', moveDraw, { passive: false });
+        window.addEventListener('touchend', endDraw);
+        window.addEventListener('touchcancel', endDraw);
 
-      playersLayer.addEventListener('mousedown', startMoveAthlete);
-      window.addEventListener('mousemove', moveAthlete);
-      window.addEventListener('mouseup', endMoveAthlete);
+        playersLayer.addEventListener('mousedown', startMoveAthlete);
+        window.addEventListener('mousemove', moveAthlete);
+        window.addEventListener('mouseup', endMoveAthlete);
 
-      playersLayer.addEventListener('touchstart', startMoveAthlete, { passive: false });
-      window.addEventListener('touchmove', moveAthlete, { passive: false });
-      window.addEventListener('touchend', endMoveAthlete);
-      window.addEventListener('touchcancel', endMoveAthlete);
+        playersLayer.addEventListener('touchstart', startMoveAthlete, { passive: false });
+        window.addEventListener('touchmove', moveAthlete, { passive: false });
+        window.addEventListener('touchend', endMoveAthlete);
+        window.addEventListener('touchcancel', endMoveAthlete);
+      }
 
 
       updateTacticalInteractionMode();
