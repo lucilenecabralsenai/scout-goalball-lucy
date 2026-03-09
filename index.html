@@ -706,9 +706,9 @@
       </div>
       <div class="bg-white rounded-xl p-3 card-shadow">
        <div id="tactical-board" class="relative w-full rounded-xl overflow-hidden border border-slate-200 bg-emerald-50" style="aspect-ratio: 2 / 1;">
-        <canvas id="tactical-court-canvas" class="absolute inset-0 w-full h-full"></canvas>
-        <canvas id="tactical-draw-canvas" class="tactical-canvas absolute inset-0 w-full h-full"></canvas>
-        <div id="tactical-players-layer" class="absolute inset-0 pointer-events-none"></div>
+        <canvas id="tactical-court-canvas" class="absolute inset-0 w-full h-full z-10"></canvas>
+        <canvas id="tactical-draw-canvas" class="tactical-canvas absolute inset-0 w-full h-full z-20"></canvas>
+        <div id="tactical-players-layer" class="absolute inset-0 pointer-events-none z-30"></div>
        </div>
        <p class="text-xs text-slate-500 mt-2">Use toque ou mouse para desenhar. Para mover atletas, selecione "Mover atleta".</p>
       </div>
@@ -3324,6 +3324,7 @@ populateHeatmapAthletes();
 
     function setupTacticalBoardSize() {
       const board = document.getElementById('tactical-board');
+      const playersLayer = document.getElementById('tactical-players-layer');
       const courtCanvas = document.getElementById('tactical-court-canvas');
       const drawCanvas = document.getElementById('tactical-draw-canvas');
       const rect = board.getBoundingClientRect();
@@ -3412,7 +3413,6 @@ populateHeatmapAthletes();
         el.style.top = `${p.y * board.height - 24}px`;
         el.textContent = p.label;
         el.dataset.id = p.id;
-        el.draggable = true;
         layer.appendChild(el);
       });
     }
@@ -3477,27 +3477,36 @@ populateHeatmapAthletes();
     function bindTacticalEvents() {
       const drawCanvas = document.getElementById('tactical-draw-canvas');
       const board = document.getElementById('tactical-board');
+      const playersLayer = document.getElementById('tactical-players-layer');
 
       const startDraw = (event) => {
         if (TacticalBoard.tool === 'move') return;
         event.preventDefault();
         const pos = getBoardEventPosition(event);
         TacticalBoard.drawingActive = true;
+
         if (TacticalBoard.tool === 'erase') {
           eraseAt(pos.x, pos.y);
           return;
         }
-        TacticalBoard.currentDrawing = { tool: TacticalBoard.tool, points: [{ x: pos.x, y: pos.y }, { x: pos.x, y: pos.y }] };
+
+        TacticalBoard.currentDrawing = {
+          tool: TacticalBoard.tool,
+          points: [{ x: pos.x, y: pos.y }, { x: pos.x, y: pos.y }]
+        };
+        redrawTacticalDrawings();
       };
 
       const moveDraw = (event) => {
         if (!TacticalBoard.drawingActive || TacticalBoard.tool === 'move') return;
         event.preventDefault();
         const pos = getBoardEventPosition(event);
+
         if (TacticalBoard.tool === 'erase') {
           eraseAt(pos.x, pos.y);
           return;
         }
+
         if (!TacticalBoard.currentDrawing) return;
         if (TacticalBoard.tool === 'path') {
           TacticalBoard.currentDrawing.points.push({ x: pos.x, y: pos.y });
@@ -3514,7 +3523,10 @@ populateHeatmapAthletes();
         if (TacticalBoard.currentDrawing && TacticalBoard.currentDrawing.points.length > 1) {
           TacticalBoard.drawings.push({
             ...TacticalBoard.currentDrawing,
-            points: TacticalBoard.currentDrawing.points.map(p => ({ x: p.x / canvas.width, y: p.y / canvas.height }))
+            points: TacticalBoard.currentDrawing.points.map(p => ({
+              x: p.x / canvas.width,
+              y: p.y / canvas.height
+            }))
           });
         }
         TacticalBoard.currentDrawing = null;
@@ -3536,7 +3548,9 @@ populateHeatmapAthletes();
         const src = event.touches?.[0] || event.changedTouches?.[0] || event;
         const px = Math.min(rect.width, Math.max(0, src.clientX - rect.left));
         const py = Math.min(rect.height, Math.max(0, src.clientY - rect.top));
-        TacticalBoard.players = TacticalBoard.players.map(p => p.id === TacticalBoard.dragPlayerId ? { ...p, x: px / rect.width, y: py / rect.height } : p);
+        TacticalBoard.players = TacticalBoard.players.map(p =>
+          p.id === TacticalBoard.dragPlayerId ? { ...p, x: px / rect.width, y: py / rect.height } : p
+        );
         renderTacticalPlayers();
       };
 
@@ -3548,7 +3562,9 @@ populateHeatmapAthletes();
         TacticalBoard.tool = e.target.value;
         updateTacticalInteractionMode();
       });
-      document.getElementById('tactical-system').addEventListener('change', (e) => TacticalBoard.system = normalizeOffensiveSystem(e.target.value));
+      document.getElementById('tactical-system').addEventListener('change', (e) => {
+        TacticalBoard.system = normalizeOffensiveSystem(e.target.value);
+      });
       document.getElementById('tactical-apply-system').addEventListener('click', () => {
         applyTacticalSystem(TacticalBoard.system);
         showToast(`✅ Sistema ${TacticalBoard.system} aplicado`);
@@ -3563,60 +3579,26 @@ populateHeatmapAthletes();
         applyTacticalSystem('Livre');
       });
 
-      drawCanvas.addEventListener('pointerdown', startDraw);
-      drawCanvas.addEventListener('pointermove', moveDraw);
-      drawCanvas.addEventListener('pointerup', endDraw);
-      drawCanvas.addEventListener('pointerleave', endDraw);
-
+      // Drawing input (desktop + tablet)
       drawCanvas.addEventListener('mousedown', startDraw);
-      drawCanvas.addEventListener('mousemove', moveDraw);
+      window.addEventListener('mousemove', moveDraw);
       window.addEventListener('mouseup', endDraw);
 
       drawCanvas.addEventListener('touchstart', startDraw, { passive: false });
-      drawCanvas.addEventListener('touchmove', moveDraw, { passive: false });
-      drawCanvas.addEventListener('touchend', endDraw);
-      drawCanvas.addEventListener('touchcancel', endDraw);
+      window.addEventListener('touchmove', moveDraw, { passive: false });
+      window.addEventListener('touchend', endDraw);
+      window.addEventListener('touchcancel', endDraw);
 
-      board.addEventListener('pointerdown', startMoveAthlete);
-      board.addEventListener('pointermove', moveAthlete);
-      board.addEventListener('pointerup', endMoveAthlete);
-      board.addEventListener('pointerleave', endMoveAthlete);
-
-      board.addEventListener('mousedown', startMoveAthlete);
+      // Athlete movement input (desktop + tablet)
+      playersLayer.addEventListener('mousedown', startMoveAthlete);
       window.addEventListener('mousemove', moveAthlete);
       window.addEventListener('mouseup', endMoveAthlete);
 
-      board.addEventListener('touchstart', startMoveAthlete, { passive: false });
-      board.addEventListener('touchmove', moveAthlete, { passive: false });
-      board.addEventListener('touchend', endMoveAthlete);
-      board.addEventListener('touchcancel', endMoveAthlete);
+      playersLayer.addEventListener('touchstart', startMoveAthlete, { passive: false });
+      window.addEventListener('touchmove', moveAthlete, { passive: false });
+      window.addEventListener('touchend', endMoveAthlete);
+      window.addEventListener('touchcancel', endMoveAthlete);
 
-      const layer = document.getElementById('tactical-players-layer');
-      layer.addEventListener('dragstart', (event) => {
-        if (TacticalBoard.tool !== 'move') {
-          event.preventDefault();
-          return;
-        }
-        const target = event.target.closest('.tactical-player');
-        if (!target) return;
-        TacticalBoard.dragPlayerId = target.dataset.id;
-        event.dataTransfer?.setData('text/plain', TacticalBoard.dragPlayerId);
-      });
-      board.addEventListener('dragover', (event) => {
-        if (TacticalBoard.tool === 'move') event.preventDefault();
-      });
-      board.addEventListener('drop', (event) => {
-        if (TacticalBoard.tool !== 'move') return;
-        event.preventDefault();
-        const rect = board.getBoundingClientRect();
-        const px = Math.min(rect.width, Math.max(0, event.clientX - rect.left));
-        const py = Math.min(rect.height, Math.max(0, event.clientY - rect.top));
-        const dragId = event.dataTransfer?.getData('text/plain') || TacticalBoard.dragPlayerId;
-        if (!dragId) return;
-        TacticalBoard.players = TacticalBoard.players.map(p => p.id === dragId ? { ...p, x: px / rect.width, y: py / rect.height } : p);
-        TacticalBoard.dragPlayerId = null;
-        renderTacticalPlayers();
-      });
 
       updateTacticalInteractionMode();
     }
