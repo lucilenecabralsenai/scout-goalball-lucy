@@ -3599,10 +3599,9 @@ populateHeatmapAthletes();
       };
     }
 
-    function syncTacticalToolFromUI() {
+    function getTacticalToolFromUI() {
       const toolSelect = document.getElementById('tactical-tool');
-      TacticalBoard.tool = toolSelect?.value || TacticalBoard.tool;
-      return TacticalBoard.tool;
+      return toolSelect?.value || TacticalBoard.tool;
     }
 
     function updateTacticalInteractionMode() {
@@ -3620,7 +3619,7 @@ populateHeatmapAthletes();
 
       const startDraw = (event) => {
         if (!ensureTacticalBoardReady()) return;
-        const activeTool = syncTacticalToolFromUI();
+        const activeTool = TacticalBoard.tool;
         if (activeTool === 'move') return;
         event.preventDefault();
         const pos = getBoardEventPosition(event);
@@ -3639,7 +3638,7 @@ populateHeatmapAthletes();
       };
 
       const moveDraw = (event) => {
-        const activeTool = syncTacticalToolFromUI();
+        const activeTool = TacticalBoard.tool;
         if (!TacticalBoard.drawingActive || activeTool === 'move') return;
         event.preventDefault();
         const pos = getBoardEventPosition(event);
@@ -3677,7 +3676,7 @@ populateHeatmapAthletes();
 
       const startMoveAthlete = (event) => {
         if (!ensureTacticalBoardReady()) return;
-        const activeTool = syncTacticalToolFromUI();
+        const activeTool = TacticalBoard.tool;
         if (activeTool !== 'move') return;
         const target = event.target.closest('.tactical-player');
         if (!target) return;
@@ -3686,7 +3685,7 @@ populateHeatmapAthletes();
       };
 
       const moveAthlete = (event) => {
-        const activeTool = syncTacticalToolFromUI();
+        const activeTool = TacticalBoard.tool;
         if (activeTool !== 'move' || !TacticalBoard.dragPlayerId) return;
         event.preventDefault();
         const rect = board.getBoundingClientRect();
@@ -3704,8 +3703,12 @@ populateHeatmapAthletes();
       };
 
       const toolSelect = document.getElementById('tactical-tool');
+      TacticalBoard.tool = getTacticalToolFromUI();
       const onToolChange = (e) => {
+        const movedPlayers = TacticalBoard.players.map(player => ({ ...player }));
         TacticalBoard.tool = e.target.value;
+        TacticalBoard.players = movedPlayers;
+        renderTacticalPlayers();
         updateTacticalInteractionMode();
       };
       toolSelect.addEventListener('change', onToolChange);
