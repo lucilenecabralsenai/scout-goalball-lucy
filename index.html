@@ -208,6 +208,8 @@
     <section id="tab-jogo" class="tab-content hidden">
      <div class="max-w-4xl mx-auto space-y-4"><!-- Quick Actions -->
       <div class="grid grid-cols-2 gap-3"><button id="btn-attack" class="bg-gradient-to-br from-green-500 to-green-700 text-white p-4 rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transition-all"> ⚡ Registrar Ataque </button> <button id="btn-change-target" class="bg-gradient-to-br from-orange-500 to-orange-700 text-white p-4 rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transition-all"> 🎯 Mudança de Alvo </button>
+      </div>
+      <div class="grid grid-cols-1 gap-3"><button id="btn-end-match" class="bg-gradient-to-br from-red-500 to-red-700 text-white p-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all"> 🏁 Encerrar Partida </button>
      </div>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-3"><button id="btn-end-match" class="bg-gradient-to-br from-red-500 to-red-700 text-white p-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all"> 🏁 Encerrar Partida </button> <button id="btn-new-match" class="bg-gradient-to-br from-indigo-500 to-indigo-700 text-white p-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all"> 🆕 Nova Partida </button>
       </div>
@@ -380,6 +382,7 @@
       <div class="bg-white rounded-xl p-4 card-shadow">
        <div class="flex items-center justify-between mb-4">
         <h2 class="text-lg font-semibold text-slate-800">📋 Histórico de Lances</h2>
+        <div class="flex gap-2 flex-wrap"><select id="history-match-select" class="px-3 py-1 border rounded-lg text-sm"> <option value="current">Partida atual</option> </select> <select id="history-filter" class="px-3 py-1 border rounded-lg text-sm"> <option value="all">Todos</option> <option value="1T">1º Tempo</option> <option value="2T">2º Tempo</option> <option value="PR">Prorrogação</option> </select>
          <div class="flex gap-2 flex-wrap"><select id="history-match-select" class="px-3 py-1 border rounded-lg text-sm"> <option value="current">Partida atual</option> </select> <select id="history-filter" class="px-3 py-1 border rounded-lg text-sm"> <option value="all">Todos</option> <option value="1T">1º Tempo</option> <option value="2T">2º Tempo</option> <option value="PR">Prorrogação</option> <option value="PN">Penalidades</option> </select>
         </div>
        </div>
@@ -752,6 +755,7 @@
       currentTargets: {},
       events: [],
       matchId: null,
+      archivedMatches: []
       archivedMatches: [],
       matchRules: {
         firstHalfPenaltyApplied: { my: false, opponent: false }
@@ -870,6 +874,7 @@
           currentTargets: AppState.currentTargets,
           events: AppState.events,
           archivedMatches: AppState.archivedMatches,
+          matchId: AppState.matchId
           matchId: AppState.matchId,
           matchRules: AppState.matchRules
         };
@@ -886,6 +891,10 @@
           const parsed = JSON.parse(data);
           AppState.config = parsed.config || AppState.config;
           AppState.lineup = parsed.lineup || AppState.lineup;
+          AppState.targetPlans = parsed.targetPlans || {};
+          AppState.currentTargets = parsed.currentTargets || {};
+          AppState.events = Array.isArray(parsed.events) ? parsed.events : [];
+          AppState.archivedMatches = Array.isArray(parsed.archivedMatches) ? parsed.archivedMatches : [];
          AppState.lineup.phaseStarters = {
             '1T': parsed?.lineup?.phaseStarters?.['1T'] || AppState.lineup.phaseStarters['1T'],
             '2T': parsed?.lineup?.phaseStarters?.['2T'] || AppState.lineup.phaseStarters['2T'],
@@ -1418,6 +1427,8 @@
 
       const previousMatchId = AppState.matchId;
       AppState.matchId = Date.now().toString();
+      saveToLocalStorage();
+      renderHistoryMatchSelector();
       resetRequestControl();
       setPossessionForPhase(AppState.lineup.phase);
       saveToLocalStorage();
@@ -1704,11 +1715,65 @@
     async function performSubstitution() {
       const subOutIdx = document.getElementById('sub-out').value;
       const subInIdx = document.getElementById('sub-in').value;
+      
 
       if (subOutIdx === '' || subInIdx === '') {
         showToast('⚠️ Selecione os atletas para a substituição');
         return;
       }
+      
+      // Find position of player going out
+      let position = null;
+      if (AppState.lineup.left == subOutIdx) position = 'left';
+      else if (AppState.lineup.center == subOutIdx) position = 'center';
+      else if (AppState.lineup.right == subOutIdx) position = 'right';
+      
+      if (!position) {
+        showToast('⚠️ Atleta selecionado não está em quadra');
+        return;
+      }
+      
+      // Update lineup
+      AppState.lineup[position] = parseInt(subInIdx);
+
+      const subEvent = {
+        type: 'substitution',
+        matchId: AppState.matchId,
+        timestamp: new Date().toISOString(),
+        phase: AppState.lineup.phase,
+        subOut: subOutIdx,
+        subIn: subInIdx,
+        position: position,
+        team: 'my',
+        athleteNumber: '',
+        athleteName: '',
+        ballType: '',
+        target: '',
+        result: '',
+        penaltyType: '',
+        defenseStructure: '',
+        ballBehavior: '',
+        plannedTargets: '',
+        newTargets: ''
+      };
+
+      const canRegisterEvent = sdkEvents.length < 999;
+      if (!canRegisterEvent) {
+        showToast('⚠️ Limite de 999 registros atingido! Substituição aplicada sem registro no histórico.');
+      }
+      
+      // Record substitution event
+      if (canRegisterEvent && window.dataSdk) {
+        const result = await window.dataSdk.create(subEvent);
+        if (!result.isOk) {
+          createLocalEvent(subEvent);
+        }
+      } else if (canRegisterEvent) {
+        createLocalEvent(subEvent);
+      }
+      
+      saveToLocalStorage();
+      updateLineupDisplay();
 
       const ok = await registerSubstitution({
         team: 'my',
@@ -1912,6 +1977,7 @@
         newTargets: ''
       };
       
+      if (sdkEvents.length >= 999) {
      if (sdkEvents.length >= 999) {
         showToast('⚠️ Limite de 999 registros atingido!');
         return;
@@ -2169,6 +2235,8 @@
         penaltyType: '',
         defenseStructure: '',
         ballBehavior: '',
+        plannedTargets: '',
+        newTargets: targetChangeState.newTargets.join(','),
         offensiveSystem: 'Livre',
         plannedTargets: '',
         newTargets: sanitizeTargets(targetChangeState.newTargets).join(','),
@@ -2256,6 +2324,7 @@
       
       const selectedMatchId = getSelectedHistoryMatchId();
       renderHistoryMeta();
+      let events = sdkEvents.filter(e => (e.type === 'event' || e.type === 'substitution' || e.type === 'target_change') && e.matchId === selectedMatchId);
       let events = sdkEvents.filter(e => (e.type === 'event' || e.type === 'substitution' || e.type === 'target_change' || e.type === 'timeout') && e.matchId === selectedMatchId);
       
       if (filter !== 'all') {
@@ -2349,6 +2418,7 @@
         const resultEmoji = e.result === 'gol' ? '⚽' : e.result === 'defendida' ? '🧤' : e.result === 'fora' ? '❌' : e.result === 'blockout' ? '🚫' : e.result === 'ballover' ? '🔁' : '⚠️';
         
         return `
+          <div class="p-3 rounded-lg border ${teamClass}" data-id="${getEventId(e)}">
          <div class="p-3 rounded-lg border ${teamClass}" data-id="${getEventId(e)}">
             <div class="flex items-center justify-between">
               <div class="flex items-center gap-2">
@@ -2384,6 +2454,7 @@
           showToast('❌ Erro ao excluir lance');
           return;
         }
+      } else {
        } else {
         sdkEvents = sdkEvents.filter(e => getEventId(e) !== id);
         syncEventsToLocalStorage();
@@ -2485,6 +2556,7 @@
           showToast('❌ Erro ao atualizar lance');
           return;
         }
+      } else {
         } else {
         sdkEvents = sdkEvents.map(e => getEventId(e) === id ? updatedEvent : e);
         syncEventsToLocalStorage();
@@ -3342,34 +3414,93 @@ populateHeatmapAthletes();
       return true;
     }
 
+
+    function ensureTacticalBoardReady() {
+      const drawCanvas = document.getElementById('tactical-draw-canvas');
+      const board = document.getElementById('tactical-board');
+      if (!drawCanvas || !board) return false;
+
+      const rect = board.getBoundingClientRect();
+      if (!rect.width || !rect.height) return false;
+
+      setupTacticalBoardSize();
+      drawTacticalCourt();
+      redrawTacticalDrawings();
+      renderTacticalPlayers();
+      return drawCanvas.width > 0 && drawCanvas.height > 0;
+    }
+
     function drawTacticalCourt() {
       const canvas = document.getElementById('tactical-court-canvas');
       const ctx = canvas.getContext('2d');
       const { width:w, height:h } = canvas;
       ctx.clearRect(0,0,w,h);
-      ctx.fillStyle = '#dcfce7';
-      ctx.fillRect(0,0,w,h);
+
+      // Full Goalball court bands (from my goal line to opponent goal line)
+      const horizontalBands = [
+        { label: 'Defesa', color: '#dbeafe' },
+        { label: 'Ataque', color: '#e0f2fe' },
+        { label: 'Neutra', color: '#ecfeff' },
+        { label: 'Neutra', color: '#ecfeff' },
+        { label: 'Ataque adversário', color: '#fee2e2' },
+        { label: 'Defesa adversária', color: '#fecaca' }
+      ];
+
+      const bandHeight = h / horizontalBands.length;
+      horizontalBands.forEach((band, i) => {
+        const y = i * bandHeight;
+        ctx.fillStyle = band.color;
+        ctx.fillRect(0, y, w, bandHeight);
+      });
+
+      // Outer court
       ctx.strokeStyle = '#1f2937';
       ctx.lineWidth = 2;
       ctx.strokeRect(2,2,w-4,h-4);
+
+      // 6 standard sectors across court width
       ctx.strokeStyle = '#16a34a';
       ctx.lineWidth = 1.2;
       for (let i=1;i<6;i++) {
         const x = (w/6)*i;
-        ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,h); ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(x,0);
+        ctx.lineTo(x,h);
+        ctx.stroke();
       }
-      for (let i=1;i<3;i++) {
-        const y = (h/3)*i;
-        ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(w,y); ctx.stroke();
-      }
+
+      // Band separators (full court structure)
       ctx.strokeStyle = '#0f766e';
-      ctx.lineWidth = 2;
-      ctx.beginPath(); ctx.moveTo(0,h*0.8); ctx.lineTo(w,h*0.8); ctx.stroke();
+      ctx.lineWidth = 1.5;
+      for (let i=1;i<horizontalBands.length;i++) {
+        const y = bandHeight * i;
+        ctx.beginPath();
+        ctx.moveTo(0,y);
+        ctx.lineTo(w,y);
+        ctx.stroke();
+      }
+
+      // Goal lines at both ends
+      ctx.strokeStyle = '#0f172a';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(0,h*0.04);
+      ctx.lineTo(w,h*0.04);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(0,h*0.96);
+      ctx.lineTo(w,h*0.96);
+      ctx.stroke();
+
+      // Visual labels
       ctx.fillStyle = '#334155';
       ctx.font = '12px sans-serif';
-      ctx.fillText('Defesa', 10, h*0.78);
-      ctx.fillText('Ataque', 10, 16);
+      horizontalBands.forEach((band, i) => {
+        const y = i * bandHeight + 14;
+        ctx.fillText(band.label, 8, y);
+      });
     }
+
 
     function drawShape(ctx, drawing) {
       const points = drawing.points || [];
@@ -3494,6 +3625,9 @@ populateHeatmapAthletes();
       const playersLayer = document.getElementById('tactical-players-layer');
 
       const startDraw = (event) => {
+        if (!ensureTacticalBoardReady()) return;
+        const activeTool = syncTacticalToolFromUI();
+        if (activeTool === 'move') return;
         const activeTool = syncTacticalToolFromUI();
         if (activeTool === 'move') return;
         if (TacticalBoard.tool === 'move') return;
@@ -3559,6 +3693,9 @@ populateHeatmapAthletes();
       };
 
       const startMoveAthlete = (event) => {
+        if (!ensureTacticalBoardReady()) return;
+        const activeTool = syncTacticalToolFromUI();
+        if (activeTool !== 'move') return;
         const activeTool = syncTacticalToolFromUI();
         if (activeTool !== 'move') return;
         if (TacticalBoard.tool !== 'move') return;
@@ -3594,10 +3731,6 @@ populateHeatmapAthletes();
       };
       toolSelect.addEventListener('change', onToolChange);
       toolSelect.addEventListener('input', onToolChange);
-      document.getElementById('tactical-tool').addEventListener('change', (e) => {
-        TacticalBoard.tool = e.target.value;
-        updateTacticalInteractionMode();
-      });
       document.getElementById('tactical-system').addEventListener('change', (e) => {
         TacticalBoard.system = normalizeOffensiveSystem(e.target.value);
       });
