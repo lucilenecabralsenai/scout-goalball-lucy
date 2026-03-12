@@ -273,7 +273,7 @@
          <div class="grid grid-cols-3 gap-2" id="result-grid"><button class="result-btn px-3 py-2 border-2 border-slate-300 rounded-lg text-sm" data-result="gol">⚽ Gol</button> <button class="result-btn px-3 py-2 border-2 border-slate-300 rounded-lg text-sm" data-result="defendida">🧤 Defendida</button> <button class="result-btn px-3 py-2 border-2 border-slate-300 rounded-lg text-sm" data-result="blockout">🚫 Blockout</button> <button class="result-btn px-3 py-2 border-2 border-slate-300 rounded-lg text-sm" data-result="fora">❌ Fora</button> <button class="result-btn px-3 py-2 border-2 border-slate-300 rounded-lg text-sm" data-result="penalidade">⚠️ Penalidade</button> <button class="result-btn px-3 py-2 border-2 border-slate-300 rounded-lg text-sm" data-result="ballover">🔁 Ball Over</button>
          </div>
          </div><!-- Penalty Type (conditional) -->
-         <div id="penalty-section" class="hidden"><label class="block text-sm font-medium text-slate-600 mb-2">Tipo de Penalidade</label> <select id="penalty-type" class="w-full px-3 py-2 border border-slate-300 rounded-lg"> <option value="">Selecionar tipo</option> <option value="highball">Highball</option> <option value="longball">Longball</option> <option value="noise">Noise</option> <option value="eyeshade">Eyeshade</option> <option value="delay">Delay</option> <option value="10sec">10 Segundos</option> <option value="illegal-defense">Defesa Ilegal</option> <option value="other">Outra</option> </select>
+         <div id="penalty-section" class="hidden"><label class="block text-sm font-medium text-slate-600 mb-2">Tipo de Penalidade</label> <select id="penalty-type" class="w-full px-3 py-2 border border-slate-300 rounded-lg"> <option value="">Selecionar tipo</option> <option value="high-ball">High Ball</option> <option value="long-ball">Long Ball</option> <option value="10-seconds">10 Seconds</option> <option value="illegal-defense">Illegal Defense</option> <option value="personal-delay-of-game">Personal Delay of Game</option> <option value="illegal-coaching">Illegal Coaching</option> <option value="unsportsmanlike-conduct">Unsportsmanlike Conduct</option> <option value="team-delay-of-game">Team Delay of Game</option> <option value="illegal-substitution">Illegal Substitution</option> <option value="illegal-timeout">Illegal Timeout</option> <option value="noise">Noise</option> <option value="unsportsmanlike-conduct-team">Unsportsmanlike Conduct (Team)</option> </select>
          </div><!-- Defense Section -->
          <div id="defense-section" class="border-t pt-4 mt-4">
           <h4 class="text-sm font-semibold text-slate-700 mb-3">🛡️ Defesa</h4><!-- Defense Structure -->
@@ -811,6 +811,38 @@
     const OFFENSIVE_SYSTEMS = ['Livre', 'Cone Aberto', 'Cone Fechado', 'Espelho', 'Arrasta', 'Diagonal Direita', 'Diagonal Esquerda', 'X', 'Bloco Direito', 'Bloco Esquerdo'];
     const GAME_SITUATIONS = ['Livre', 'Flutuou', 'Inverteu', 'Passou a bola'];
     const LEGACY_TARGET_MAP = { '2/3': '3', '4/5': '4', 'M': '3' };
+    const PENALTY_OPTIONS = [
+      { value: 'high-ball', label: 'High Ball' },
+      { value: 'long-ball', label: 'Long Ball' },
+      { value: '10-seconds', label: '10 Seconds' },
+      { value: 'illegal-defense', label: 'Illegal Defense' },
+      { value: 'personal-delay-of-game', label: 'Personal Delay of Game' },
+      { value: 'illegal-coaching', label: 'Illegal Coaching' },
+      { value: 'unsportsmanlike-conduct', label: 'Unsportsmanlike Conduct' },
+      { value: 'team-delay-of-game', label: 'Team Delay of Game' },
+      { value: 'illegal-substitution', label: 'Illegal Substitution' },
+      { value: 'illegal-timeout', label: 'Illegal Timeout' },
+      { value: 'noise', label: 'Noise' },
+      { value: 'unsportsmanlike-conduct-team', label: 'Unsportsmanlike Conduct (Team)' }
+    ];
+    const PENALTY_LABEL_BY_VALUE = Object.fromEntries(PENALTY_OPTIONS.map(o => [o.value, o.label]));
+    const LEGACY_PENALTY_MAP = {
+      highball: 'high-ball',
+      'high-ball': 'high-ball',
+      longball: 'long-ball',
+      'long-ball': 'long-ball',
+      '10sec': '10-seconds',
+      '10-seconds': '10-seconds',
+      '10 segundos': '10-seconds',
+      '10 seconds': '10-seconds',
+      delay: 'personal-delay-of-game',
+      'personal-delay-of-game': 'personal-delay-of-game',
+      'illegal-defense': 'illegal-defense',
+      'defesa ilegal': 'illegal-defense',
+      noise: 'noise',
+      eyeshade: 'illegal-defense',
+      other: ''
+    };
 
     function normalizeTarget(target) {
       const normalized = String(target || '').trim();
@@ -837,6 +869,25 @@
       return normalizeGameSituation(event?.gameSituation || event?.offensiveSystem);
     }
 
+    function normalizePenaltyType(value) {
+      const normalized = String(value || '').trim().toLowerCase();
+      if (!normalized) return '';
+      return PENALTY_LABEL_BY_VALUE[normalized] ? normalized : (LEGACY_PENALTY_MAP[normalized] || '');
+    }
+
+    function getPenaltyLabel(value) {
+      const normalized = normalizePenaltyType(value);
+      if (!normalized) return '';
+      return PENALTY_LABEL_BY_VALUE[normalized] || '';
+    }
+
+    function resolveResultLabel(event) {
+      const result = String(event?.result || '').trim();
+      if (result !== 'penalidade') return result || '-';
+      const penalty = getPenaltyLabel(event?.penaltyType);
+      return penalty ? `penalidade (${penalty})` : 'penalidade';
+    }
+
     function normalizeStoredEvent(event) {
       if (!event || typeof event !== 'object') return event;
       const cloned = { ...event };
@@ -844,6 +895,7 @@
         cloned.target = normalizeTarget(cloned.target);
         cloned.offensiveSystem = normalizeOffensiveSystem(cloned.offensiveSystem);
         cloned.gameSituation = resolveGameSituation(cloned);
+        cloned.penaltyType = normalizePenaltyType(cloned.penaltyType);
       }
       if (cloned.type === 'target_change') {
         const targets = sanitizeTargets(String(cloned.newTargets || '').split(','));
@@ -1142,7 +1194,7 @@
       const headers = ['Data/Hora','Tempo','Equipe','Atleta','Tipo Bola','Alvo','Situação de Jogo','Resultado','Penalidade','Defesa','Comportamento'];
       const rows = events.map(e => [
         e.timestamp || '', e.phase || '', getTeamLabel(e.team), `${e.athleteNumber || ''} ${e.athleteName || ''}`.trim(),
-        e.ballType || '', normalizeTarget(e.target) || '-', resolveGameSituation(e), e.result || '', e.penaltyType || '', e.defenseStructure || '', e.ballBehavior || ''
+        e.ballType || '', normalizeTarget(e.target) || '-', resolveGameSituation(e), e.result || '', getPenaltyLabel(e.penaltyType), e.defenseStructure || '', e.ballBehavior || ''
       ]);
       const csv = [headers, ...rows].map(r => r.map(v => `"${String(v).replaceAll('"','""')}"`).join(';')).join('\n');
       const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -1198,7 +1250,7 @@
             <td>${escapeHtml(event.ballType || '-')}</td>
             <td>${escapeHtml(normalizeTarget(event.target) || '-')}</td>
             <td>${escapeHtml(resolveGameSituation(event))}</td>
-            <td>${escapeHtml(event.result || '-')}</td>
+            <td>${escapeHtml(resolveResultLabel(event))}</td>
           </tr>`;
         }).join('') || '<tr><td colspan="8" class="muted">Sem lances registrados no período.</td></tr>';
     }
@@ -2116,7 +2168,7 @@
         ballType: attackState.ballType,
         target: attackState.target,
         result: attackState.result,
-        penaltyType: attackState.penaltyType,
+        penaltyType: normalizePenaltyType(attackState.penaltyType),
         defenseStructure: attackState.defenseStructures.join(','),
         ballBehavior: attackState.ballBehavior,
         gameSituation: normalizeGameSituation(attackState.gameSituation),
@@ -2321,7 +2373,7 @@
 
       const lastEvents = attackEvents.slice(-4).reverse();
       document.getElementById('timeout-last-events').innerHTML = lastEvents.length
-        ? lastEvents.map(event => `<div class="p-2 rounded border ${event.team === 'my' ? 'bg-blue-50 border-blue-100' : 'bg-rose-50 border-rose-100'}">${new Date(event.timestamp).toLocaleTimeString('pt-BR',{hour:'2-digit', minute:'2-digit'})} • ${getTeamLabel(event.team)} • ${event.athleteNumber || '?'} ${event.athleteName || ''} • ${event.ballType} / ${event.target} / ${event.result}</div>`).join('')
+        ? lastEvents.map(event => `<div class="p-2 rounded border ${event.team === 'my' ? 'bg-blue-50 border-blue-100' : 'bg-rose-50 border-rose-100'}">${new Date(event.timestamp).toLocaleTimeString('pt-BR',{hour:'2-digit', minute:'2-digit'})} • ${getTeamLabel(event.team)} • ${event.athleteNumber || '?'} ${event.athleteName || ''} • ${event.ballType} / ${event.target} / ${resolveResultLabel(event)}</div>`).join('')
         : '<p class="text-slate-500">Sem lances registrados até o momento.</p>';
 
       document.getElementById('timeout-court-container').innerHTML = buildTimeoutCourt(attackEvents);
@@ -2656,7 +2708,7 @@
                   <div class="text-sm font-medium">${e.athleteNumber || '?'} - ${e.athleteName || 'N/A'}</div>
                   <div class="text-xs text-slate-600">
                     ${e.ballType} → Alvo ${normalizeTarget(e.target) || '-'} • Sit. ${resolveGameSituation(e)} = ${e.result}
-                    ${e.penaltyType ? `(${e.penaltyType})` : ''}
+                    ${getPenaltyLabel(e.penaltyType) ? `(${getPenaltyLabel(e.penaltyType)})` : ''}
                   </div>
                   ${e.defenseStructure ? `<div class="text-xs text-slate-500">Defesa: ${e.defenseStructure} | ${e.ballBehavior}</div>` : ''}
                 </div>
@@ -2743,6 +2795,14 @@
             <option value="ballover" ${event.result === 'ballover' ? 'selected' : ''}>Ball Over</option>
           </select>
         </div>
+
+        <div>
+          <label class="block text-sm font-medium text-slate-600 mb-2">Tipo de Penalidade</label>
+          <select id="edit-penalty-type" class="w-full px-3 py-2 border border-slate-300 rounded-lg">
+            <option value="">Selecionar tipo</option>
+            ${PENALTY_OPTIONS.map(option => `<option value="${option.value}" ${normalizePenaltyType(event.penaltyType) === option.value ? 'selected' : ''}>${option.label}</option>`).join('')}
+          </select>
+        </div>
         
         <div>
           <label class="block text-sm font-medium text-slate-600 mb-2">Comportamento da Bola</label>
@@ -2776,6 +2836,7 @@
         gameSituation: normalizeGameSituation(document.getElementById('edit-game-situation').value),
         offensiveSystem: normalizeGameSituation(document.getElementById('edit-game-situation').value),
         result: document.getElementById('edit-result').value,
+        penaltyType: normalizePenaltyType(document.getElementById('edit-penalty-type').value),
         ballBehavior: document.getElementById('edit-ball-behavior').value
       };
       
@@ -3463,7 +3524,7 @@ function renderHeatmap(optionsOrFilter) {
       });
       
       document.getElementById('penalty-type').addEventListener('change', (e) => {
-        attackState.penaltyType = e.target.value;
+        attackState.penaltyType = normalizePenaltyType(e.target.value);
       });
 
       document.getElementById('attack-game-situation').addEventListener('change', (e) => {
