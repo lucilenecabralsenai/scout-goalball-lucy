@@ -186,6 +186,22 @@
         <div id="bench-players" class="flex flex-wrap gap-2"><!-- Bench players will be shown here -->
         </div>
        </div>
+      </div><div class="bg-white rounded-xl p-5 card-shadow">
+       <h2 class="text-lg font-semibold text-slate-800 mb-4">🔴 Escalação Adversária</h2>
+       <div class="bg-gradient-to-b from-rose-50 to-slate-50 rounded-xl p-4 border-2 border-rose-200 mb-3">
+        <div class="grid grid-cols-3 gap-4 max-w-md mx-auto">
+         <div class="text-center">
+          <div class="w-16 h-16 mx-auto bg-rose-600 rounded-full flex items-center justify-center text-white font-bold text-lg mb-2" id="opp-pos-left">-</div><span class="text-xs text-slate-600">Ala Esquerda</span> <select id="select-opp-left" class="w-full mt-1 text-xs p-1 border rounded"><option value="">Selecionar</option></select>
+         </div>
+         <div class="text-center">
+          <div class="w-20 h-20 mx-auto bg-rose-700 rounded-full flex items-center justify-center text-white font-bold text-xl mb-2" id="opp-pos-center">-</div><span class="text-xs text-slate-600">Pivô</span> <select id="select-opp-center" class="w-full mt-1 text-xs p-1 border rounded"><option value="">Selecionar</option></select>
+         </div>
+         <div class="text-center">
+          <div class="w-16 h-16 mx-auto bg-rose-600 rounded-full flex items-center justify-center text-white font-bold text-lg mb-2" id="opp-pos-right">-</div><span class="text-xs text-slate-600">Ala Direita</span> <select id="select-opp-right" class="w-full mt-1 text-xs p-1 border rounded"><option value="">Selecionar</option></select>
+         </div>
+        </div>
+       </div>
+       <p class="text-xs text-slate-500">Configure os três atletas iniciais adversários para melhorar a leitura tática no Jogo, no modal de ataque e na prancheta.</p>
       </div><!-- Substitution -->
       <div class="bg-white rounded-xl p-5 card-shadow">
        <h2 class="text-lg font-semibold text-slate-800 mb-4">🔄 Realizar Substituição</h2>
@@ -204,7 +220,7 @@
      </div>
     </section><!-- Jogo Tab -->
     <section id="tab-jogo" class="tab-content hidden">
-     <div class="max-w-4xl mx-auto space-y-4"><!-- Quick Actions -->
+     <div class="max-w-4xl mx-auto space-y-4"><div class="bg-white rounded-xl p-4 card-shadow border border-slate-200 space-y-3"><div class="flex flex-col md:flex-row md:items-center md:justify-between gap-2"><div><div class="text-xs uppercase tracking-wide text-slate-500">Placar atual</div><div id="match-score" class="text-2xl font-bold text-slate-800">0 - 0</div></div><div class="text-sm text-slate-500">Formação em quadra</div></div><div id="jogo-oncourt" class="grid grid-cols-1 md:grid-cols-3 gap-2"><div class="rounded-lg border border-slate-200 bg-slate-50 p-3"><div class="text-xs text-slate-500">Ala E</div><div class="font-semibold text-slate-800">#-</div></div><div class="rounded-lg border border-slate-200 bg-slate-50 p-3"><div class="text-xs text-slate-500">Pivô</div><div class="font-semibold text-slate-800">#-</div></div><div class="rounded-lg border border-slate-200 bg-slate-50 p-3"><div class="text-xs text-slate-500">Ala D</div><div class="font-semibold text-slate-800">#-</div></div></div></div><!-- Quick Actions -->
       <div class="grid grid-cols-2 gap-3"><button id="btn-attack" class="bg-gradient-to-br from-green-500 to-green-700 text-white p-4 rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transition-all"> ⚡ Registrar Ataque </button> <button id="btn-change-target" class="bg-gradient-to-br from-orange-500 to-orange-700 text-white p-4 rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transition-all"> 🎯 Mudança de Alvo </button>
       </div>
       <div class="grid grid-cols-1 gap-3"><button id="btn-end-match" class="bg-gradient-to-br from-red-500 to-red-700 text-white p-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all"> 🏁 Encerrar Partida </button>
@@ -221,11 +237,26 @@
         <div class="sticky top-0 bg-white border-b px-4 py-3 flex items-center justify-between">
          <h3 class="text-lg font-semibold">⚡ Registrar Ataque</h3><button id="close-attack-modal" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100">✕</button>
         </div>
-        <div class="p-4 space-y-4"><!-- Team Selection -->
+        <div class="p-4 space-y-4"><div class="sticky top-[56px] z-10 -mx-4 px-4 py-3 border-b border-slate-200 bg-white/95 backdrop-blur-sm space-y-2">
+          <div class="flex items-center justify-between gap-2">
+            <div class="text-xs uppercase tracking-wide text-slate-500">Consulta rápida</div>
+            <div id="attack-modal-score" class="text-sm font-bold text-slate-800">Placar: 0 - 0</div>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+            <div class="rounded-lg border border-blue-200 bg-blue-50 p-2">
+              <div class="text-xs font-semibold text-blue-800 mb-1">Minha equipe</div>
+              <div id="attack-modal-my-lineup" class="space-y-1 text-xs text-slate-700"></div>
+            </div>
+            <div class="rounded-lg border border-rose-200 bg-rose-50 p-2">
+              <div class="text-xs font-semibold text-rose-800 mb-1">Adversário</div>
+              <div id="attack-modal-opponent-lineup" class="space-y-1 text-xs text-slate-700"></div>
+            </div>
+          </div>
+         </div><!-- Team Selection -->
          <div><label class="block text-sm font-medium text-slate-600 mb-2">Equipe</label>
           <div class="grid grid-cols-2 gap-2"><button class="team-select-btn px-4 py-2 border-2 border-blue-500 bg-blue-50 text-blue-700 rounded-lg font-medium" data-team="my">Minha Equipe</button> <button class="team-select-btn px-4 py-2 border-2 border-slate-300 text-slate-600 rounded-lg font-medium" data-team="opponent">Adversário</button>
           </div>
-         </div><!-- Athlete Selection -->
+         </div><div id="attack-offensive-fields" class="space-y-4"><!-- Athlete Selection -->
          <div><label class="block text-sm font-medium text-slate-600 mb-2">Atleta</label> <select id="attack-athlete" class="w-full px-3 py-2 border border-slate-300 rounded-lg"> <option value="">Selecionar atleta</option> </select>
          </div><!-- Ball Type -->
          <div><label class="block text-sm font-medium text-slate-600 mb-2">Tipo de Bola</label>
@@ -236,13 +267,13 @@
           <div class="grid grid-cols-6 gap-1" id="target-grid"><button class="target-btn px-2 py-2 border-2 border-slate-300 rounded text-xs font-medium" data-target="1">1</button> <button class="target-btn px-2 py-2 border-2 border-slate-300 rounded text-xs font-medium" data-target="2">2</button> <button class="target-btn px-2 py-2 border-2 border-slate-300 rounded text-xs font-medium" data-target="3">3</button> <button class="target-btn px-2 py-2 border-2 border-slate-300 rounded text-xs font-medium" data-target="4">4</button> <button class="target-btn px-2 py-2 border-2 border-slate-300 rounded text-xs font-medium" data-target="5">5</button> <button class="target-btn px-2 py-2 border-2 border-slate-300 rounded text-xs font-medium" data-target="6">6</button>
           </div>
          </div>
-         <div><label class="block text-sm font-medium text-slate-600 mb-2">Sistema ofensivo</label> <select id="attack-offensive-system" class="w-full px-3 py-2 border border-slate-300 rounded-lg"><option value="Livre">Livre</option><option value="Cone Aberto">Cone Aberto</option><option value="Cone Fechado">Cone Fechado</option><option value="Espelho">Espelho</option><option value="Arrasta">Arrasta</option><option value="Diagonal Direita">Diagonal Direita</option><option value="Diagonal Esquerda">Diagonal Esquerda</option><option value="X">X</option><option value="Bloco Direito">Bloco Direito</option><option value="Bloco Esquerdo">Bloco Esquerdo</option></select>
-         </div><!-- Result -->
+         <div><label class="block text-sm font-medium text-slate-600 mb-2">Situação de jogo</label> <select id="attack-game-situation" class="w-full px-3 py-2 border border-slate-300 rounded-lg"><option value="Livre">Livre</option><option value="Flutuou">Flutuou</option><option value="Inverteu">Inverteu</option><option value="Passou a bola">Passou a bola</option></select>
+         </div></div><!-- Result -->
          <div><label class="block text-sm font-medium text-slate-600 mb-2">Resultado</label>
          <div class="grid grid-cols-3 gap-2" id="result-grid"><button class="result-btn px-3 py-2 border-2 border-slate-300 rounded-lg text-sm" data-result="gol">⚽ Gol</button> <button class="result-btn px-3 py-2 border-2 border-slate-300 rounded-lg text-sm" data-result="defendida">🧤 Defendida</button> <button class="result-btn px-3 py-2 border-2 border-slate-300 rounded-lg text-sm" data-result="blockout">🚫 Blockout</button> <button class="result-btn px-3 py-2 border-2 border-slate-300 rounded-lg text-sm" data-result="fora">❌ Fora</button> <button class="result-btn px-3 py-2 border-2 border-slate-300 rounded-lg text-sm" data-result="penalidade">⚠️ Penalidade</button> <button class="result-btn px-3 py-2 border-2 border-slate-300 rounded-lg text-sm" data-result="ballover">🔁 Ball Over</button>
          </div>
          </div><!-- Penalty Type (conditional) -->
-         <div id="penalty-section" class="hidden"><label class="block text-sm font-medium text-slate-600 mb-2">Tipo de Penalidade</label> <select id="penalty-type" class="w-full px-3 py-2 border border-slate-300 rounded-lg"> <option value="">Selecionar tipo</option> <option value="highball">Highball</option> <option value="longball">Longball</option> <option value="noise">Noise</option> <option value="eyeshade">Eyeshade</option> <option value="delay">Delay</option> <option value="10sec">10 Segundos</option> <option value="illegal-defense">Defesa Ilegal</option> <option value="other">Outra</option> </select>
+         <div id="penalty-section" class="hidden space-y-3"><label class="flex items-center gap-2 text-sm text-slate-700 p-2 rounded-lg bg-amber-50 border border-amber-200"><input type="checkbox" id="penalty-no-attack"> <span>Penalidade sem ataque (evento sem arremesso)</span></label><div><label class="block text-sm font-medium text-slate-600 mb-2">Tipo de Penalidade</label> <select id="penalty-type" class="w-full px-3 py-2 border border-slate-300 rounded-lg"> <option value="">Selecionar tipo</option> <option value="high-ball">High Ball</option> <option value="long-ball">Long Ball</option> <option value="10-seconds">10 Seconds</option> <option value="illegal-defense">Illegal Defense</option> <option value="personal-delay-of-game">Personal Delay of Game</option> <option value="illegal-coaching">Illegal Coaching</option> <option value="unsportsmanlike-conduct">Unsportsmanlike Conduct</option> <option value="team-delay-of-game">Team Delay of Game</option> <option value="illegal-substitution">Illegal Substitution</option> <option value="illegal-timeout">Illegal Timeout</option> <option value="noise">Noise</option> <option value="unsportsmanlike-conduct-team">Unsportsmanlike Conduct (Team)</option> </select></div><div><label class="block text-sm font-medium text-slate-600 mb-2">Observação (opcional)</label><textarea id="penalty-note" rows="2" class="w-full px-3 py-2 border border-slate-300 rounded-lg" placeholder="Ex.: penalidade vinda do banco (Illegal Coaching)"></textarea></div>
          </div><!-- Defense Section -->
          <div id="defense-section" class="border-t pt-4 mt-4">
           <h4 class="text-sm font-semibold text-slate-700 mb-3">🛡️ Defesa</h4><!-- Defense Structure -->
@@ -747,6 +778,9 @@
         left: null,
         center: null,
         right: null,
+        opponentLeft: null,
+        opponentCenter: null,
+        opponentRight: null,
         phase: '1T',
         phaseStarters: {
           '1T': 'my',
@@ -775,7 +809,40 @@
 
     const OFFICIAL_TARGETS = ['1', '2', '3', '4', '5', '6'];
     const OFFENSIVE_SYSTEMS = ['Livre', 'Cone Aberto', 'Cone Fechado', 'Espelho', 'Arrasta', 'Diagonal Direita', 'Diagonal Esquerda', 'X', 'Bloco Direito', 'Bloco Esquerdo'];
+    const GAME_SITUATIONS = ['Livre', 'Flutuou', 'Inverteu', 'Passou a bola'];
     const LEGACY_TARGET_MAP = { '2/3': '3', '4/5': '4', 'M': '3' };
+    const PENALTY_OPTIONS = [
+      { value: 'high-ball', label: 'High Ball' },
+      { value: 'long-ball', label: 'Long Ball' },
+      { value: '10-seconds', label: '10 Seconds' },
+      { value: 'illegal-defense', label: 'Illegal Defense' },
+      { value: 'personal-delay-of-game', label: 'Personal Delay of Game' },
+      { value: 'illegal-coaching', label: 'Illegal Coaching' },
+      { value: 'unsportsmanlike-conduct', label: 'Unsportsmanlike Conduct' },
+      { value: 'team-delay-of-game', label: 'Team Delay of Game' },
+      { value: 'illegal-substitution', label: 'Illegal Substitution' },
+      { value: 'illegal-timeout', label: 'Illegal Timeout' },
+      { value: 'noise', label: 'Noise' },
+      { value: 'unsportsmanlike-conduct-team', label: 'Unsportsmanlike Conduct (Team)' }
+    ];
+    const PENALTY_LABEL_BY_VALUE = Object.fromEntries(PENALTY_OPTIONS.map(o => [o.value, o.label]));
+    const LEGACY_PENALTY_MAP = {
+      highball: 'high-ball',
+      'high-ball': 'high-ball',
+      longball: 'long-ball',
+      'long-ball': 'long-ball',
+      '10sec': '10-seconds',
+      '10-seconds': '10-seconds',
+      '10 segundos': '10-seconds',
+      '10 seconds': '10-seconds',
+      delay: 'personal-delay-of-game',
+      'personal-delay-of-game': 'personal-delay-of-game',
+      'illegal-defense': 'illegal-defense',
+      'defesa ilegal': 'illegal-defense',
+      noise: 'noise',
+      eyeshade: 'illegal-defense',
+      other: ''
+    };
 
     function normalizeTarget(target) {
       const normalized = String(target || '').trim();
@@ -793,12 +860,61 @@
       return OFFENSIVE_SYSTEMS.includes(normalized) ? normalized : 'Livre';
     }
 
+    function normalizeGameSituation(value) {
+      const normalized = String(value || '').trim();
+      return GAME_SITUATIONS.includes(normalized) ? normalized : 'Livre';
+    }
+
+    function resolveGameSituation(event) {
+      return normalizeGameSituation(event?.gameSituation || event?.offensiveSystem);
+    }
+
+    function normalizePenaltyType(value) {
+      const normalized = String(value || '').trim().toLowerCase();
+      if (!normalized) return '';
+      return PENALTY_LABEL_BY_VALUE[normalized] ? normalized : (LEGACY_PENALTY_MAP[normalized] || '');
+    }
+
+    function getPenaltyLabel(value) {
+      const normalized = normalizePenaltyType(value);
+      if (!normalized) return '';
+      return PENALTY_LABEL_BY_VALUE[normalized] || '';
+    }
+
+    function resolveResultLabel(event) {
+      const result = String(event?.result || '').trim();
+      if (result !== 'penalidade') return result || '-';
+      const penalty = getPenaltyLabel(event?.penaltyType);
+      return penalty ? `penalidade (${penalty})` : 'penalidade';
+    }
+
+    function isNoAttackPenaltyEvent(event) {
+      return event?.type === 'event' && event?.result === 'penalidade' && Boolean(event?.noAttackPenalty);
+    }
+
+    function isShotEvent(event) {
+      return event?.type === 'event' && !isNoAttackPenaltyEvent(event);
+    }
+
+    function formatEventDetailLine(event) {
+      if (isNoAttackPenaltyEvent(event)) {
+        const penalty = getPenaltyLabel(event.penaltyType) || 'Penalidade';
+        const note = event.observation ? ` • Obs: ${event.observation}` : '';
+        return `Sem arremesso • ${penalty}${note}`;
+      }
+      return `${event.ballType || '-'} → Alvo ${normalizeTarget(event.target) || '-'} • Sit. ${resolveGameSituation(event)} = ${event.result}`;
+    }
+
     function normalizeStoredEvent(event) {
       if (!event || typeof event !== 'object') return event;
       const cloned = { ...event };
       if (cloned.type === 'event') {
         cloned.target = normalizeTarget(cloned.target);
         cloned.offensiveSystem = normalizeOffensiveSystem(cloned.offensiveSystem);
+        cloned.gameSituation = resolveGameSituation(cloned);
+        cloned.penaltyType = normalizePenaltyType(cloned.penaltyType);
+        cloned.noAttackPenalty = Boolean(cloned.noAttackPenalty);
+        cloned.observation = String(cloned.observation || '').trim();
       }
       if (cloned.type === 'target_change') {
         const targets = sanitizeTargets(String(cloned.newTargets || '').split(','));
@@ -904,6 +1020,10 @@
             'PR': parsed?.lineup?.phaseStarters?.['PR'] || AppState.lineup.phaseStarters['PR'],
             'PN': parsed?.lineup?.phaseStarters?.['PN'] || AppState.lineup.phaseStarters['PN']
           };
+          AppState.lineup.opponentLeft = parsed?.lineup?.opponentLeft ?? AppState.lineup.opponentLeft;
+          AppState.lineup.opponentCenter = parsed?.lineup?.opponentCenter ?? AppState.lineup.opponentCenter;
+          AppState.lineup.opponentRight = parsed?.lineup?.opponentRight ?? AppState.lineup.opponentRight;
+          ensureOpponentLineupDefaults();
           AppState.lineup.possessionTeam = parsed?.lineup?.possessionTeam || AppState.lineup.phaseStarters[AppState.lineup.phase] || 'my';
           AppState.targetPlans = Object.fromEntries(Object.entries(parsed.targetPlans || {}).map(([k,v]) => [k, sanitizeTargets(v)]));
           AppState.currentTargets = Object.fromEntries(Object.entries(parsed.currentTargets || {}).map(([k,v]) => [k, sanitizeTargets(v)]));
@@ -1019,10 +1139,16 @@
           inSelect.innerHTML += `<option value="${idx}">${label}</option>`;
         });
       } else {
-        AppState.config.opponentAthletes.forEach((athlete, idx) => {
-          if (!(athlete.name || athlete.number)) return;
+        const onCourt = [AppState.lineup.opponentLeft, AppState.lineup.opponentCenter, AppState.lineup.opponentRight].filter(v => v !== null);
+        onCourt.forEach(idx => {
+          const athlete = AppState.config.opponentAthletes[idx];
+          if (!athlete) return;
           const label = athlete.number ? `${athlete.number} - ${athlete.name}` : (athlete.name || `Atleta ${idx + 1}`);
           outSelect.innerHTML += `<option value="${idx}">${label}</option>`;
+        });
+        AppState.config.opponentAthletes.forEach((athlete, idx) => {
+          if (!(athlete.name || athlete.number) || onCourt.includes(idx)) return;
+          const label = athlete.number ? `${athlete.number} - ${athlete.name}` : (athlete.name || `Atleta ${idx + 1}`);
           inSelect.innerHTML += `<option value="${idx}">${label}</option>`;
         });
       }
@@ -1084,10 +1210,10 @@
     function downloadExcelReport() {
       const activePeriod = document.querySelector('.report-period-btn.bg-blue-600')?.dataset.period || 'all';
       const events = getReportEvents(activePeriod);
-      const headers = ['Data/Hora','Tempo','Equipe','Atleta','Tipo Bola','Alvo','Sistema Ofensivo','Resultado','Penalidade','Defesa','Comportamento'];
+      const headers = ['Data/Hora','Tempo','Equipe','Atleta','Tipo Bola','Alvo','Situação de Jogo','Resultado','Penalidade','Defesa','Comportamento'];
       const rows = events.map(e => [
         e.timestamp || '', e.phase || '', getTeamLabel(e.team), `${e.athleteNumber || ''} ${e.athleteName || ''}`.trim(),
-        e.ballType || '', normalizeTarget(e.target) || '-', normalizeOffensiveSystem(e.offensiveSystem), e.result || '', e.penaltyType || '', e.defenseStructure || '', e.ballBehavior || ''
+        e.ballType || '', normalizeTarget(e.target) || '-', resolveGameSituation(e), e.result || '', getPenaltyLabel(e.penaltyType), e.defenseStructure || '', e.ballBehavior || ''
       ]);
       const csv = [headers, ...rows].map(r => r.map(v => `"${String(v).replaceAll('"','""')}"`).join(';')).join('\n');
       const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -1142,8 +1268,8 @@
             <td>${escapeHtml(`${event.athleteNumber || '?'} ${event.athleteName || ''}`.trim())}</td>
             <td>${escapeHtml(event.ballType || '-')}</td>
             <td>${escapeHtml(normalizeTarget(event.target) || '-')}</td>
-            <td>${escapeHtml(normalizeOffensiveSystem(event.offensiveSystem))}</td>
-            <td>${escapeHtml(event.result || '-')}</td>
+            <td>${escapeHtml(resolveGameSituation(event))}</td>
+            <td>${escapeHtml(resolveResultLabel(event))}</td>
           </tr>`;
         }).join('') || '<tr><td colspan="8" class="muted">Sem lances registrados no período.</td></tr>';
     }
@@ -1576,6 +1702,7 @@
       });
       
       saveToLocalStorage();
+      ensureOpponentLineupDefaults();
       updateLineupSelectors();
       renderTargetPlan();
       showToast('✅ Configuração salva com sucesso!');
@@ -1584,6 +1711,43 @@
     // =====================================================
     // ESCALAÇÃO TAB FUNCTIONS
     // =====================================================
+
+    function getConfiguredOpponentIndices() {
+      return (AppState.config.opponentAthletes || [])
+        .map((athlete, idx) => ((athlete?.name || athlete?.number) ? idx : null))
+        .filter(idx => idx !== null);
+    }
+
+    function ensureOpponentLineupDefaults() {
+      const configured = getConfiguredOpponentIndices();
+      const current = [AppState.lineup.opponentLeft, AppState.lineup.opponentCenter, AppState.lineup.opponentRight];
+      if (current.every(v => v !== null)) return;
+
+      const used = new Set(current.filter(v => v !== null));
+      const nextAvailable = () => configured.find(idx => !used.has(idx));
+
+      if (AppState.lineup.opponentLeft === null) {
+        const idx = nextAvailable();
+        if (idx !== undefined) {
+          AppState.lineup.opponentLeft = idx;
+          used.add(idx);
+        }
+      }
+      if (AppState.lineup.opponentCenter === null) {
+        const idx = nextAvailable();
+        if (idx !== undefined) {
+          AppState.lineup.opponentCenter = idx;
+          used.add(idx);
+        }
+      }
+      if (AppState.lineup.opponentRight === null) {
+        const idx = nextAvailable();
+        if (idx !== undefined) {
+          AppState.lineup.opponentRight = idx;
+          used.add(idx);
+        }
+      }
+    }
     
     function updateLineupSelectors() {
       const athletes = AppState.config.myAthletes.filter(a => a.name || a.number);
@@ -1593,17 +1757,39 @@
         const select = document.getElementById(id);
         if (!select) return;
         
-        const currentValue = select.value;
         select.innerHTML = '<option value="">Selecionar</option>';
         
         athletes.forEach((athlete, idx) => {
           const display = athlete.number ? `${athlete.number} - ${athlete.name}` : athlete.name;
           select.innerHTML += `<option value="${idx}">${display}</option>`;
         });
-        
-        select.value = currentValue;
+      });
+
+      const myMap = { 'select-left': 'left', 'select-center': 'center', 'select-right': 'right' };
+      Object.entries(myMap).forEach(([id, key]) => {
+        const select = document.getElementById(id);
+        const value = AppState.lineup[key];
+        if (select) select.value = value !== null ? String(value) : '';
       });
       
+      ['select-opp-left', 'select-opp-center', 'select-opp-right'].forEach(id => {
+        const select = document.getElementById(id);
+        if (!select) return;
+        select.innerHTML = '<option value="">Selecionar</option>';
+        AppState.config.opponentAthletes.forEach((athlete, idx) => {
+          if (!(athlete.name || athlete.number)) return;
+          const display = athlete.number ? `${athlete.number} - ${athlete.name}` : athlete.name;
+          select.innerHTML += `<option value="${idx}">${display}</option>`;
+        });
+      });
+
+      const oppMap = { 'select-opp-left': 'opponentLeft', 'select-opp-center': 'opponentCenter', 'select-opp-right': 'opponentRight' };
+      Object.entries(oppMap).forEach(([id, key]) => {
+        const select = document.getElementById(id);
+        const value = AppState.lineup[key];
+        if (select) select.value = value !== null ? String(value) : '';
+      });
+
       // Update attack modal selectors
       updateAttackAthleteSelector('my');
     }
@@ -1621,6 +1807,19 @@
         }
       });
       
+      const opponentPositions = [
+        { key: 'opponentLeft', displayId: 'opp-pos-left' },
+        { key: 'opponentCenter', displayId: 'opp-pos-center' },
+        { key: 'opponentRight', displayId: 'opp-pos-right' }
+      ];
+      opponentPositions.forEach(({ key, displayId }) => {
+        const display = document.getElementById(displayId);
+        if (!display) return;
+        const idx = AppState.lineup[key];
+        const athlete = idx !== null ? AppState.config.opponentAthletes[idx] : null;
+        display.textContent = athlete?.number || '-';
+      });
+
       // Update bench
       const benchContainer = document.getElementById('bench-players');
       const onCourt = [AppState.lineup.left, AppState.lineup.center, AppState.lineup.right].filter(x => x !== null);
@@ -1676,6 +1875,19 @@
         AppState.lineup[position] = parseInt(subInIdx, 10);
       }
 
+      if (team === 'opponent') {
+        if (AppState.lineup.opponentLeft == subOutIdx) position = 'opponentLeft';
+        else if (AppState.lineup.opponentCenter == subOutIdx) position = 'opponentCenter';
+        else if (AppState.lineup.opponentRight == subOutIdx) position = 'opponentRight';
+
+        if (!position) {
+          showToast('⚠️ Atleta adversário selecionado não está em quadra');
+          return false;
+        }
+
+        AppState.lineup[position] = parseInt(subInIdx, 10);
+      }
+
       const subEvent = {
         type: 'substitution',
         matchId: AppState.matchId,
@@ -1693,7 +1905,7 @@
         penaltyType: '',
         defenseStructure: '',
         ballBehavior: '',
-        offensiveSystem: 'Livre',
+        gameSituation: 'Livre',
         plannedTargets: '',
         newTargets: ''
       };
@@ -1712,6 +1924,8 @@
 
       saveToLocalStorage();
       updateLineupDisplay();
+      renderGameOnCourtSummary();
+      renderAttackModalQuickInfo();
       return true;
     }
 
@@ -1777,6 +1991,8 @@
       
       saveToLocalStorage();
       updateLineupDisplay();
+      renderGameOnCourtSummary();
+      renderAttackModalQuickInfo();
 
       const ok = await registerSubstitution({
         team: 'my',
@@ -1792,6 +2008,7 @@
     }
 
     function openQuickSubModal() {
+      closeAttackModal();
       document.getElementById('quick-sub-modal').classList.remove('hidden');
       document.getElementById('quick-sub-team').value = 'my';
       updateQuickSubSelectors();
@@ -1878,7 +2095,9 @@
       penaltyType: '',
       defenseStructures: [],
       ballBehavior: '',
-      offensiveSystem: 'Livre'
+      gameSituation: 'Livre',
+      noAttackPenalty: false,
+      observation: ''
     };
     
     let targetChangeState = {
@@ -1893,6 +2112,7 @@
       updateAttackAthleteSelector(attackState.team);
       const preferredBtn = document.querySelector(`.team-select-btn[data-team="${attackState.team}"]`);
       if (preferredBtn) preferredBtn.click();
+      renderAttackModalQuickInfo();
     }
     
     function closeAttackModal() {
@@ -1909,7 +2129,9 @@
         penaltyType: '',
         defenseStructures: [],
         ballBehavior: '',
-        offensiveSystem: 'Livre'
+        gameSituation: 'Livre',
+        noAttackPenalty: false,
+        observation: ''
       };
       
       // Reset UI
@@ -1928,9 +2150,26 @@
       document.getElementById('penalty-section').classList.add('hidden');
       document.getElementById('attack-athlete').value = '';
       document.getElementById('penalty-type').value = '';
-      document.getElementById('attack-offensive-system').value = 'Livre';
+      document.getElementById('attack-game-situation').value = 'Livre';
+      document.getElementById('penalty-no-attack').checked = false;
+      document.getElementById('penalty-note').value = '';
+      updatePenaltyModeUI();
     }
     
+    function updatePenaltyModeUI() {
+      const isPenalty = attackState.result === 'penalidade';
+      const noAttack = isPenalty && attackState.noAttackPenalty;
+      const offensive = document.getElementById('attack-offensive-fields');
+      if (offensive) offensive.classList.toggle('opacity-40', noAttack);
+
+      document.querySelectorAll('.ball-type-btn, .target-btn').forEach(btn => {
+        btn.disabled = noAttack;
+        btn.classList.toggle('pointer-events-none', noAttack);
+      });
+      const situationSel = document.getElementById('attack-game-situation');
+      if (situationSel) situationSel.disabled = noAttack;
+    }
+
     function updateAttackAthleteSelector(team) {
       const select = document.getElementById('attack-athlete');
       select.innerHTML = '<option value="">Selecionar atleta</option>';
@@ -1945,8 +2184,14 @@
     }
     
     async function saveAttack() {
-      if (attackState.athlete === '' || !attackState.ballType || !attackState.target || !attackState.result) {
-        showToast('⚠️ Preencha todos os campos obrigatórios');
+      if (!attackState.result) {
+        showToast('⚠️ Selecione o resultado do lance');
+        return;
+      }
+
+      const noAttackPenalty = attackState.result === 'penalidade' && attackState.noAttackPenalty;
+      if (!noAttackPenalty && (attackState.athlete === '' || !attackState.ballType || !attackState.target)) {
+        showToast('⚠️ Preencha os campos obrigatórios do ataque');
         return;
       }
       
@@ -1956,7 +2201,7 @@
       }
       
       const athletes = attackState.team === 'my' ? AppState.config.myAthletes : AppState.config.opponentAthletes;
-      const athlete = athletes[attackState.athlete];
+      const athlete = attackState.athlete === '' ? null : athletes[attackState.athlete];
       
       const event = {
         type: 'event',
@@ -1966,14 +2211,17 @@
         team: attackState.team,
         athleteNumber: athlete?.number || '',
         athleteName: athlete?.name || '',
-        ballType: attackState.ballType,
-        target: attackState.target,
+        ballType: noAttackPenalty ? '' : attackState.ballType,
+        target: noAttackPenalty ? '' : attackState.target,
         result: attackState.result,
-        penaltyType: attackState.penaltyType,
+        penaltyType: normalizePenaltyType(attackState.penaltyType),
+        noAttackPenalty: noAttackPenalty,
+        observation: String(attackState.observation || '').trim(),
         defenseStructure: attackState.defenseStructures.join(','),
         ballBehavior: attackState.ballBehavior,
-        offensiveSystem: normalizeOffensiveSystem(attackState.offensiveSystem),
-        plannedTargets: JSON.stringify(AppState.currentTargets[attackState.athlete] || []),
+        gameSituation: noAttackPenalty ? '' : normalizeGameSituation(attackState.gameSituation),
+        offensiveSystem: noAttackPenalty ? '' : normalizeGameSituation(attackState.gameSituation),
+        plannedTargets: noAttackPenalty ? '' : JSON.stringify(AppState.currentTargets[attackState.athlete] || []),
         subIn: '',
         subOut: '',
         position: '',
@@ -1989,20 +2237,22 @@
         const result = await window.dataSdk.create(event);
         if (!result.isOk) {
           createLocalEvent(event);
-          applyAttackPossessionRule(event);
+          if (!noAttackPenalty) applyAttackPossessionRule(event);
           showToast('⚠️ Lance salvo localmente (modo offline)');
-          closeAttackModal();
+          prepareAttackForNextRegister();
           updateScore();
+          renderAttackModalQuickInfo();
           return;
         }
       } else {
         createLocalEvent(event);
       }
 
-      applyAttackPossessionRule(event);
-      closeAttackModal();
+      if (!noAttackPenalty) applyAttackPossessionRule(event);
+      prepareAttackForNextRegister();
       showToast('✅ Lance registrado!');
       updateScore();
+      renderAttackModalQuickInfo();
     }
     
 
@@ -2118,6 +2368,7 @@
     }
 
     function openTimeoutActionModal() {
+      closeAttackModal();
       document.getElementById('timeout-team-select').value = 'my';
       document.getElementById('timeout-action-modal').classList.remove('hidden');
     }
@@ -2170,7 +2421,7 @@
 
       const lastEvents = attackEvents.slice(-4).reverse();
       document.getElementById('timeout-last-events').innerHTML = lastEvents.length
-        ? lastEvents.map(event => `<div class="p-2 rounded border ${event.team === 'my' ? 'bg-blue-50 border-blue-100' : 'bg-rose-50 border-rose-100'}">${new Date(event.timestamp).toLocaleTimeString('pt-BR',{hour:'2-digit', minute:'2-digit'})} • ${getTeamLabel(event.team)} • ${event.athleteNumber || '?'} ${event.athleteName || ''} • ${event.ballType} / ${event.target} / ${event.result}</div>`).join('')
+        ? lastEvents.map(event => `<div class="p-2 rounded border ${event.team === 'my' ? 'bg-blue-50 border-blue-100' : 'bg-rose-50 border-rose-100'}">${new Date(event.timestamp).toLocaleTimeString('pt-BR',{hour:'2-digit', minute:'2-digit'})} • ${getTeamLabel(event.team)} • ${event.athleteNumber || '?'} ${event.athleteName || ''} • ${formatEventDetailLine(event)}</div>`).join('')
         : '<p class="text-slate-500">Sem lances registrados até o momento.</p>';
 
       document.getElementById('timeout-court-container').innerHTML = buildTimeoutCourt(attackEvents);
@@ -2182,6 +2433,7 @@
     }
 
     function openTargetChangeModal() {
+      closeAttackModal();
       document.getElementById('target-change-modal').classList.remove('hidden');
       targetChangeState = { athlete: '', newTargets: [] };
       
@@ -2268,6 +2520,80 @@
         scoreEl.textContent = `${score.myGoals} - ${score.oppGoals}`;
       }
     }
+
+    function renderGameOnCourtSummary() {
+      const roles = [
+        { key: 'left', label: 'Ala E' },
+        { key: 'center', label: 'Pivô' },
+        { key: 'right', label: 'Ala D' }
+      ];
+      const container = document.getElementById('jogo-oncourt');
+      if (!container) return;
+
+      container.innerHTML = roles.map(({ key, label }) => {
+        const idx = AppState.lineup[key];
+        const athlete = idx !== null ? AppState.config.myAthletes[idx] : null;
+        const number = athlete?.number ? `#${athlete.number}` : '#-';
+        const name = athlete?.name || 'Sem atleta';
+        return `<div class="rounded-lg border border-slate-200 bg-slate-50 p-3"><div class="text-xs text-slate-500">${label}</div><div class="font-semibold text-slate-800">${number} <span class="text-slate-600 font-medium">${name}</span></div></div>`;
+      }).join('');
+    }
+
+
+    function getAthleteLabel(athlete) {
+      const number = athlete?.number ? `#${athlete.number}` : '#-';
+      const name = athlete?.name ? ` ${athlete.name}` : '';
+      return `${number}${name}`;
+    }
+
+    function getTeamFormationRows(team) {
+      const roles = [
+        { key: 'left', label: 'Ala E' },
+        { key: 'center', label: 'Pivô' },
+        { key: 'right', label: 'Ala D' }
+      ];
+
+      if (team === 'my') {
+        return roles.map(({ key, label }) => {
+          const idx = AppState.lineup[key];
+          const athlete = idx !== null ? AppState.config.myAthletes[idx] : null;
+          return `${label} — ${getAthleteLabel(athlete)}`;
+        });
+      }
+
+      const opponentKeyMap = { left: 'opponentLeft', center: 'opponentCenter', right: 'opponentRight' };
+      const configured = getConfiguredOpponentIndices();
+      const fallbackByRole = { left: configured[0], center: configured[1], right: configured[2] };
+      return roles.map(({ key, label }) => {
+        const idx = AppState.lineup[opponentKeyMap[key]] ?? fallbackByRole[key] ?? null;
+        const athlete = idx !== null ? AppState.config.opponentAthletes?.[idx] : null;
+        return `${label} — ${getAthleteLabel(athlete)}`;
+      });
+    }
+
+    function renderAttackModalQuickInfo() {
+      const score = getScoreForMatch(AppState.matchId);
+      const scoreEl = document.getElementById('attack-modal-score');
+      const myEl = document.getElementById('attack-modal-my-lineup');
+      const oppEl = document.getElementById('attack-modal-opponent-lineup');
+      if (!scoreEl || !myEl || !oppEl) return;
+
+      scoreEl.textContent = `Placar: ${score.myGoals} - ${score.oppGoals}`;
+
+      const myRows = getTeamFormationRows('my');
+      const oppRows = getTeamFormationRows('opponent');
+      myEl.innerHTML = myRows.map(row => `<div>${row}</div>`).join('');
+      oppEl.innerHTML = oppRows.map(row => `<div>${row}</div>`).join('');
+    }
+
+    function prepareAttackForNextRegister() {
+      const team = AppState.lineup.possessionTeam || 'my';
+      resetAttackState();
+      attackState.team = team;
+      updateAttackAthleteSelector(team);
+      const preferredBtn = document.querySelector(`.team-select-btn[data-team="${team}"]`);
+      if (preferredBtn) preferredBtn.click();
+    }
     
     function renderRecentEvents() {
       const container = document.getElementById('recent-events');
@@ -2285,11 +2611,11 @@
         return `
           <div class="p-2 rounded-lg border ${teamClass} text-sm">
             <div class="flex items-center justify-between">
-              <span>${resultEmoji} ${e.athleteNumber || '?'} - ${e.athleteName || 'N/A'}</span>
+              <span>${resultEmoji} ${isNoAttackPenaltyEvent(e) ? getTeamLabel(e.team) + ' (sem arremesso)' : `${e.athleteNumber || '?'} - ${e.athleteName || 'N/A'}`}</span>
               <span class="text-xs text-slate-500">${e.phase}</span>
             </div>
             <div class="text-xs text-slate-600 mt-1">
-              ${e.ballType} → Alvo ${normalizeTarget(e.target) || '-'} • Sist. ${normalizeOffensiveSystem(e.offensiveSystem)} = ${e.result}
+              ${formatEventDetailLine(e)}
             </div>
           </div>
         `;
@@ -2299,8 +2625,8 @@
     function updateAllStats() {
       // Update live stats in Jogo tab
       const matchEvents = getCurrentMatchEvents();
-      const myEvents = matchEvents.filter(e => e.type === 'event' && e.team === 'my');
-      const oppEvents = matchEvents.filter(e => e.type === 'event' && e.team === 'opponent');
+      const myEvents = matchEvents.filter(e => isShotEvent(e) && e.team === 'my');
+      const oppEvents = matchEvents.filter(e => isShotEvent(e) && e.team === 'opponent');
       
       const myGoals = myEvents.filter(e => e.result === 'gol').length;
       const oppGoals = oppEvents.filter(e => e.result === 'gol').length;
@@ -2314,6 +2640,8 @@
       document.getElementById('opp-efficiency').textContent = oppEvents.length > 0 ? Math.round((oppGoals / oppEvents.length) * 100) + '%' : '0%';
       
       updateScore();
+      renderGameOnCourtSummary();
+      renderAttackModalQuickInfo();
     }
     
     // =====================================================
@@ -2425,10 +2753,10 @@
               <div class="flex items-center gap-2">
                 <span class="text-lg">${resultEmoji}</span>
                 <div>
-                  <div class="text-sm font-medium">${e.athleteNumber || '?'} - ${e.athleteName || 'N/A'}</div>
+                  <div class="text-sm font-medium">${isNoAttackPenaltyEvent(e) ? getTeamLabel(e.team) + ' (sem arremesso)' : `${e.athleteNumber || '?'} - ${e.athleteName || 'N/A'}`}</div>
                   <div class="text-xs text-slate-600">
-                    ${e.ballType} → Alvo ${normalizeTarget(e.target) || '-'} • Sist. ${normalizeOffensiveSystem(e.offensiveSystem)} = ${e.result}
-                    ${e.penaltyType ? `(${e.penaltyType})` : ''}
+                    ${formatEventDetailLine(e)}
+                    ${getPenaltyLabel(e.penaltyType) ? `(${getPenaltyLabel(e.penaltyType)})` : ''}
                   </div>
                   ${e.defenseStructure ? `<div class="text-xs text-slate-500">Defesa: ${e.defenseStructure} | ${e.ballBehavior}</div>` : ''}
                 </div>
@@ -2498,9 +2826,9 @@
         </div>
         
         <div>
-          <label class="block text-sm font-medium text-slate-600 mb-2">Sistema ofensivo</label>
-          <select id="edit-offensive-system" class="w-full px-3 py-2 border border-slate-300 rounded-lg">
-            ${OFFENSIVE_SYSTEMS.map(sys => `<option value="${sys}" ${normalizeOffensiveSystem(event.offensiveSystem) === sys ? 'selected' : ''}>${sys}</option>`).join('')}
+          <label class="block text-sm font-medium text-slate-600 mb-2">Situação de jogo</label>
+          <select id="edit-game-situation" class="w-full px-3 py-2 border border-slate-300 rounded-lg">
+            ${GAME_SITUATIONS.map(situation => `<option value="${situation}" ${resolveGameSituation(event) === situation ? 'selected' : ''}>${situation}</option>`).join('')}
           </select>
         </div>
 
@@ -2513,6 +2841,14 @@
             <option value="fora" ${event.result === 'fora' ? 'selected' : ''}>Fora</option>
             <option value="penalidade" ${event.result === 'penalidade' ? 'selected' : ''}>Penalidade</option>
             <option value="ballover" ${event.result === 'ballover' ? 'selected' : ''}>Ball Over</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-slate-600 mb-2">Tipo de Penalidade</label>
+          <select id="edit-penalty-type" class="w-full px-3 py-2 border border-slate-300 rounded-lg">
+            <option value="">Selecionar tipo</option>
+            ${PENALTY_OPTIONS.map(option => `<option value="${option.value}" ${normalizePenaltyType(event.penaltyType) === option.value ? 'selected' : ''}>${option.label}</option>`).join('')}
           </select>
         </div>
         
@@ -2545,8 +2881,10 @@
         ...event,
         ballType: document.getElementById('edit-ball-type').value,
         target: normalizeTarget(document.getElementById('edit-target').value),
-        offensiveSystem: normalizeOffensiveSystem(document.getElementById('edit-offensive-system').value),
+        gameSituation: normalizeGameSituation(document.getElementById('edit-game-situation').value),
+        offensiveSystem: normalizeGameSituation(document.getElementById('edit-game-situation').value),
         result: document.getElementById('edit-result').value,
+        penaltyType: normalizePenaltyType(document.getElementById('edit-penalty-type').value),
         ballBehavior: document.getElementById('edit-ball-behavior').value
       };
       
@@ -2575,7 +2913,7 @@
     function updateReportStats(period) {
       let events = getReportEvents(period);
       
-      const myEvents = events.filter(e => e.team === 'my');
+      const myEvents = events.filter(e => isShotEvent(e) && e.team === 'my');
       
       // Attack stats by athlete
       const athleteStats = {};
@@ -2664,7 +3002,7 @@
       // Offensive system stats
       const systemStats = {};
       myEvents.forEach(e => {
-        const sys = normalizeOffensiveSystem(e.offensiveSystem);
+        const sys = resolveGameSituation(e);
         const target = normalizeTarget(e.target);
         if (!target) return;
         if (!systemStats[sys]) systemStats[sys] = { attacks: 0, goals: 0, targets: {}, athletes: {} };
@@ -2678,9 +3016,9 @@
       const sysContainer = document.getElementById('offensive-system-stats');
       const sysRows = Object.entries(systemStats);
       if (sysRows.length === 0) {
-        sysContainer.innerHTML = '<p class="text-slate-500">Sem dados de sistema ofensivo.</p>';
+        sysContainer.innerHTML = '<p class="text-slate-500">Sem dados de situação de jogo.</p>';
       } else {
-        sysContainer.innerHTML = `<table class="w-full"><thead class="bg-slate-100"><tr><th class="px-2 py-1 text-left">Sistema</th><th class="px-2 py-1 text-center">Ataques</th><th class="px-2 py-1 text-center">Gols</th><th class="px-2 py-1 text-center">Aproveit.</th><th class="px-2 py-1 text-center">Alvo + usado</th><th class="px-2 py-1 text-center">Atleta + usado</th></tr></thead><tbody>${sysRows.map(([sys, data]) => { const bestTarget = Object.entries(data.targets).sort((a,b)=>b[1]-a[1])[0]?.[0] || '-'; const bestAthlete = Object.entries(data.athletes).sort((a,b)=>b[1]-a[1])[0]?.[0] || '-'; const eff = data.attacks ? ((data.goals/data.attacks)*100).toFixed(1).replace('.',',') : '0,0'; return `<tr class="border-b"><td class="px-2 py-1">${sys}</td><td class="px-2 py-1 text-center">${data.attacks}</td><td class="px-2 py-1 text-center">${data.goals}</td><td class="px-2 py-1 text-center">${eff}%</td><td class="px-2 py-1 text-center">${bestTarget}</td><td class="px-2 py-1 text-center">${bestAthlete}</td></tr>`; }).join('')}</tbody></table>`;
+        sysContainer.innerHTML = `<table class="w-full"><thead class="bg-slate-100"><tr><th class="px-2 py-1 text-left">Situação</th><th class="px-2 py-1 text-center">Ataques</th><th class="px-2 py-1 text-center">Gols</th><th class="px-2 py-1 text-center">Aproveit.</th><th class="px-2 py-1 text-center">Alvo + usado</th><th class="px-2 py-1 text-center">Atleta + usado</th></tr></thead><tbody>${sysRows.map(([sys, data]) => { const bestTarget = Object.entries(data.targets).sort((a,b)=>b[1]-a[1])[0]?.[0] || '-'; const bestAthlete = Object.entries(data.athletes).sort((a,b)=>b[1]-a[1])[0]?.[0] || '-'; const eff = data.attacks ? ((data.goals/data.attacks)*100).toFixed(1).replace('.',',') : '0,0'; return `<tr class="border-b"><td class="px-2 py-1">${sys}</td><td class="px-2 py-1 text-center">${data.attacks}</td><td class="px-2 py-1 text-center">${data.goals}</td><td class="px-2 py-1 text-center">${eff}%</td><td class="px-2 py-1 text-center">${bestTarget}</td><td class="px-2 py-1 text-center">${bestAthlete}</td></tr>`; }).join('')}</tbody></table>`;
       }
 
       const athleteDetailContainer = document.getElementById('athlete-detailed-stats');
@@ -2691,7 +3029,7 @@
         athleteEvents.forEach(e => {
           const t = normalizeTarget(e.target);
           if (t) targetUsage[t] = (targetUsage[t] || 0) + 1;
-          const sys = normalizeOffensiveSystem(e.offensiveSystem);
+          const sys = resolveGameSituation(e);
           systemUsage[sys] = (systemUsage[sys] || 0) + 1;
         });
         const bestTarget = Object.entries(targetUsage).sort((a,b)=>b[1]-a[1])[0]?.[0] || '-';
@@ -2702,7 +3040,7 @@
       if (athleteRows.length === 0) {
         athleteDetailContainer.innerHTML = '<p class="text-slate-500">Sem dados individuais.</p>';
       } else {
-        athleteDetailContainer.innerHTML = `<table class="w-full"><thead class="bg-slate-100"><tr><th class="px-2 py-1 text-left">Atleta</th><th class="px-2 py-1 text-center">Arr.</th><th class="px-2 py-1 text-center">Gols</th><th class="px-2 py-1 text-center">% Aprov.</th><th class="px-2 py-1 text-center">Alvo + usado</th><th class="px-2 py-1 text-center">Sistema + usado</th></tr></thead><tbody>${athleteRows.map(r => `<tr class="border-b"><td class="px-2 py-1">${r.number || '?'} - ${r.name || 'N/A'}</td><td class="px-2 py-1 text-center">${r.throws}</td><td class="px-2 py-1 text-center">${r.goals}</td><td class="px-2 py-1 text-center">${r.efficiency}%</td><td class="px-2 py-1 text-center">${r.bestTarget}</td><td class="px-2 py-1 text-center">${r.bestSystem}</td></tr>`).join('')}</tbody></table>`;
+        athleteDetailContainer.innerHTML = `<table class="w-full"><thead class="bg-slate-100"><tr><th class="px-2 py-1 text-left">Atleta</th><th class="px-2 py-1 text-center">Arr.</th><th class="px-2 py-1 text-center">Gols</th><th class="px-2 py-1 text-center">% Aprov.</th><th class="px-2 py-1 text-center">Alvo + usado</th><th class="px-2 py-1 text-center">Situação + usada</th></tr></thead><tbody>${athleteRows.map(r => `<tr class="border-b"><td class="px-2 py-1">${r.number || '?'} - ${r.name || 'N/A'}</td><td class="px-2 py-1 text-center">${r.throws}</td><td class="px-2 py-1 text-center">${r.goals}</td><td class="px-2 py-1 text-center">${r.efficiency}%</td><td class="px-2 py-1 text-center">${r.bestTarget}</td><td class="px-2 py-1 text-center">${r.bestSystem}</td></tr>`).join('')}</tbody></table>`;
       }
 
       // Defense stats
@@ -3116,6 +3454,17 @@ function renderHeatmap(optionsOrFilter) {
           updateLineupDisplay();
         });
       });
+
+      const opponentSelectMap = { left: 'opponentLeft', center: 'opponentCenter', right: 'opponentRight' };
+      ['left', 'center', 'right'].forEach(pos => {
+        const el = document.getElementById(`select-opp-${pos}`);
+        if (!el) return;
+        el.addEventListener('change', (e) => {
+          AppState.lineup[opponentSelectMap[pos]] = e.target.value ? parseInt(e.target.value) : null;
+          saveToLocalStorage();
+          updateLineupDisplay();
+        });
+      });
       
       document.getElementById('confirm-sub').addEventListener('click', performSubstitution);
       
@@ -3219,15 +3568,39 @@ function renderHeatmap(optionsOrFilter) {
           attackState.result = btn.dataset.result;
           
           document.getElementById('penalty-section').classList.toggle('hidden', btn.dataset.result !== 'penalidade');
+          if (btn.dataset.result !== 'penalidade') {
+            attackState.noAttackPenalty = false;
+            document.getElementById('penalty-no-attack').checked = false;
+          }
+          updatePenaltyModeUI();
         });
       });
       
       document.getElementById('penalty-type').addEventListener('change', (e) => {
-        attackState.penaltyType = e.target.value;
+        attackState.penaltyType = normalizePenaltyType(e.target.value);
       });
 
-      document.getElementById('attack-offensive-system').addEventListener('change', (e) => {
-        attackState.offensiveSystem = normalizeOffensiveSystem(e.target.value);
+      document.getElementById('penalty-no-attack').addEventListener('change', (e) => {
+        attackState.noAttackPenalty = e.target.checked;
+        if (attackState.noAttackPenalty) {
+          attackState.ballType = '';
+          attackState.target = '';
+          attackState.gameSituation = 'Livre';
+          document.getElementById('attack-game-situation').value = 'Livre';
+          document.querySelectorAll('.ball-type-btn, .target-btn').forEach(btn => {
+            btn.classList.remove('border-blue-500', 'bg-blue-50', 'text-blue-700');
+            btn.classList.add('border-slate-300');
+          });
+        }
+        updatePenaltyModeUI();
+      });
+
+      document.getElementById('penalty-note').addEventListener('input', (e) => {
+        attackState.observation = e.target.value;
+      });
+
+      document.getElementById('attack-game-situation').addEventListener('change', (e) => {
+        attackState.gameSituation = normalizeGameSituation(e.target.value);
       });
       
       document.querySelectorAll('.defense-structure').forEach(cb => {
@@ -3394,8 +3767,10 @@ populateHeatmapAthletes();
         return baseLabel;
       }
 
-      const opponentAthletes = (AppState.config.opponentAthletes || []).filter(a => a && (a.name || a.number));
-      const athlete = opponentAthletes[{ L: 0, C: 1, R: 2 }[role]];
+      const opponentRoleMap = { L: 'opponentLeft', C: 'opponentCenter', R: 'opponentRight' };
+      const fallbackByRole = { L: getConfiguredOpponentIndices()[0], C: getConfiguredOpponentIndices()[1], R: getConfiguredOpponentIndices()[2] };
+      const opponentIndex = AppState.lineup?.[opponentRoleMap[role]] ?? fallbackByRole[role];
+      const athlete = AppState.config.opponentAthletes?.[opponentIndex];
       const baseLabel = getTeamRoleLabel('opponent', role);
       if (athlete && (athlete.name || athlete.number)) {
         return athlete.number ? `${athlete.number} ${athlete.name || baseLabel}` : (athlete.name || baseLabel);
@@ -3966,6 +4341,7 @@ populateHeatmapAthletes();
       loadFromLocalStorage();
       loadConfigToForm();
       renderAthleteInputs();
+      ensureOpponentLineupDefaults();
       updateLineupSelectors();
       updateLineupDisplay();
       renderTargetPlan();
