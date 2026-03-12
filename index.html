@@ -204,7 +204,7 @@
      </div>
     </section><!-- Jogo Tab -->
     <section id="tab-jogo" class="tab-content hidden">
-     <div class="max-w-4xl mx-auto space-y-4"><!-- Quick Actions -->
+     <div class="max-w-4xl mx-auto space-y-4"><div class="bg-white rounded-xl p-4 card-shadow border border-slate-200 space-y-3"><div class="flex flex-col md:flex-row md:items-center md:justify-between gap-2"><div><div class="text-xs uppercase tracking-wide text-slate-500">Placar atual</div><div id="match-score" class="text-2xl font-bold text-slate-800">0 - 0</div></div><div class="text-sm text-slate-500">Formação em quadra</div></div><div id="jogo-oncourt" class="grid grid-cols-1 md:grid-cols-3 gap-2"><div class="rounded-lg border border-slate-200 bg-slate-50 p-3"><div class="text-xs text-slate-500">Ala E</div><div class="font-semibold text-slate-800">#-</div></div><div class="rounded-lg border border-slate-200 bg-slate-50 p-3"><div class="text-xs text-slate-500">Pivô</div><div class="font-semibold text-slate-800">#-</div></div><div class="rounded-lg border border-slate-200 bg-slate-50 p-3"><div class="text-xs text-slate-500">Ala D</div><div class="font-semibold text-slate-800">#-</div></div></div></div><!-- Quick Actions -->
       <div class="grid grid-cols-2 gap-3"><button id="btn-attack" class="bg-gradient-to-br from-green-500 to-green-700 text-white p-4 rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transition-all"> ⚡ Registrar Ataque </button> <button id="btn-change-target" class="bg-gradient-to-br from-orange-500 to-orange-700 text-white p-4 rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transition-all"> 🎯 Mudança de Alvo </button>
       </div>
       <div class="grid grid-cols-1 gap-3"><button id="btn-end-match" class="bg-gradient-to-br from-red-500 to-red-700 text-white p-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all"> 🏁 Encerrar Partida </button>
@@ -236,7 +236,7 @@
           <div class="grid grid-cols-6 gap-1" id="target-grid"><button class="target-btn px-2 py-2 border-2 border-slate-300 rounded text-xs font-medium" data-target="1">1</button> <button class="target-btn px-2 py-2 border-2 border-slate-300 rounded text-xs font-medium" data-target="2">2</button> <button class="target-btn px-2 py-2 border-2 border-slate-300 rounded text-xs font-medium" data-target="3">3</button> <button class="target-btn px-2 py-2 border-2 border-slate-300 rounded text-xs font-medium" data-target="4">4</button> <button class="target-btn px-2 py-2 border-2 border-slate-300 rounded text-xs font-medium" data-target="5">5</button> <button class="target-btn px-2 py-2 border-2 border-slate-300 rounded text-xs font-medium" data-target="6">6</button>
           </div>
          </div>
-         <div><label class="block text-sm font-medium text-slate-600 mb-2">Sistema ofensivo</label> <select id="attack-offensive-system" class="w-full px-3 py-2 border border-slate-300 rounded-lg"><option value="Livre">Livre</option><option value="Cone Aberto">Cone Aberto</option><option value="Cone Fechado">Cone Fechado</option><option value="Espelho">Espelho</option><option value="Arrasta">Arrasta</option><option value="Diagonal Direita">Diagonal Direita</option><option value="Diagonal Esquerda">Diagonal Esquerda</option><option value="X">X</option><option value="Bloco Direito">Bloco Direito</option><option value="Bloco Esquerdo">Bloco Esquerdo</option></select>
+         <div><label class="block text-sm font-medium text-slate-600 mb-2">Situação de jogo</label> <select id="attack-game-situation" class="w-full px-3 py-2 border border-slate-300 rounded-lg"><option value="Livre">Livre</option><option value="Flutuou">Flutuou</option><option value="Inverteu">Inverteu</option><option value="Passou a bola">Passou a bola</option></select>
          </div><!-- Result -->
          <div><label class="block text-sm font-medium text-slate-600 mb-2">Resultado</label>
          <div class="grid grid-cols-3 gap-2" id="result-grid"><button class="result-btn px-3 py-2 border-2 border-slate-300 rounded-lg text-sm" data-result="gol">⚽ Gol</button> <button class="result-btn px-3 py-2 border-2 border-slate-300 rounded-lg text-sm" data-result="defendida">🧤 Defendida</button> <button class="result-btn px-3 py-2 border-2 border-slate-300 rounded-lg text-sm" data-result="blockout">🚫 Blockout</button> <button class="result-btn px-3 py-2 border-2 border-slate-300 rounded-lg text-sm" data-result="fora">❌ Fora</button> <button class="result-btn px-3 py-2 border-2 border-slate-300 rounded-lg text-sm" data-result="penalidade">⚠️ Penalidade</button> <button class="result-btn px-3 py-2 border-2 border-slate-300 rounded-lg text-sm" data-result="ballover">🔁 Ball Over</button>
@@ -775,6 +775,7 @@
 
     const OFFICIAL_TARGETS = ['1', '2', '3', '4', '5', '6'];
     const OFFENSIVE_SYSTEMS = ['Livre', 'Cone Aberto', 'Cone Fechado', 'Espelho', 'Arrasta', 'Diagonal Direita', 'Diagonal Esquerda', 'X', 'Bloco Direito', 'Bloco Esquerdo'];
+    const GAME_SITUATIONS = ['Livre', 'Flutuou', 'Inverteu', 'Passou a bola'];
     const LEGACY_TARGET_MAP = { '2/3': '3', '4/5': '4', 'M': '3' };
 
     function normalizeTarget(target) {
@@ -793,12 +794,22 @@
       return OFFENSIVE_SYSTEMS.includes(normalized) ? normalized : 'Livre';
     }
 
+    function normalizeGameSituation(value) {
+      const normalized = String(value || '').trim();
+      return GAME_SITUATIONS.includes(normalized) ? normalized : 'Livre';
+    }
+
+    function resolveGameSituation(event) {
+      return normalizeGameSituation(event?.gameSituation || event?.offensiveSystem);
+    }
+
     function normalizeStoredEvent(event) {
       if (!event || typeof event !== 'object') return event;
       const cloned = { ...event };
       if (cloned.type === 'event') {
         cloned.target = normalizeTarget(cloned.target);
         cloned.offensiveSystem = normalizeOffensiveSystem(cloned.offensiveSystem);
+        cloned.gameSituation = resolveGameSituation(cloned);
       }
       if (cloned.type === 'target_change') {
         const targets = sanitizeTargets(String(cloned.newTargets || '').split(','));
@@ -1084,10 +1095,10 @@
     function downloadExcelReport() {
       const activePeriod = document.querySelector('.report-period-btn.bg-blue-600')?.dataset.period || 'all';
       const events = getReportEvents(activePeriod);
-      const headers = ['Data/Hora','Tempo','Equipe','Atleta','Tipo Bola','Alvo','Sistema Ofensivo','Resultado','Penalidade','Defesa','Comportamento'];
+      const headers = ['Data/Hora','Tempo','Equipe','Atleta','Tipo Bola','Alvo','Situação de Jogo','Resultado','Penalidade','Defesa','Comportamento'];
       const rows = events.map(e => [
         e.timestamp || '', e.phase || '', getTeamLabel(e.team), `${e.athleteNumber || ''} ${e.athleteName || ''}`.trim(),
-        e.ballType || '', normalizeTarget(e.target) || '-', normalizeOffensiveSystem(e.offensiveSystem), e.result || '', e.penaltyType || '', e.defenseStructure || '', e.ballBehavior || ''
+        e.ballType || '', normalizeTarget(e.target) || '-', resolveGameSituation(e), e.result || '', e.penaltyType || '', e.defenseStructure || '', e.ballBehavior || ''
       ]);
       const csv = [headers, ...rows].map(r => r.map(v => `"${String(v).replaceAll('"','""')}"`).join(';')).join('\n');
       const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -1142,7 +1153,7 @@
             <td>${escapeHtml(`${event.athleteNumber || '?'} ${event.athleteName || ''}`.trim())}</td>
             <td>${escapeHtml(event.ballType || '-')}</td>
             <td>${escapeHtml(normalizeTarget(event.target) || '-')}</td>
-            <td>${escapeHtml(normalizeOffensiveSystem(event.offensiveSystem))}</td>
+            <td>${escapeHtml(resolveGameSituation(event))}</td>
             <td>${escapeHtml(event.result || '-')}</td>
           </tr>`;
         }).join('') || '<tr><td colspan="8" class="muted">Sem lances registrados no período.</td></tr>';
@@ -1693,7 +1704,7 @@
         penaltyType: '',
         defenseStructure: '',
         ballBehavior: '',
-        offensiveSystem: 'Livre',
+        gameSituation: 'Livre',
         plannedTargets: '',
         newTargets: ''
       };
@@ -1712,6 +1723,7 @@
 
       saveToLocalStorage();
       updateLineupDisplay();
+      renderGameOnCourtSummary();
       return true;
     }
 
@@ -1777,6 +1789,7 @@
       
       saveToLocalStorage();
       updateLineupDisplay();
+      renderGameOnCourtSummary();
 
       const ok = await registerSubstitution({
         team: 'my',
@@ -1792,6 +1805,7 @@
     }
 
     function openQuickSubModal() {
+      closeAttackModal();
       document.getElementById('quick-sub-modal').classList.remove('hidden');
       document.getElementById('quick-sub-team').value = 'my';
       updateQuickSubSelectors();
@@ -1878,7 +1892,7 @@
       penaltyType: '',
       defenseStructures: [],
       ballBehavior: '',
-      offensiveSystem: 'Livre'
+      gameSituation: 'Livre'
     };
     
     let targetChangeState = {
@@ -1909,7 +1923,7 @@
         penaltyType: '',
         defenseStructures: [],
         ballBehavior: '',
-        offensiveSystem: 'Livre'
+        gameSituation: 'Livre'
       };
       
       // Reset UI
@@ -1928,7 +1942,7 @@
       document.getElementById('penalty-section').classList.add('hidden');
       document.getElementById('attack-athlete').value = '';
       document.getElementById('penalty-type').value = '';
-      document.getElementById('attack-offensive-system').value = 'Livre';
+      document.getElementById('attack-game-situation').value = 'Livre';
     }
     
     function updateAttackAthleteSelector(team) {
@@ -1972,7 +1986,8 @@
         penaltyType: attackState.penaltyType,
         defenseStructure: attackState.defenseStructures.join(','),
         ballBehavior: attackState.ballBehavior,
-        offensiveSystem: normalizeOffensiveSystem(attackState.offensiveSystem),
+        gameSituation: normalizeGameSituation(attackState.gameSituation),
+        offensiveSystem: normalizeGameSituation(attackState.gameSituation),
         plannedTargets: JSON.stringify(AppState.currentTargets[attackState.athlete] || []),
         subIn: '',
         subOut: '',
@@ -1991,7 +2006,7 @@
           createLocalEvent(event);
           applyAttackPossessionRule(event);
           showToast('⚠️ Lance salvo localmente (modo offline)');
-          closeAttackModal();
+          prepareAttackForNextRegister();
           updateScore();
           return;
         }
@@ -2000,7 +2015,7 @@
       }
 
       applyAttackPossessionRule(event);
-      closeAttackModal();
+      prepareAttackForNextRegister();
       showToast('✅ Lance registrado!');
       updateScore();
     }
@@ -2118,6 +2133,7 @@
     }
 
     function openTimeoutActionModal() {
+      closeAttackModal();
       document.getElementById('timeout-team-select').value = 'my';
       document.getElementById('timeout-action-modal').classList.remove('hidden');
     }
@@ -2182,6 +2198,7 @@
     }
 
     function openTargetChangeModal() {
+      closeAttackModal();
       document.getElementById('target-change-modal').classList.remove('hidden');
       targetChangeState = { athlete: '', newTargets: [] };
       
@@ -2268,6 +2285,33 @@
         scoreEl.textContent = `${score.myGoals} - ${score.oppGoals}`;
       }
     }
+
+    function renderGameOnCourtSummary() {
+      const roles = [
+        { key: 'left', label: 'Ala E' },
+        { key: 'center', label: 'Pivô' },
+        { key: 'right', label: 'Ala D' }
+      ];
+      const container = document.getElementById('jogo-oncourt');
+      if (!container) return;
+
+      container.innerHTML = roles.map(({ key, label }) => {
+        const idx = AppState.lineup[key];
+        const athlete = idx !== null ? AppState.config.myAthletes[idx] : null;
+        const number = athlete?.number ? `#${athlete.number}` : '#-';
+        const name = athlete?.name || 'Sem atleta';
+        return `<div class="rounded-lg border border-slate-200 bg-slate-50 p-3"><div class="text-xs text-slate-500">${label}</div><div class="font-semibold text-slate-800">${number} <span class="text-slate-600 font-medium">${name}</span></div></div>`;
+      }).join('');
+    }
+
+    function prepareAttackForNextRegister() {
+      const team = AppState.lineup.possessionTeam || 'my';
+      resetAttackState();
+      attackState.team = team;
+      updateAttackAthleteSelector(team);
+      const preferredBtn = document.querySelector(`.team-select-btn[data-team="${team}"]`);
+      if (preferredBtn) preferredBtn.click();
+    }
     
     function renderRecentEvents() {
       const container = document.getElementById('recent-events');
@@ -2289,7 +2333,7 @@
               <span class="text-xs text-slate-500">${e.phase}</span>
             </div>
             <div class="text-xs text-slate-600 mt-1">
-              ${e.ballType} → Alvo ${normalizeTarget(e.target) || '-'} • Sist. ${normalizeOffensiveSystem(e.offensiveSystem)} = ${e.result}
+              ${e.ballType} → Alvo ${normalizeTarget(e.target) || '-'} • Sit. ${resolveGameSituation(e)} = ${e.result}
             </div>
           </div>
         `;
@@ -2314,6 +2358,7 @@
       document.getElementById('opp-efficiency').textContent = oppEvents.length > 0 ? Math.round((oppGoals / oppEvents.length) * 100) + '%' : '0%';
       
       updateScore();
+      renderGameOnCourtSummary();
     }
     
     // =====================================================
@@ -2427,7 +2472,7 @@
                 <div>
                   <div class="text-sm font-medium">${e.athleteNumber || '?'} - ${e.athleteName || 'N/A'}</div>
                   <div class="text-xs text-slate-600">
-                    ${e.ballType} → Alvo ${normalizeTarget(e.target) || '-'} • Sist. ${normalizeOffensiveSystem(e.offensiveSystem)} = ${e.result}
+                    ${e.ballType} → Alvo ${normalizeTarget(e.target) || '-'} • Sit. ${resolveGameSituation(e)} = ${e.result}
                     ${e.penaltyType ? `(${e.penaltyType})` : ''}
                   </div>
                   ${e.defenseStructure ? `<div class="text-xs text-slate-500">Defesa: ${e.defenseStructure} | ${e.ballBehavior}</div>` : ''}
@@ -2498,9 +2543,9 @@
         </div>
         
         <div>
-          <label class="block text-sm font-medium text-slate-600 mb-2">Sistema ofensivo</label>
-          <select id="edit-offensive-system" class="w-full px-3 py-2 border border-slate-300 rounded-lg">
-            ${OFFENSIVE_SYSTEMS.map(sys => `<option value="${sys}" ${normalizeOffensiveSystem(event.offensiveSystem) === sys ? 'selected' : ''}>${sys}</option>`).join('')}
+          <label class="block text-sm font-medium text-slate-600 mb-2">Situação de jogo</label>
+          <select id="edit-game-situation" class="w-full px-3 py-2 border border-slate-300 rounded-lg">
+            ${GAME_SITUATIONS.map(situation => `<option value="${situation}" ${resolveGameSituation(event) === situation ? 'selected' : ''}>${situation}</option>`).join('')}
           </select>
         </div>
 
@@ -2545,7 +2590,8 @@
         ...event,
         ballType: document.getElementById('edit-ball-type').value,
         target: normalizeTarget(document.getElementById('edit-target').value),
-        offensiveSystem: normalizeOffensiveSystem(document.getElementById('edit-offensive-system').value),
+        gameSituation: normalizeGameSituation(document.getElementById('edit-game-situation').value),
+        offensiveSystem: normalizeGameSituation(document.getElementById('edit-game-situation').value),
         result: document.getElementById('edit-result').value,
         ballBehavior: document.getElementById('edit-ball-behavior').value
       };
@@ -2664,7 +2710,7 @@
       // Offensive system stats
       const systemStats = {};
       myEvents.forEach(e => {
-        const sys = normalizeOffensiveSystem(e.offensiveSystem);
+        const sys = resolveGameSituation(e);
         const target = normalizeTarget(e.target);
         if (!target) return;
         if (!systemStats[sys]) systemStats[sys] = { attacks: 0, goals: 0, targets: {}, athletes: {} };
@@ -2678,9 +2724,9 @@
       const sysContainer = document.getElementById('offensive-system-stats');
       const sysRows = Object.entries(systemStats);
       if (sysRows.length === 0) {
-        sysContainer.innerHTML = '<p class="text-slate-500">Sem dados de sistema ofensivo.</p>';
+        sysContainer.innerHTML = '<p class="text-slate-500">Sem dados de situação de jogo.</p>';
       } else {
-        sysContainer.innerHTML = `<table class="w-full"><thead class="bg-slate-100"><tr><th class="px-2 py-1 text-left">Sistema</th><th class="px-2 py-1 text-center">Ataques</th><th class="px-2 py-1 text-center">Gols</th><th class="px-2 py-1 text-center">Aproveit.</th><th class="px-2 py-1 text-center">Alvo + usado</th><th class="px-2 py-1 text-center">Atleta + usado</th></tr></thead><tbody>${sysRows.map(([sys, data]) => { const bestTarget = Object.entries(data.targets).sort((a,b)=>b[1]-a[1])[0]?.[0] || '-'; const bestAthlete = Object.entries(data.athletes).sort((a,b)=>b[1]-a[1])[0]?.[0] || '-'; const eff = data.attacks ? ((data.goals/data.attacks)*100).toFixed(1).replace('.',',') : '0,0'; return `<tr class="border-b"><td class="px-2 py-1">${sys}</td><td class="px-2 py-1 text-center">${data.attacks}</td><td class="px-2 py-1 text-center">${data.goals}</td><td class="px-2 py-1 text-center">${eff}%</td><td class="px-2 py-1 text-center">${bestTarget}</td><td class="px-2 py-1 text-center">${bestAthlete}</td></tr>`; }).join('')}</tbody></table>`;
+        sysContainer.innerHTML = `<table class="w-full"><thead class="bg-slate-100"><tr><th class="px-2 py-1 text-left">Situação</th><th class="px-2 py-1 text-center">Ataques</th><th class="px-2 py-1 text-center">Gols</th><th class="px-2 py-1 text-center">Aproveit.</th><th class="px-2 py-1 text-center">Alvo + usado</th><th class="px-2 py-1 text-center">Atleta + usado</th></tr></thead><tbody>${sysRows.map(([sys, data]) => { const bestTarget = Object.entries(data.targets).sort((a,b)=>b[1]-a[1])[0]?.[0] || '-'; const bestAthlete = Object.entries(data.athletes).sort((a,b)=>b[1]-a[1])[0]?.[0] || '-'; const eff = data.attacks ? ((data.goals/data.attacks)*100).toFixed(1).replace('.',',') : '0,0'; return `<tr class="border-b"><td class="px-2 py-1">${sys}</td><td class="px-2 py-1 text-center">${data.attacks}</td><td class="px-2 py-1 text-center">${data.goals}</td><td class="px-2 py-1 text-center">${eff}%</td><td class="px-2 py-1 text-center">${bestTarget}</td><td class="px-2 py-1 text-center">${bestAthlete}</td></tr>`; }).join('')}</tbody></table>`;
       }
 
       const athleteDetailContainer = document.getElementById('athlete-detailed-stats');
@@ -2691,7 +2737,7 @@
         athleteEvents.forEach(e => {
           const t = normalizeTarget(e.target);
           if (t) targetUsage[t] = (targetUsage[t] || 0) + 1;
-          const sys = normalizeOffensiveSystem(e.offensiveSystem);
+          const sys = resolveGameSituation(e);
           systemUsage[sys] = (systemUsage[sys] || 0) + 1;
         });
         const bestTarget = Object.entries(targetUsage).sort((a,b)=>b[1]-a[1])[0]?.[0] || '-';
@@ -2702,7 +2748,7 @@
       if (athleteRows.length === 0) {
         athleteDetailContainer.innerHTML = '<p class="text-slate-500">Sem dados individuais.</p>';
       } else {
-        athleteDetailContainer.innerHTML = `<table class="w-full"><thead class="bg-slate-100"><tr><th class="px-2 py-1 text-left">Atleta</th><th class="px-2 py-1 text-center">Arr.</th><th class="px-2 py-1 text-center">Gols</th><th class="px-2 py-1 text-center">% Aprov.</th><th class="px-2 py-1 text-center">Alvo + usado</th><th class="px-2 py-1 text-center">Sistema + usado</th></tr></thead><tbody>${athleteRows.map(r => `<tr class="border-b"><td class="px-2 py-1">${r.number || '?'} - ${r.name || 'N/A'}</td><td class="px-2 py-1 text-center">${r.throws}</td><td class="px-2 py-1 text-center">${r.goals}</td><td class="px-2 py-1 text-center">${r.efficiency}%</td><td class="px-2 py-1 text-center">${r.bestTarget}</td><td class="px-2 py-1 text-center">${r.bestSystem}</td></tr>`).join('')}</tbody></table>`;
+        athleteDetailContainer.innerHTML = `<table class="w-full"><thead class="bg-slate-100"><tr><th class="px-2 py-1 text-left">Atleta</th><th class="px-2 py-1 text-center">Arr.</th><th class="px-2 py-1 text-center">Gols</th><th class="px-2 py-1 text-center">% Aprov.</th><th class="px-2 py-1 text-center">Alvo + usado</th><th class="px-2 py-1 text-center">Situação + usada</th></tr></thead><tbody>${athleteRows.map(r => `<tr class="border-b"><td class="px-2 py-1">${r.number || '?'} - ${r.name || 'N/A'}</td><td class="px-2 py-1 text-center">${r.throws}</td><td class="px-2 py-1 text-center">${r.goals}</td><td class="px-2 py-1 text-center">${r.efficiency}%</td><td class="px-2 py-1 text-center">${r.bestTarget}</td><td class="px-2 py-1 text-center">${r.bestSystem}</td></tr>`).join('')}</tbody></table>`;
       }
 
       // Defense stats
@@ -3226,8 +3272,8 @@ function renderHeatmap(optionsOrFilter) {
         attackState.penaltyType = e.target.value;
       });
 
-      document.getElementById('attack-offensive-system').addEventListener('change', (e) => {
-        attackState.offensiveSystem = normalizeOffensiveSystem(e.target.value);
+      document.getElementById('attack-game-situation').addEventListener('change', (e) => {
+        attackState.gameSituation = normalizeGameSituation(e.target.value);
       });
       
       document.querySelectorAll('.defense-structure').forEach(cb => {
