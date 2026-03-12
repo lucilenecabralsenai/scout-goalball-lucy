@@ -1090,7 +1090,8 @@
       const used1T = events.filter(e => e.phase === '1T').length;
       const used2T = events.filter(e => e.phase === '2T').length;
       const usedTotal = events.length;
-      const firstHalfPenaltyApplied = Boolean(AppState.matchRules?.firstHalfPenaltyApplied?.[team]);
+      const firstHalfFinished = AppState.lineup.phase !== '1T';
+      const firstHalfPenaltyApplied = firstHalfFinished && used1T === 0;
       const totalAvailable = 4 - (firstHalfPenaltyApplied ? 1 : 0);
       return {
         used1T,
