@@ -1275,6 +1275,50 @@
         }).join('') || '<tr><td colspan="8" class="muted">Sem lances registrados no período.</td></tr>';
     }
 
+    function getOpponentIndividualOffenseRows(events) {
+      const opponentShots = events.filter(e => isShotEvent(e) && e.team === 'opponent');
+      const statsByAthlete = {};
+
+      opponentShots.forEach((event, index) => {
+        const athleteKey = `${event.athleteNumber || 'sem-numero'}-${event.athleteName || `atleta-${index}`}`;
+        if (!statsByAthlete[athleteKey]) {
+          statsByAthlete[athleteKey] = {
+            number: event.athleteNumber || '?',
+            name: event.athleteName || 'N/A',
+            throws: 0,
+            goals: 0,
+            defended: 0
+          };
+        }
+
+        statsByAthlete[athleteKey].throws += 1;
+        if (event.result === 'gol') statsByAthlete[athleteKey].goals += 1;
+        if (event.result === 'defendida') statsByAthlete[athleteKey].defended += 1;
+      });
+
+      const rows = Object.values(statsByAthlete)
+        .filter(athlete => athlete.throws > 0)
+        .sort((a, b) => b.throws - a.throws || b.goals - a.goals);
+
+      if (rows.length === 0) {
+        return '<tr><td colspan="5" class="text-center py-4 text-slate-500">Sem dados</td></tr>';
+      }
+
+      return rows.map(athlete => {
+        const efficiency = athlete.throws > 0
+          ? Math.round((athlete.goals / athlete.throws) * 100)
+          : 0;
+
+        return `<tr class="border-b border-slate-100">
+          <td class="px-3 py-2">${escapeHtml(`${athlete.number || '?'} - ${athlete.name || 'N/A'}`)}</td>
+          <td class="px-3 py-2 text-center">${athlete.throws}</td>
+          <td class="px-3 py-2 text-center font-bold text-green-600">${athlete.goals}</td>
+          <td class="px-3 py-2 text-center">${athlete.defended}</td>
+          <td class="px-3 py-2 text-center">${efficiency}%</td>
+        </tr>`;
+      }).join('');
+    }
+
     function buildPdfReportDocument() {
       const period = getActiveReportPeriod();
       updateReportStats(period);
@@ -1290,6 +1334,7 @@
       const heatmapSvg = document.getElementById('court-heatmap')?.outerHTML || '<p class="muted">Mapa indisponível.</p>';
       const systemStatsHtml = document.getElementById('offensive-system-stats')?.innerHTML || '<p class="muted">Sem dados.</p>';
       const athleteDetailedHtml = document.getElementById('athlete-detailed-stats')?.innerHTML || '<p class="muted">Sem dados.</p>';
+      const opponentIndividualRows = getOpponentIndividualOffenseRows(events);
 
       const myAttackCount = events.filter(e => e.team === 'my').length;
       const oppAttackCount = events.filter(e => e.team === 'opponent').length;
@@ -1381,6 +1426,16 @@
         <div class="card"><h3>Zona mais eficiente</h3><div>${escapeHtml(highlights.mostEfficientZone)}</div></div>
         <div class="card"><h3>Defesa: sucesso de bloco</h3><div>${escapeHtml(highlights.blockSuccess)}</div></div>
       </div>
+    </section>
+
+    <section class="section">
+      <h2 class="section-title">ANÁLISE OFENSIVA INDIVIDUAL – Adversário</h2>
+      <table>
+        <thead>
+          <tr><th>Atleta</th><th>Arremessos</th><th>Gols</th><th>Defendidas</th><th>Aproveitamento (%)</th></tr>
+        </thead>
+        <tbody>${opponentIndividualRows}</tbody>
+      </table>
     </section>
 
     <section class="section">
