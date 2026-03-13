@@ -1319,6 +1319,80 @@
       }).join('');
     }
 
+    function formatPct(goals, attempts) {
+      if (!attempts) return '0,0%';
+      return `${((goals / attempts) * 100).toFixed(1).replace('.', ',')}%`;
+    }
+
+    function formatPressure(attacks, goals) {
+      if (!goals) return 'Sem gol';
+      return (attacks / goals).toFixed(2).replace('.', ',');
+    }
+
+    function getZoneEfficiencyRows(events, team = 'my') {
+      const zoneStats = Object.fromEntries(OFFICIAL_TARGETS.map(zone => [zone, { shots: 0, goals: 0 }]));
+      events.filter(e => isShotEvent(e) && e.team === team).forEach(event => {
+        const zone = normalizeTarget(event.target);
+        if (!zone || !zoneStats[zone]) return;
+        zoneStats[zone].shots += 1;
+        if (event.result === 'gol') zoneStats[zone].goals += 1;
+      });
+
+      return OFFICIAL_TARGETS.map(zone => {
+        const stats = zoneStats[zone];
+        return `<tr><td>${zone}</td><td>${stats.shots}</td><td>${stats.goals}</td><td>${formatPct(stats.goals, stats.shots)}</td></tr>`;
+      }).join('');
+    }
+
+    function getBallTypeEfficiencyRows(events, team = 'my') {
+      const trackedTypes = [
+        { value: 'lisa', label: 'Lisa' },
+        { value: 'quicada', label: 'Quicada' },
+        { value: 'curva', label: 'Curva' },
+        { value: 'spin', label: 'Spin' },
+        { value: 'rapida', label: 'Rápida' },
+        { value: 'lenta', label: 'Lenta' }
+      ];
+      const typeStats = Object.fromEntries(trackedTypes.map(type => [type.value, { shots: 0, goals: 0 }]));
+
+      events.filter(e => isShotEvent(e) && e.team === team).forEach(event => {
+        const ballType = String(event.ballType || '').trim().toLowerCase();
+        if (!typeStats[ballType]) return;
+        typeStats[ballType].shots += 1;
+        if (event.result === 'gol') typeStats[ballType].goals += 1;
+      });
+
+      return trackedTypes.map(type => {
+        const stats = typeStats[type.value];
+        return `<tr><td>${type.label}</td><td>${stats.shots}</td><td>${stats.goals}</td><td>${formatPct(stats.goals, stats.shots)}</td></tr>`;
+      }).join('');
+    }
+
+    function getSystemEfficiencyRows(events, team = 'my') {
+      const systemStats = {};
+      events.filter(e => isShotEvent(e) && e.team === team).forEach(event => {
+        const system = resolveGameSituation(event);
+        if (!systemStats[system]) {
+          systemStats[system] = { attacks: 0, goals: 0, targets: {}, athletes: {} };
+        }
+        const target = normalizeTarget(event.target);
+        const athleteLabel = `${event.athleteNumber || '?'} - ${event.athleteName || 'N/A'}`;
+        systemStats[system].attacks += 1;
+        if (event.result === 'gol') systemStats[system].goals += 1;
+        if (target) systemStats[system].targets[target] = (systemStats[system].targets[target] || 0) + 1;
+        systemStats[system].athletes[athleteLabel] = (systemStats[system].athletes[athleteLabel] || 0) + 1;
+      });
+
+      const rows = Object.entries(systemStats).sort((a, b) => b[1].attacks - a[1].attacks);
+      if (!rows.length) return '<tr><td colspan="6" class="muted">Sem dados</td></tr>';
+
+      return rows.map(([system, data]) => {
+        const bestTarget = Object.entries(data.targets).sort((a, b) => b[1] - a[1])[0]?.[0] || '-';
+        const bestAthlete = Object.entries(data.athletes).sort((a, b) => b[1] - a[1])[0]?.[0] || '-';
+        return `<tr><td>${escapeHtml(system)}</td><td>${data.attacks}</td><td>${data.goals}</td><td>${formatPct(data.goals, data.attacks)}</td><td>${escapeHtml(bestTarget)}</td><td>${escapeHtml(bestAthlete)}</td></tr>`;
+      }).join('');
+    }
+
     function buildPdfReportDocument() {
       const period = getActiveReportPeriod();
       updateReportStats(period);
@@ -1332,30 +1406,59 @@
       const oppTeam = AppState.config.opponentTeam || 'Adversário';
       const attackRows = document.getElementById('attack-stats-body')?.innerHTML || '<tr><td colspan="7">Sem dados</td></tr>';
       const heatmapSvg = document.getElementById('court-heatmap')?.outerHTML || '<p class="muted">Mapa indisponível.</p>';
-      const systemStatsHtml = document.getElementById('offensive-system-stats')?.innerHTML || '<p class="muted">Sem dados.</p>';
-      const athleteDetailedHtml = document.getElementById('athlete-detailed-stats')?.innerHTML || '<p class="muted">Sem dados.</p>';
       const opponentIndividualRows = getOpponentIndividualOffenseRows(events);
 
-      const myAttackCount = events.filter(e => e.team === 'my').length;
-      const oppAttackCount = events.filter(e => e.team === 'opponent').length;
-      const myGoals = events.filter(e => e.team === 'my' && e.result === 'gol').length;
-      const oppGoals = events.filter(e => e.team === 'opponent' && e.result === 'gol').length;
-      const defendedCount = events.filter(e => e.result === 'defendida').length;
-      const outCount = events.filter(e => e.result === 'fora').length;
+      const myShots = events.filter(e => isShotEvent(e) && e.team === 'my');
+      const oppShots = events.filter(e => isShotEvent(e) && e.team === 'opponent');
+      const myGoals = myShots.filter(e => e.result === 'gol').length;
+      const oppGoals = oppShots.filter(e => e.result === 'gol').length;
+      const myDefenses = oppShots.filter(e => e.result === 'defendida').length;
+      const myPenalties = events.filter(e => e.team === 'my' && e.result === 'penalidade').length;
+      const oppPenalties = events.filter(e => e.team === 'opponent' && e.result === 'penalidade').length;
       const ballOverCount = events.filter(e => e.result === 'ballover').length;
-      const topZones = getTopZones(events);
+      const outCount = events.filter(e => e.result === 'fora').length;
 
       const highlights = {
         mostEfficient: document.getElementById('most-efficient')?.textContent?.trim() || '-',
         mostUsedZone: document.getElementById('most-used-zone')?.textContent?.trim() || '-',
-        mostEfficientZone: document.getElementById('most-efficient-zone')?.textContent?.trim() || '-',
-        correctBlocks: document.getElementById('correct-blocks')?.textContent?.trim() || '0',
-        incorrectBlocks: document.getElementById('incorrect-blocks')?.textContent?.trim() || '0',
-        coverageCount: document.getElementById('coverage-count')?.textContent?.trim() || '0',
-        blockSuccess: document.getElementById('block-success')?.textContent?.trim() || '0%',
-        goalsAfterBadBlock: document.getElementById('goals-after-bad-block')?.textContent?.trim() || '0'
+        mostEfficientZone: document.getElementById('most-efficient-zone')?.textContent?.trim() || '-'
       };
 
+      const allAthletes = events.filter(e => isShotEvent(e)).reduce((acc, event, index) => {
+        const key = `${event.team}-${event.athleteNumber || 's/n'}-${event.athleteName || `atleta-${index}`}`;
+        if (!acc[key]) {
+          acc[key] = {
+            team: event.team,
+            label: `${event.athleteNumber || '?'} - ${event.athleteName || 'N/A'}`,
+            shots: 0,
+            goals: 0
+          };
+        }
+        acc[key].shots += 1;
+        if (event.result === 'gol') acc[key].goals += 1;
+        return acc;
+      }, {});
+
+      const athleteList = Object.values(allAthletes);
+      const topGoals = [...athleteList].sort((a, b) => b.goals - a.goals || b.shots - a.shots)[0];
+      const topShots = [...athleteList].sort((a, b) => b.shots - a.shots || b.goals - a.goals)[0];
+      const topEfficiency = [...athleteList]
+        .filter(a => a.shots >= 5)
+        .sort((a, b) => (b.goals / b.shots) - (a.goals / a.shots))[0];
+
+      const oppZoneCounts = {};
+      const oppBallTypeCounts = {};
+      const oppAthleteCounts = {};
+      oppShots.forEach(event => {
+        const zone = normalizeTarget(event.target);
+        if (zone) oppZoneCounts[zone] = (oppZoneCounts[zone] || 0) + 1;
+        const ballType = String(event.ballType || '').trim().toLowerCase();
+        if (ballType) oppBallTypeCounts[ballType] = (oppBallTypeCounts[ballType] || 0) + 1;
+        const athlete = `${event.athleteNumber || '?'} - ${event.athleteName || 'N/A'}`;
+        oppAthleteCounts[athlete] = (oppAthleteCounts[athlete] || 0) + 1;
+      });
+
+      const ballTypeLabels = { lisa: 'Lisa', quicada: 'Quicada', curva: 'Curva', spin: 'Spin', rapida: 'Rápida', lenta: 'Lenta' };
       const latestRows = getLatestRelevantEvents(events);
 
       return `<!doctype html>
@@ -1398,78 +1501,97 @@
       <div class="score">${escapeHtml(myTeam)} ${score.myGoals} x ${score.oppGoals} ${escapeHtml(oppTeam)}</div>
     </header>
 
-    <section class="grid grid-4">
-      <div class="card"><h3>Total de lances</h3><div class="metric">${events.length}</div></div>
-      <div class="card"><h3>Ataques (minha equipe)</h3><div class="metric">${myAttackCount}</div></div>
-      <div class="card"><h3>Ataques (adversário)</h3><div class="metric">${oppAttackCount}</div></div>
-      <div class="card"><h3>Top zonas exploradas</h3><div>${escapeHtml(topZones)}</div></div>
-    </section>
-
-    <section class="section grid grid-4">
-      <div class="card"><h3>Gols minha equipe</h3><div class="metric">${myGoals}</div></div>
-      <div class="card"><h3>Gols adversário</h3><div class="metric">${oppGoals}</div></div>
-      <div class="card"><h3>Defendidas</h3><div class="metric">${defendedCount}</div></div>
-      <div class="card"><h3>Fora + Ball over</h3><div class="metric">${outCount + ballOverCount}</div></div>
+    <section class="section">
+      <h2 class="section-title">Resumo da partida</h2>
+      <div class="grid grid-4">
+        <div class="card"><h3>Total de lances</h3><div class="metric">${events.length}</div></div>
+        <div class="card"><h3>Ataques minha equipe</h3><div class="metric">${myShots.length}</div></div>
+        <div class="card"><h3>Ataques adversário</h3><div class="metric">${oppShots.length}</div></div>
+        <div class="card"><h3>Gols minha equipe</h3><div class="metric">${myGoals}</div></div>
+        <div class="card"><h3>Gols adversário</h3><div class="metric">${oppGoals}</div></div>
+        <div class="card"><h3>Eficiência ofensiva</h3><div class="metric">${formatPct(myGoals, myShots.length)}</div></div>
+        <div class="card"><h3>Eficiência defensiva</h3><div class="metric">${formatPct(myDefenses, oppShots.length)}</div></div>
+        <div class="card"><h3>Penalidades (minha/adversário)</h3><div class="metric">${myPenalties} / ${oppPenalties}</div></div>
+        <div class="card"><h3>Ball over</h3><div class="metric">${ballOverCount}</div></div>
+        <div class="card"><h3>Fora</h3><div class="metric">${outCount}</div></div>
+        <div class="card"><h3>Pressão ofensiva (minha equipe)</h3><div class="metric">${formatPressure(myShots.length, myGoals)}</div></div>
+        <div class="card"><h3>Pressão ofensiva (adversário)</h3><div class="metric">${formatPressure(oppShots.length, oppGoals)}</div></div>
+      </div>
     </section>
 
     <section class="section">
-      <h2 class="section-title">Estatísticas de ataque (minha equipe)</h2>
+      <h2 class="section-title">Estatísticas ofensivas minha equipe</h2>
       <table>
-        <thead>
-          <tr><th>Atleta</th><th>Arr.</th><th>Gols</th><th>Def.</th><th>Pen.</th><th>% Aprov.</th><th>% Plano</th></tr>
-        </thead>
+        <thead><tr><th>Atleta</th><th>Arr.</th><th>Gols</th><th>Def.</th><th>Pen.</th><th>% Aprov.</th><th>% Plano</th></tr></thead>
         <tbody>${attackRows}</tbody>
       </table>
       <div class="grid grid-4" style="margin-top:8px;">
         <div class="card"><h3>Mais eficiente</h3><div>${escapeHtml(highlights.mostEfficient)}</div></div>
         <div class="card"><h3>Zona mais usada</h3><div>${escapeHtml(highlights.mostUsedZone)}</div></div>
         <div class="card"><h3>Zona mais eficiente</h3><div>${escapeHtml(highlights.mostEfficientZone)}</div></div>
-        <div class="card"><h3>Defesa: sucesso de bloco</h3><div>${escapeHtml(highlights.blockSuccess)}</div></div>
       </div>
     </section>
 
     <section class="section">
-      <h2 class="section-title">ANÁLISE OFENSIVA INDIVIDUAL – Adversário</h2>
+      <h2 class="section-title">Estatísticas ofensivas adversário</h2>
       <table>
-        <thead>
-          <tr><th>Atleta</th><th>Arremessos</th><th>Gols</th><th>Defendidas</th><th>Aproveitamento (%)</th></tr>
-        </thead>
+        <thead><tr><th>Atleta</th><th>Arremessos</th><th>Gols</th><th>Defendidas</th><th>Aproveitamento (%)</th></tr></thead>
         <tbody>${opponentIndividualRows}</tbody>
       </table>
     </section>
 
     <section class="section">
+      <h2 class="section-title">Eficiência por zona de ataque</h2>
+      <table>
+        <thead><tr><th>Zona</th><th>Arremessos</th><th>Gols</th><th>Aproveitamento %</th></tr></thead>
+        <tbody>${getZoneEfficiencyRows(events, 'my')}</tbody>
+      </table>
+    </section>
+
+    <section class="section">
+      <h2 class="section-title">Eficiência por tipo de bola</h2>
+      <table>
+        <thead><tr><th>Tipo de bola</th><th>Arremessos</th><th>Gols</th><th>Aproveitamento %</th></tr></thead>
+        <tbody>${getBallTypeEfficiencyRows(events, 'my')}</tbody>
+      </table>
+    </section>
+
+    <section class="section">
       <h2 class="section-title">Análise por sistema ofensivo</h2>
-      <div>${systemStatsHtml}</div>
+      <table>
+        <thead><tr><th>Situação</th><th>Ataques</th><th>Gols</th><th>Aproveitamento</th><th>Alvo mais usado</th><th>Atleta mais usado</th></tr></thead>
+        <tbody>${getSystemEfficiencyRows(events, 'my')}</tbody>
+      </table>
     </section>
 
     <section class="section">
-      <h2 class="section-title">Análise ofensiva individual</h2>
-      <div>${athleteDetailedHtml}</div>
+      <h2 class="section-title">Top jogadores da partida</h2>
+      <div class="grid grid-2">
+        <div class="card"><h3>Mais gols</h3><div>${topGoals ? `${escapeHtml(topGoals.label)} (${topGoals.goals})` : '-'}</div></div>
+        <div class="card"><h3>Mais arremessos</h3><div>${topShots ? `${escapeHtml(topShots.label)} (${topShots.shots})` : '-'}</div></div>
+        <div class="card"><h3>Mais eficiente (mín. 5 arremessos)</h3><div>${topEfficiency ? `${escapeHtml(topEfficiency.label)} (${formatPct(topEfficiency.goals, topEfficiency.shots)})` : 'Sem atleta com 5 arremessos'}</div></div>
+      </div>
     </section>
 
     <section class="section">
-      <h2 class="section-title">Defesa e tendências relevantes</h2>
-      <div class="grid grid-4">
-        <div class="card"><h3>Bloco correto</h3><div class="metric">${escapeHtml(highlights.correctBlocks)}</div></div>
-        <div class="card"><h3>Bloco incorreto</h3><div class="metric">${escapeHtml(highlights.incorrectBlocks)}</div></div>
-        <div class="card"><h3>Cobertura</h3><div class="metric">${escapeHtml(highlights.coverageCount)}</div></div>
-        <div class="card"><h3>Gols após bloco incorreto</h3><div class="metric">${escapeHtml(highlights.goalsAfterBadBlock)}</div></div>
+      <h2 class="section-title">Tendências do adversário</h2>
+      <div class="grid grid-2">
+        <div class="card"><h3>Zona mais atacada</h3><div>${escapeHtml(Object.entries(oppZoneCounts).sort((a,b)=>b[1]-a[1])[0]?.[0] || '-')}</div></div>
+        <div class="card"><h3>Tipo de bola mais usado</h3><div>${escapeHtml(ballTypeLabels[Object.entries(oppBallTypeCounts).sort((a,b)=>b[1]-a[1])[0]?.[0]] || '-')}</div></div>
+        <div class="card"><h3>Jogador mais ativo</h3><div>${escapeHtml(Object.entries(oppAthleteCounts).sort((a,b)=>b[1]-a[1])[0]?.[0] || '-')}</div></div>
       </div>
     </section>
 
     <section class="section page-break">
-      <h2 class="section-title">Mapa de calor / quadra</h2>
+      <h2 class="section-title">Heatmap</h2>
       <div class="heatmap-box" id="pdf-heatmap">${heatmapSvg}</div>
       <div class="legend">Mapa exportado com os filtros ativos no momento da geração do PDF.</div>
     </section>
 
     <section class="section">
-      <h2 class="section-title">Últimos lances relevantes</h2>
+      <h2 class="section-title">Últimos lances</h2>
       <table>
-        <thead>
-          <tr><th>Horário</th><th>Fase</th><th>Equipe</th><th>Atleta</th><th>Tipo bola</th><th>Alvo</th><th>Sistema</th><th>Resultado</th></tr>
-        </thead>
+        <thead><tr><th>Horário</th><th>Fase</th><th>Equipe</th><th>Atleta</th><th>Tipo bola</th><th>Alvo</th><th>Sistema</th><th>Resultado</th></tr></thead>
         <tbody>${latestRows}</tbody>
       </table>
     </section>
