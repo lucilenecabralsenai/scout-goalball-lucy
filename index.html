@@ -5,10 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Scout Goalball Pro</title>
   <script src="https://cdn.tailwindcss.com/3.4.17"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
-  <script src="./firebase-config.js"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
     
@@ -763,10 +759,15 @@
    <div id="toast" class="fixed bottom-4 left-1/2 -translate-x-1/2 bg-slate-800 text-white px-4 py-2 rounded-lg shadow-lg hidden transition-all z-50"><span id="toast-message"></span>
    </div>
   </div>
-  <script>
+  <script type="module">
     // =====================================================
     // SCOUT GOALBALL PRO - MAIN APPLICATION
     // =====================================================
+
+    import { auth as firebaseAuth, db as firestoreDb, enableFirestorePersistence } from "./firebase.js";
+    import { GoogleAuthProvider, createUserWithEmailAndPassword, onAuthStateChanged, signInWithEmailAndPassword, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js";
+    import { collection, doc, getDocs, limit, onSnapshot, orderBy, query, serverTimestamp, setDoc, where } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
+
     
     // Application State
     const AppState = {
@@ -814,9 +815,7 @@
       }
     };
     
-    // Local storage for offline persistence
-    const STORAGE_KEY = 'scout_goalball_pro_data';
-    const ONGOING_MATCH_STORAGE_KEY = 'scout_goalball_pro_ongoing_match';
+    // Storage key used only for per-device identification
     const DEVICE_ID_STORAGE_KEY = 'scout_goalball_device_id';
     
     // SDK Data
@@ -1032,9 +1031,6 @@
     // FIREBASE SYNC FUNCTIONS
     // =====================================================
 
-    let firebaseApp = null;
-    let firebaseAuth = null;
-    let firestoreDb = null;
     let unsubscribeAuth = null;
     let unsubscribeMatchDoc = null;
     let unsubscribeMatchEvents = null;
@@ -1082,8 +1078,26 @@
 
     function createMatchPayload(statusOverride = null) {
       const score = getScoreForMatch(AppState.matchId);
+      const events = getCurrentMatchEvents();
+      const statistics = {
+        totalEvents: events.length,
+        myGoals: events.filter((event) => event.type === 'event' && event.team === 'my' && event.result === 'gol').length,
+        opponentGoals: events.filter((event) => event.type === 'event' && event.team === 'opponent' && event.result === 'gol').length
+      };
       return {
         ownerId: AppState.auth.user.uid,
+        status: statusOverride || (events.length > 0 ? 'live' : 'draft'),
+        info: {
+          competition: AppState.config.competition || '',
+          location: AppState.config.location || '',
+          date: AppState.config.date || '',
+          teams: {
+            myTeam: AppState.config.myTeam || 'Minha Equipe',
+            opponentTeam: AppState.config.opponentTeam || 'Adversário'
+          },
+          score,
+          statistics
+        },
         competition: AppState.config.competition || '',
         location: AppState.config.location || '',
         date: AppState.config.date || '',
@@ -1091,23 +1105,23 @@
         opponentTeam: AppState.config.opponentTeam || 'Adversário',
         score,
         phase: AppState.lineup.phase,
-        status: statusOverride || (getCurrentMatchEvents().length > 0 ? 'live' : 'draft'),
+        statistics,
         config: AppState.config,
         lineup: AppState.lineup,
         targetPlans: AppState.targetPlans,
         currentTargets: AppState.currentTargets,
         matchRules: AppState.matchRules,
         archivedMatches: AppState.archivedMatches,
-        updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        updatedAt: serverTimestamp(),
+        createdAt: serverTimestamp()
       };
     }
 
     async function pushCurrentMatchToCloud(statusOverride = null) {
       if (!firestoreDb || !AppState.auth.user?.uid) return;
       updateSyncStatus(navigator.onLine ? 'syncing' : 'offline');
-      const matchRef = firestoreDb.collection('matches').doc(AppState.matchId);
-      await matchRef.set(createMatchPayload(statusOverride), { merge: true });
+      const matchRef = doc(collection(firestoreDb, 'matches'), AppState.matchId);
+      await setDoc(matchRef, createMatchPayload(statusOverride), { merge: true });
       const currentEvents = getCurrentMatchEvents();
       await Promise.all(currentEvents.map((event, idx) => {
         const eventId = getEventId(event) || `event-${idx}-${Date.now()}`;
@@ -1126,15 +1140,16 @@
           observation: event.observation || '',
           defenseLocation: event.defenseLocation || '',
           ballOutcome: event.ballOutcome || '',
-          updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-          createdAt: event.createdAt || firebase.firestore.FieldValue.serverTimestamp()
+          updatedAt: serverTimestamp(),
+          timestamp: event.timestamp || new Date().toISOString(),
+          createdAt: event.createdAt || serverTimestamp()
         };
-        return matchRef.collection('events').doc(eventId).set(payload, { merge: true });
+        return setDoc(doc(collection(matchRef, 'events'), eventId), payload, { merge: true });
       }));
-      await firestoreDb.collection('users').doc(AppState.auth.user.uid).set({
+      await setDoc(doc(collection(firestoreDb, 'users'), AppState.auth.user.uid), {
         email: AppState.auth.user.email || '',
         lastActiveMatchId: AppState.matchId,
-        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        updatedAt: serverTimestamp()
       }, { merge: true });
       updateSyncStatus(navigator.onLine ? 'synced' : 'offline');
     }
@@ -1168,9 +1183,9 @@
       if (!firestoreDb || !AppState.auth.user?.uid || !AppState.matchId) return;
       unsubscribeMatchDoc?.();
       unsubscribeMatchEvents?.();
-      const matchRef = firestoreDb.collection('matches').doc(AppState.matchId);
-      unsubscribeMatchDoc = matchRef.onSnapshot((snap) => {
-        if (!snap.exists) return;
+      const matchRef = doc(collection(firestoreDb, 'matches'), AppState.matchId);
+      unsubscribeMatchDoc = onSnapshot(matchRef, (snap) => {
+        if (!snap.exists()) return;
         const data = snap.data();
         if (data.ownerId !== AppState.auth.user.uid) return;
         if (snap.metadata.hasPendingWrites) {
@@ -1193,21 +1208,22 @@
         suppressCloudSync = false;
       });
 
-      unsubscribeMatchEvents = matchRef.collection('events').onSnapshot((snap) => {
+      unsubscribeMatchEvents = onSnapshot(collection(matchRef, 'events'), (snap) => {
         const remoteEvents = [];
-        snap.forEach(doc => remoteEvents.push(normalizeStoredEvent({ __backendId: doc.id, ...doc.data() })));
+        snap.forEach(doc => remoteEvents.push(normalizeStoredEvent({ __backendId: doc.id, ...doc.data(), matchId: AppState.matchId })));
         applyRemoteEvents(remoteEvents);
       });
     }
 
     async function restoreLatestOngoingMatch() {
       if (!firestoreDb || !AppState.auth.user?.uid) return;
-      const querySnapshot = await firestoreDb.collection('matches')
-        .where('ownerId', '==', AppState.auth.user.uid)
-        .where('status', 'in', ['live', 'draft'])
-        .orderBy('updatedAt', 'desc')
-        .limit(1)
-        .get();
+      const querySnapshot = await getDocs(query(
+        collection(firestoreDb, 'matches'),
+        where('ownerId', '==', AppState.auth.user.uid),
+        where('status', 'in', ['live', 'draft']),
+        orderBy('updatedAt', 'desc'),
+        limit(1)
+      ));
       if (querySnapshot.empty) return;
       const doc = querySnapshot.docs[0];
       if (!doc?.id) return;
@@ -1217,22 +1233,10 @@
     }
 
     async function initFirebaseSync() {
-      if (!window.firebase || !window.FIREBASE_CONFIG) {
-        updateSyncStatus('local');
-        return;
-      }
-      firebaseApp = firebase.apps.length ? firebase.app() : firebase.initializeApp(window.FIREBASE_CONFIG);
-      firebaseAuth = firebase.auth();
-      firestoreDb = firebase.firestore();
       AppState.sync.deviceId = getDeviceId();
+      await enableFirestorePersistence();
 
-      try {
-        await firestoreDb.enablePersistence({ synchronizeTabs: true });
-      } catch (error) {
-        console.warn('Firestore persistence unavailable:', error);
-      }
-
-      unsubscribeAuth = firebaseAuth.onAuthStateChanged(async (user) => {
+      unsubscribeAuth = onAuthStateChanged(firebaseAuth, async (user) => {
         AppState.auth.user = user || null;
         updateAuthStatusLabel(user);
         if (!user) {
@@ -1241,7 +1245,16 @@
           updateSyncStatus('local');
           return;
         }
-        await restoreLatestOngoingMatch();
+        await loadAllMatchesFromCloud();
+        loadConfigToForm();
+        updateLineupSelectors();
+        updateLineupDisplay();
+        renderTargetPlan();
+        renderHistoryMatchSelector();
+        renderReportMatchSelector();
+        updateAllStats();
+        renderHistory();
+        renderRecentEvents();
         subscribeToCurrentMatch();
         enqueueCloudSync('auth-state');
       });
@@ -1251,96 +1264,93 @@
     }
 
     // =====================================================
-    // LOCAL STORAGE FUNCTIONS
+    // CLOUD PERSISTENCE (FIRESTORE)
     // =====================================================
     
     function saveToLocalStorage() {
-      try {
-        const data = {
-          config: AppState.config,
-          lineup: AppState.lineup,
-          targetPlans: AppState.targetPlans,
-          currentTargets: AppState.currentTargets,
-          events: AppState.events,
-          archivedMatches: AppState.archivedMatches,
-          matchId: AppState.matchId,
-          matchRules: AppState.matchRules
-        };
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-
-        const ongoingMatchSnapshot = {
-          matchId: AppState.matchId,
-          events: sdkEvents.filter(e => e.matchId === AppState.matchId),
-          lineup: AppState.lineup,
-          currentTargets: AppState.currentTargets,
-          targetPlans: AppState.targetPlans,
-          config: AppState.config,
-          matchRules: AppState.matchRules,
-          savedAt: new Date().toISOString()
-        };
-        localStorage.setItem(ONGOING_MATCH_STORAGE_KEY, JSON.stringify(ongoingMatchSnapshot));
-        if (!suppressCloudSync) enqueueCloudSync('local-save');
-      } catch (e) {
-        console.error('Failed to save to localStorage:', e);
-      }
+      if (!suppressCloudSync) enqueueCloudSync('state-change');
     }
     
     function loadFromLocalStorage() {
-      try {
-        const data = localStorage.getItem(STORAGE_KEY);
-        const ongoingMatchData = localStorage.getItem(ONGOING_MATCH_STORAGE_KEY);
-        if (data) {
-          const parsed = JSON.parse(data);
-          AppState.config = parsed.config || AppState.config;
-          AppState.lineup = parsed.lineup || AppState.lineup;
-          AppState.targetPlans = parsed.targetPlans || {};
-          AppState.currentTargets = parsed.currentTargets || {};
-          AppState.events = Array.isArray(parsed.events) ? parsed.events : [];
-          AppState.archivedMatches = Array.isArray(parsed.archivedMatches) ? parsed.archivedMatches : [];
-         AppState.lineup.phaseStarters = {
-            '1T': parsed?.lineup?.phaseStarters?.['1T'] || AppState.lineup.phaseStarters['1T'],
-            '2T': parsed?.lineup?.phaseStarters?.['2T'] || AppState.lineup.phaseStarters['2T'],
-            'PR': parsed?.lineup?.phaseStarters?.['PR'] || AppState.lineup.phaseStarters['PR'],
-            'PN': parsed?.lineup?.phaseStarters?.['PN'] || AppState.lineup.phaseStarters['PN']
-          };
-          AppState.lineup.opponentLeft = parsed?.lineup?.opponentLeft ?? AppState.lineup.opponentLeft;
-          AppState.lineup.opponentCenter = parsed?.lineup?.opponentCenter ?? AppState.lineup.opponentCenter;
-          AppState.lineup.opponentRight = parsed?.lineup?.opponentRight ?? AppState.lineup.opponentRight;
-          ensureOpponentLineupDefaults();
-          AppState.lineup.possessionTeam = parsed?.lineup?.possessionTeam || AppState.lineup.phaseStarters[AppState.lineup.phase] || 'my';
-          AppState.targetPlans = Object.fromEntries(Object.entries(parsed.targetPlans || {}).map(([k,v]) => [k, sanitizeTargets(v)]));
-          AppState.currentTargets = Object.fromEntries(Object.entries(parsed.currentTargets || {}).map(([k,v]) => [k, sanitizeTargets(v)]));
-          AppState.events = Array.isArray(parsed.events) ? parsed.events.map(normalizeStoredEvent) : [];
-          AppState.archivedMatches = Array.isArray(parsed.archivedMatches) ? parsed.archivedMatches : [];
-          AppState.matchRules = parsed.matchRules || AppState.matchRules;
-          AppState.matchRules.firstHalfPenaltyApplied = {
-            my: Boolean(parsed?.matchRules?.firstHalfPenaltyApplied?.my),
-            opponent: Boolean(parsed?.matchRules?.firstHalfPenaltyApplied?.opponent)
-          };
-          AppState.matchRules.pendingPenaltyShotTeam = parsed?.matchRules?.pendingPenaltyShotTeam || null;
-          sdkEvents = [...AppState.events];
-          AppState.matchId = parsed.matchId || Date.now().toString();
+      AppState.matchId = Date.now().toString();
+      AppState.events = [];
+      sdkEvents = [];
+    }
 
-          const parsedOngoing = ongoingMatchData ? JSON.parse(ongoingMatchData) : null;
-          const currentMatchHasEvents = sdkEvents.some(e => e.matchId === AppState.matchId);
-          const ongoingHasEvents = Array.isArray(parsedOngoing?.events) && parsedOngoing.events.length > 0;
+    async function loadAllMatchesFromCloud() {
+      if (!AppState.auth.user?.uid) return;
+      const matchesSnap = await getDocs(query(
+        collection(firestoreDb, 'matches'),
+        where('ownerId', '==', AppState.auth.user.uid),
+        orderBy('updatedAt', 'desc')
+      ));
 
-          if (!currentMatchHasEvents && ongoingHasEvents && parsedOngoing.matchId) {
-            AppState.matchId = parsedOngoing.matchId;
-            sdkEvents = [...sdkEvents, ...parsedOngoing.events.map(normalizeStoredEvent)];
-            AppState.events = [...sdkEvents];
-          }
-        } else {
-          AppState.matchId = Date.now().toString();
+      const matchDocs = matchesSnap.docs;
+      const allEvents = [];
+      const archived = [];
+
+      for (const matchDoc of matchDocs) {
+        const matchData = matchDoc.data() || {};
+        if (matchData.status === 'ended') {
+          archived.push({
+            id: matchDoc.id,
+            date: matchData.date || '',
+            myTeam: matchData.myTeam || 'Minha Equipe',
+            opponentTeam: matchData.opponentTeam || 'Adversário',
+            score: matchData.score || { my: 0, opponent: 0 }
+          });
         }
-      } catch (e) {
-        console.error('Failed to load from localStorage:', e);
-        AppState.matchId = Date.now().toString();
+        const eventsSnap = await getDocs(collection(firestoreDb, 'matches', matchDoc.id, 'events'));
+        eventsSnap.forEach((eventDoc) => {
+          allEvents.push(normalizeStoredEvent({ __backendId: eventDoc.id, ...eventDoc.data(), matchId: matchDoc.id }));
+        });
+      }
+
+      AppState.archivedMatches = archived;
+      sdkEvents = allEvents;
+      AppState.events = [...sdkEvents];
+
+      const activeMatch = matchDocs.find((d) => {
+        const status = d.data()?.status;
+        return status === 'live' || status === 'draft';
+      }) || matchDocs[0];
+
+      if (activeMatch) {
+        AppState.matchId = activeMatch.id;
+        const data = activeMatch.data() || {};
+        AppState.config = data.config || AppState.config;
+        AppState.lineup = data.lineup || AppState.lineup;
+        AppState.targetPlans = data.targetPlans || AppState.targetPlans;
+        AppState.currentTargets = data.currentTargets || AppState.currentTargets;
+        AppState.matchRules = data.matchRules || AppState.matchRules;
       }
     }
 
     function getEventId(event) {
       return event.__backendId || event.__localId;
+    }
+
+    async function pushEventToCloud(event) {
+      if (!AppState.auth.user?.uid || !AppState.matchId) return;
+      const eventId = getEventId(event) || `event-${Date.now()}`;
+      const matchRef = doc(collection(firestoreDb, 'matches'), AppState.matchId);
+      await setDoc(matchRef, createMatchPayload(), { merge: true });
+      await setDoc(doc(collection(matchRef, 'events'), eventId), {
+        ...event,
+        ownerId: AppState.auth.user.uid,
+        deviceId: AppState.sync.deviceId,
+        matchId: AppState.matchId,
+        team: event.team || '',
+        athlete: event.athlete ?? null,
+        target: event.target || '',
+        ballType: event.ballType || '',
+        result: event.result || '',
+        defenseLocation: event.defenseLocation || '',
+        penaltyType: event.penaltyType || '',
+        timestamp: event.timestamp || new Date().toISOString(),
+        updatedAt: serverTimestamp(),
+        createdAt: event.createdAt || serverTimestamp()
+      }, { merge: true });
     }
 
     function createLocalEvent(event) {
@@ -1351,6 +1361,10 @@
       sdkEvents.push(localEvent);
       AppState.events = [...sdkEvents];
       saveToLocalStorage();
+      pushEventToCloud(localEvent).catch((error) => {
+        console.error('Immediate event sync failed:', error);
+        updateSyncStatus(navigator.onLine ? 'error' : 'offline');
+      });
       updateAllStats();
       renderHistory();
       renderRecentEvents();
@@ -4063,8 +4077,8 @@ function renderHeatmap(optionsOrFilter) {
 
       document.getElementById('btn-login-google').addEventListener('click', async () => {
         if (!firebaseAuth) return showToast('⚠️ Configure o Firebase para autenticar');
-        const provider = new firebase.auth.GoogleAuthProvider();
-        await firebaseAuth.signInWithPopup(provider);
+        const provider = new GoogleAuthProvider();
+        await signInWithPopup(firebaseAuth, provider);
       });
       document.getElementById('btn-login-email').addEventListener('click', async () => {
         if (!firebaseAuth) return showToast('⚠️ Configure o Firebase para autenticar');
@@ -4072,10 +4086,10 @@ function renderHeatmap(optionsOrFilter) {
         const password = prompt('Senha (mín. 6 caracteres):');
         if (!email || !password) return;
         try {
-          await firebaseAuth.signInWithEmailAndPassword(email, password);
+          await signInWithEmailAndPassword(firebaseAuth, email, password);
         } catch (error) {
           if (error.code === 'auth/user-not-found') {
-            await firebaseAuth.createUserWithEmailAndPassword(email, password);
+            await createUserWithEmailAndPassword(firebaseAuth, email, password);
           } else {
             throw error;
           }
@@ -4083,7 +4097,7 @@ function renderHeatmap(optionsOrFilter) {
       });
       document.getElementById('btn-logout').addEventListener('click', async () => {
         if (!firebaseAuth) return;
-        await firebaseAuth.signOut();
+        await signOut(firebaseAuth);
       });
 
       document.querySelectorAll('.report-period-btn').forEach(btn => {
