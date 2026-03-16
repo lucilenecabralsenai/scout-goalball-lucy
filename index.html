@@ -5,6 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Scout Goalball Pro</title>
   <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
+  <script src="./firebase-config.js"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
     
@@ -117,6 +121,18 @@
   </div>
 
 </header>
+
+<div class="bg-slate-900 text-white px-4 py-2 flex flex-wrap items-center justify-between gap-2">
+  <div class="flex items-center gap-2 text-xs md:text-sm">
+    <span id="auth-status-label" class="px-2 py-1 rounded bg-slate-700">Não autenticado</span>
+    <span id="sync-status" class="px-2 py-1 rounded bg-slate-700">Sync: local</span>
+  </div>
+  <div class="flex items-center gap-2">
+    <button id="btn-login-google" class="px-3 py-1.5 rounded bg-blue-600 text-white text-xs md:text-sm">Entrar com Google</button>
+    <button id="btn-login-email" class="px-3 py-1.5 rounded bg-indigo-600 text-white text-xs md:text-sm">Entrar com e-mail</button>
+    <button id="btn-logout" class="px-3 py-1.5 rounded bg-slate-600 text-white text-xs md:text-sm hidden">Sair</button>
+  </div>
+</div>
 <!-- Navigation -->
    <nav class="bg-white border-b border-slate-200 px-2 py-2 flex-shrink-0 overflow-x-auto">
     <div class="flex gap-1 min-w-max"><button class="tab-btn active px-4 py-2 rounded-lg text-sm font-medium transition-all" data-tab="config">⚙️ Config</button> <button class="tab-btn px-4 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 transition-all" data-tab="escalacao">👥 Escalação</button> <button class="tab-btn px-4 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 transition-all" data-tab="jogo">🎮 Jogo</button> <button class="tab-btn px-4 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 transition-all" data-tab="historico">📋 Histórico</button> <button class="tab-btn px-4 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 transition-all" data-tab="relatorio">📊 Relatório</button> <button class="tab-btn px-4 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 transition-all" data-tab="analise">📈 Análise</button> <button class="tab-btn px-4 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 transition-all" data-tab="prancheta">🧠 Prancheta</button>
@@ -424,7 +440,7 @@
     <section id="tab-relatorio" class="tab-content hidden">
      <div class="max-w-5xl mx-auto space-y-4"><!-- Period Selector -->
       <div class="bg-white rounded-xl p-4 card-shadow">
-       <div class="flex gap-2 flex-wrap items-center"><select id="report-match-select" class="px-3 py-2 border rounded-lg text-sm"><option value="current">Partida atual</option></select> <button id="export-report-pdf" class="px-3 py-2 bg-red-600 text-white rounded-lg text-sm">Exportar PDF</button> <button id="export-report-excel" class="px-3 py-2 bg-green-600 text-white rounded-lg text-sm">Exportar Excel</button> <button class="report-period-btn active px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium" data-period="all">Geral</button> <button class="report-period-btn px-4 py-2 bg-slate-200 text-slate-700 rounded-lg text-sm font-medium" data-period="1T">1º Tempo</button> <button class="report-period-btn px-4 py-2 bg-slate-200 text-slate-700 rounded-lg text-sm font-medium" data-period="2T">2º Tempo</button> <button class="report-period-btn px-4 py-2 bg-slate-200 text-slate-700 rounded-lg text-sm font-medium" data-period="PR">Prorrogação</button> <button class="report-period-btn px-4 py-2 bg-slate-200 text-slate-700 rounded-lg text-sm font-medium" data-period="PN">Penalidades</button>
+       <div class="flex gap-2 flex-wrap items-center"><select id="report-match-select" class="px-3 py-2 border rounded-lg text-sm"><option value="current">Partida atual</option></select> <button id="export-report-pdf" class="px-3 py-2 bg-red-600 text-white rounded-lg text-sm">Exportar PDF</button> <button id="export-report-excel" class="px-3 py-2 bg-green-600 text-white rounded-lg text-sm">Exportar Excel</button> <button id="export-match-json" class="px-3 py-2 bg-slate-700 text-white rounded-lg text-sm">Exportar JSON</button> <button id="import-match-json" class="px-3 py-2 bg-slate-500 text-white rounded-lg text-sm">Importar JSON</button> <input id="import-match-json-input" type="file" accept="application/json" class="hidden"> <button class="report-period-btn active px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium" data-period="all">Geral</button> <button class="report-period-btn px-4 py-2 bg-slate-200 text-slate-700 rounded-lg text-sm font-medium" data-period="1T">1º Tempo</button> <button class="report-period-btn px-4 py-2 bg-slate-200 text-slate-700 rounded-lg text-sm font-medium" data-period="2T">2º Tempo</button> <button class="report-period-btn px-4 py-2 bg-slate-200 text-slate-700 rounded-lg text-sm font-medium" data-period="PR">Prorrogação</button> <button class="report-period-btn px-4 py-2 bg-slate-200 text-slate-700 rounded-lg text-sm font-medium" data-period="PN">Penalidades</button>
        </div>
       </div><!-- Attack Stats -->
       <div class="bg-white rounded-xl p-4 card-shadow">
@@ -788,12 +804,20 @@
       matchRules: {
         firstHalfPenaltyApplied: { my: false, opponent: false },
         pendingPenaltyShotTeam: null
+      },
+      sync: {
+        status: 'local',
+        deviceId: null
+      },
+      auth: {
+        user: null
       }
     };
     
     // Local storage for offline persistence
     const STORAGE_KEY = 'scout_goalball_pro_data';
     const ONGOING_MATCH_STORAGE_KEY = 'scout_goalball_pro_ongoing_match';
+    const DEVICE_ID_STORAGE_KEY = 'scout_goalball_device_id';
     
     // SDK Data
     let sdkEvents = [];
@@ -1005,6 +1029,228 @@
     }
     
     // =====================================================
+    // FIREBASE SYNC FUNCTIONS
+    // =====================================================
+
+    let firebaseApp = null;
+    let firebaseAuth = null;
+    let firestoreDb = null;
+    let unsubscribeAuth = null;
+    let unsubscribeMatchDoc = null;
+    let unsubscribeMatchEvents = null;
+    let syncDebounceTimer = null;
+    let suppressCloudSync = false;
+
+    function getDeviceId() {
+      const existing = localStorage.getItem(DEVICE_ID_STORAGE_KEY);
+      if (existing) return existing;
+      const created = `device-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+      localStorage.setItem(DEVICE_ID_STORAGE_KEY, created);
+      return created;
+    }
+
+    function updateSyncStatus(status, detail = '') {
+      AppState.sync.status = status;
+      const el = document.getElementById('sync-status');
+      if (!el) return;
+      const map = {
+        syncing: { text: 'Sincronizando', cls: 'bg-amber-600' },
+        offline: { text: 'Salvo offline', cls: 'bg-orange-700' },
+        synced: { text: 'Sincronizado', cls: 'bg-emerald-700' },
+        local: { text: 'Local', cls: 'bg-slate-700' },
+        error: { text: 'Erro de sync', cls: 'bg-red-700' }
+      };
+      const selected = map[status] || map.local;
+      el.className = `px-2 py-1 rounded ${selected.cls}`;
+      el.textContent = `Sync: ${selected.text}${detail ? ` (${detail})` : ''}`;
+    }
+
+    function updateAuthStatusLabel(user) {
+      const authLabel = document.getElementById('auth-status-label');
+      const logoutBtn = document.getElementById('btn-logout');
+      if (!authLabel || !logoutBtn) return;
+      if (user) {
+        authLabel.className = 'px-2 py-1 rounded bg-emerald-700';
+        authLabel.textContent = user.email || 'Autenticado';
+        logoutBtn.classList.remove('hidden');
+      } else {
+        authLabel.className = 'px-2 py-1 rounded bg-slate-700';
+        authLabel.textContent = 'Não autenticado';
+        logoutBtn.classList.add('hidden');
+      }
+    }
+
+    function createMatchPayload(statusOverride = null) {
+      const score = getScoreForMatch(AppState.matchId);
+      return {
+        ownerId: AppState.auth.user.uid,
+        competition: AppState.config.competition || '',
+        location: AppState.config.location || '',
+        date: AppState.config.date || '',
+        myTeam: AppState.config.myTeam || 'Minha Equipe',
+        opponentTeam: AppState.config.opponentTeam || 'Adversário',
+        score,
+        phase: AppState.lineup.phase,
+        status: statusOverride || (getCurrentMatchEvents().length > 0 ? 'live' : 'draft'),
+        config: AppState.config,
+        lineup: AppState.lineup,
+        targetPlans: AppState.targetPlans,
+        currentTargets: AppState.currentTargets,
+        matchRules: AppState.matchRules,
+        archivedMatches: AppState.archivedMatches,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      };
+    }
+
+    async function pushCurrentMatchToCloud(statusOverride = null) {
+      if (!firestoreDb || !AppState.auth.user?.uid) return;
+      updateSyncStatus(navigator.onLine ? 'syncing' : 'offline');
+      const matchRef = firestoreDb.collection('matches').doc(AppState.matchId);
+      await matchRef.set(createMatchPayload(statusOverride), { merge: true });
+      const currentEvents = getCurrentMatchEvents();
+      await Promise.all(currentEvents.map((event, idx) => {
+        const eventId = getEventId(event) || `event-${idx}-${Date.now()}`;
+        const payload = {
+          ...event,
+          ownerId: AppState.auth.user.uid,
+          deviceId: AppState.sync.deviceId,
+          eventType: event.type || 'event',
+          team: event.team || '',
+          athlete: event.athlete ?? null,
+          target: event.target || '',
+          ballType: event.ballType || '',
+          gameSituation: resolveGameSituation(event),
+          result: event.result || '',
+          penaltyType: event.penaltyType || '',
+          observation: event.observation || '',
+          defenseLocation: event.defenseLocation || '',
+          ballOutcome: event.ballOutcome || '',
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+          createdAt: event.createdAt || firebase.firestore.FieldValue.serverTimestamp()
+        };
+        return matchRef.collection('events').doc(eventId).set(payload, { merge: true });
+      }));
+      await firestoreDb.collection('users').doc(AppState.auth.user.uid).set({
+        email: AppState.auth.user.email || '',
+        lastActiveMatchId: AppState.matchId,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      }, { merge: true });
+      updateSyncStatus(navigator.onLine ? 'synced' : 'offline');
+    }
+
+    function enqueueCloudSync(reason = '') {
+      if (suppressCloudSync || !AppState.auth.user || !firestoreDb) return;
+      if (syncDebounceTimer) clearTimeout(syncDebounceTimer);
+      syncDebounceTimer = setTimeout(async () => {
+        try {
+          await pushCurrentMatchToCloud();
+        } catch (error) {
+          console.error('Cloud sync failed:', reason, error);
+          updateSyncStatus(navigator.onLine ? 'error' : 'offline');
+        }
+      }, 500);
+    }
+
+    function applyRemoteEvents(events) {
+      suppressCloudSync = true;
+      const preserved = sdkEvents.filter(e => e.matchId !== AppState.matchId);
+      sdkEvents = [...preserved, ...events.map(normalizeStoredEvent)];
+      AppState.events = [...sdkEvents];
+      saveToLocalStorage();
+      updateAllStats();
+      renderHistory();
+      renderRecentEvents();
+      suppressCloudSync = false;
+    }
+
+    function subscribeToCurrentMatch() {
+      if (!firestoreDb || !AppState.auth.user?.uid || !AppState.matchId) return;
+      unsubscribeMatchDoc?.();
+      unsubscribeMatchEvents?.();
+      const matchRef = firestoreDb.collection('matches').doc(AppState.matchId);
+      unsubscribeMatchDoc = matchRef.onSnapshot((snap) => {
+        if (!snap.exists) return;
+        const data = snap.data();
+        if (data.ownerId !== AppState.auth.user.uid) return;
+        if (snap.metadata.hasPendingWrites) {
+          updateSyncStatus(navigator.onLine ? 'syncing' : 'offline');
+          return;
+        }
+        updateSyncStatus(snap.metadata.fromCache ? 'offline' : 'synced');
+        suppressCloudSync = true;
+        AppState.config = data.config || AppState.config;
+        AppState.lineup = data.lineup || AppState.lineup;
+        AppState.targetPlans = data.targetPlans || AppState.targetPlans;
+        AppState.currentTargets = data.currentTargets || AppState.currentTargets;
+        AppState.matchRules = data.matchRules || AppState.matchRules;
+        AppState.archivedMatches = data.archivedMatches || AppState.archivedMatches;
+        loadConfigToForm();
+        updateLineupSelectors();
+        updateLineupDisplay();
+        renderTargetPlan();
+        saveToLocalStorage();
+        suppressCloudSync = false;
+      });
+
+      unsubscribeMatchEvents = matchRef.collection('events').onSnapshot((snap) => {
+        const remoteEvents = [];
+        snap.forEach(doc => remoteEvents.push(normalizeStoredEvent({ __backendId: doc.id, ...doc.data() })));
+        applyRemoteEvents(remoteEvents);
+      });
+    }
+
+    async function restoreLatestOngoingMatch() {
+      if (!firestoreDb || !AppState.auth.user?.uid) return;
+      const querySnapshot = await firestoreDb.collection('matches')
+        .where('ownerId', '==', AppState.auth.user.uid)
+        .where('status', 'in', ['live', 'draft'])
+        .orderBy('updatedAt', 'desc')
+        .limit(1)
+        .get();
+      if (querySnapshot.empty) return;
+      const doc = querySnapshot.docs[0];
+      if (!doc?.id) return;
+      AppState.matchId = doc.id;
+      subscribeToCurrentMatch();
+      showToast('🔄 Partida live/draft restaurada da nuvem');
+    }
+
+    async function initFirebaseSync() {
+      if (!window.firebase || !window.FIREBASE_CONFIG) {
+        updateSyncStatus('local');
+        return;
+      }
+      firebaseApp = firebase.apps.length ? firebase.app() : firebase.initializeApp(window.FIREBASE_CONFIG);
+      firebaseAuth = firebase.auth();
+      firestoreDb = firebase.firestore();
+      AppState.sync.deviceId = getDeviceId();
+
+      try {
+        await firestoreDb.enablePersistence({ synchronizeTabs: true });
+      } catch (error) {
+        console.warn('Firestore persistence unavailable:', error);
+      }
+
+      unsubscribeAuth = firebaseAuth.onAuthStateChanged(async (user) => {
+        AppState.auth.user = user || null;
+        updateAuthStatusLabel(user);
+        if (!user) {
+          unsubscribeMatchDoc?.();
+          unsubscribeMatchEvents?.();
+          updateSyncStatus('local');
+          return;
+        }
+        await restoreLatestOngoingMatch();
+        subscribeToCurrentMatch();
+        enqueueCloudSync('auth-state');
+      });
+
+      window.addEventListener('online', () => enqueueCloudSync('online'));
+      window.addEventListener('offline', () => updateSyncStatus('offline'));
+    }
+
+    // =====================================================
     // LOCAL STORAGE FUNCTIONS
     // =====================================================
     
@@ -1033,6 +1279,7 @@
           savedAt: new Date().toISOString()
         };
         localStorage.setItem(ONGOING_MATCH_STORAGE_KEY, JSON.stringify(ongoingMatchSnapshot));
+        if (!suppressCloudSync) enqueueCloudSync('local-save');
       } catch (e) {
         console.error('Failed to save to localStorage:', e);
       }
@@ -1693,6 +1940,8 @@
       updateAllStats();
       renderRecentEvents();
       showToast('🆕 Nova partida iniciada!');
+      subscribeToCurrentMatch();
+      enqueueCloudSync('new-match');
     }
 
 
@@ -1801,6 +2050,8 @@
       updateAllStats();
       renderRecentEvents();
       showToast('🏁 Partida encerrada e salva! Nova partida iniciada.');
+      enqueueCloudSync('end-match');
+      subscribeToCurrentMatch();
     }
     
     // =====================================================
@@ -3806,6 +4057,34 @@ function renderHeatmap(optionsOrFilter) {
 
       document.getElementById('export-report-pdf').addEventListener('click', downloadPdfReport);
       document.getElementById('export-report-excel').addEventListener('click', downloadExcelReport);
+      document.getElementById('export-match-json').addEventListener('click', exportCurrentMatchJson);
+      document.getElementById('import-match-json').addEventListener('click', () => document.getElementById('import-match-json-input').click());
+      document.getElementById('import-match-json-input').addEventListener('change', (e) => importMatchFromJson(e.target.files?.[0]));
+
+      document.getElementById('btn-login-google').addEventListener('click', async () => {
+        if (!firebaseAuth) return showToast('⚠️ Configure o Firebase para autenticar');
+        const provider = new firebase.auth.GoogleAuthProvider();
+        await firebaseAuth.signInWithPopup(provider);
+      });
+      document.getElementById('btn-login-email').addEventListener('click', async () => {
+        if (!firebaseAuth) return showToast('⚠️ Configure o Firebase para autenticar');
+        const email = prompt('E-mail:');
+        const password = prompt('Senha (mín. 6 caracteres):');
+        if (!email || !password) return;
+        try {
+          await firebaseAuth.signInWithEmailAndPassword(email, password);
+        } catch (error) {
+          if (error.code === 'auth/user-not-found') {
+            await firebaseAuth.createUserWithEmailAndPassword(email, password);
+          } else {
+            throw error;
+          }
+        }
+      });
+      document.getElementById('btn-logout').addEventListener('click', async () => {
+        if (!firebaseAuth) return;
+        await firebaseAuth.signOut();
+      });
 
       document.querySelectorAll('.report-period-btn').forEach(btn => {
         btn.addEventListener('click', () => {
@@ -4458,6 +4737,66 @@ populateHeatmapAthletes();
     }
 
 
+    function exportCurrentMatchJson() {
+      const payload = {
+        exportedAt: new Date().toISOString(),
+        matchId: AppState.matchId,
+        config: AppState.config,
+        lineup: AppState.lineup,
+        targetPlans: AppState.targetPlans,
+        currentTargets: AppState.currentTargets,
+        matchRules: AppState.matchRules,
+        archivedMatches: AppState.archivedMatches,
+        events: getCurrentMatchEvents()
+      };
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `scout-goalball-${AppState.matchId}.json`;
+      link.click();
+      URL.revokeObjectURL(url);
+      showToast('📦 Backup JSON exportado');
+    }
+
+    function importMatchFromJson(file) {
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const parsed = JSON.parse(String(reader.result || '{}'));
+          if (!parsed.matchId || !Array.isArray(parsed.events)) throw new Error('Arquivo inválido');
+          AppState.matchId = parsed.matchId;
+          AppState.config = parsed.config || AppState.config;
+          AppState.lineup = parsed.lineup || AppState.lineup;
+          AppState.targetPlans = parsed.targetPlans || AppState.targetPlans;
+          AppState.currentTargets = parsed.currentTargets || AppState.currentTargets;
+          AppState.matchRules = parsed.matchRules || AppState.matchRules;
+          AppState.archivedMatches = parsed.archivedMatches || AppState.archivedMatches;
+          const rest = sdkEvents.filter(e => e.matchId !== AppState.matchId);
+          sdkEvents = [...rest, ...parsed.events.map(normalizeStoredEvent)];
+          AppState.events = [...sdkEvents];
+          saveToLocalStorage();
+          loadConfigToForm();
+          updateLineupSelectors();
+          updateLineupDisplay();
+          renderTargetPlan();
+          renderHistoryMatchSelector();
+          renderReportMatchSelector();
+          renderHistory();
+          renderRecentEvents();
+          updateAllStats();
+          subscribeToCurrentMatch();
+          enqueueCloudSync('json-import');
+          showToast('✅ Backup JSON importado');
+        } catch (error) {
+          console.error(error);
+          showToast('⚠️ Falha ao importar JSON');
+        }
+      };
+      reader.readAsText(file);
+    }
+
     // =====================================================
     // INITIALIZATION
     // =====================================================
@@ -4480,6 +4819,7 @@ populateHeatmapAthletes();
       initializeEventListeners();
       initTacticalBoard();
       await initDataSdk();
+      await initFirebaseSync();
 
       if (getCurrentMatchEvents().length > 0) {
         showToast('🔄 Partida em andamento restaurada');
