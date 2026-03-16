@@ -823,6 +823,7 @@
     
     // Storage key used only for per-device identification
     const DEVICE_ID_STORAGE_KEY = 'scout_goalball_device_id';
+    const LOCAL_CACHE_KEY_PREFIX = 'scout_goalball_cache_v2';
     
     // SDK Data
     let sdkEvents = [];
@@ -958,6 +959,15 @@
       return cloned;
     }
 
+    function toEpochMs(value) {
+      if (!value) return 0;
+      if (typeof value === 'number') return value;
+      if (typeof value?.toMillis === 'function') return value.toMillis();
+      if (typeof value?.seconds === 'number') return (value.seconds * 1000) + Math.floor((value.nanoseconds || 0) / 1000000);
+      const parsed = new Date(value).getTime();
+      return Number.isFinite(parsed) ? parsed : 0;
+    }
+
     
     // Default config for Element SDK
     const defaultConfig = {
@@ -1040,6 +1050,7 @@
     let unsubscribeAuth = null;
     let unsubscribeMatchDoc = null;
     let unsubscribeMatchEvents = null;
+    let unsubscribeUserMatches = null;
     let syncDebounceTimer = null;
     let suppressCloudSync = false;
 
@@ -1091,7 +1102,9 @@
         opponentGoals: events.filter((event) => event.type === 'event' && event.team === 'opponent' && event.result === 'gol').length
       };
       return {
+        ownerUid: AppState.auth.user.uid,
         ownerId: AppState.auth.user.uid,
+        ownerEmail: AppState.auth.user.email || '',
         status: statusOverride || (events.length > 0 ? 'live' : 'draft'),
         info: {
           competition: AppState.config.competition || '',
@@ -1133,7 +1146,9 @@
         const eventId = getEventId(event) || `event-${idx}-${Date.now()}`;
         const payload = {
           ...event,
+          ownerUid: AppState.auth.user.uid,
           ownerId: AppState.auth.user.uid,
+          ownerEmail: AppState.auth.user.email || '',
           deviceId: AppState.sync.deviceId,
           eventType: event.type || 'event',
           team: event.team || '',
@@ -1154,6 +1169,7 @@
       }));
       await setDoc(doc(collection(firestoreDb, 'users'), AppState.auth.user.uid), {
         email: AppState.auth.user.email || '',
+        ownerEmail: AppState.auth.user.email || '',
         lastActiveMatchId: AppState.matchId,
         updatedAt: serverTimestamp()
       }, { merge: true });
@@ -1185,6 +1201,81 @@
       suppressCloudSync = false;
     }
 
+    function getLocalCacheKey(uid = AppState.auth.user?.uid) {
+      return uid ? `${LOCAL_CACHE_KEY_PREFIX}_${uid}` : `${LOCAL_CACHE_KEY_PREFIX}_guest`;
+    }
+
+    function serializeStateForCache() {
+      return {
+        version: 2,
+        savedAt: Date.now(),
+        matchId: AppState.matchId,
+        config: AppState.config,
+        lineup: AppState.lineup,
+        targetPlans: AppState.targetPlans,
+        currentTargets: AppState.currentTargets,
+        matchRules: AppState.matchRules,
+        archivedMatches: AppState.archivedMatches,
+        events: AppState.events
+      };
+    }
+
+    function persistStateToCache() {
+      try {
+        localStorage.setItem(getLocalCacheKey(), JSON.stringify(serializeStateForCache()));
+      } catch (error) {
+        console.warn('[SYNC] Falha ao salvar cache local', error);
+      }
+    }
+
+    function readStateFromCache(uid = AppState.auth.user?.uid) {
+      try {
+        const raw = localStorage.getItem(getLocalCacheKey(uid));
+        return raw ? JSON.parse(raw) : null;
+      } catch (error) {
+        console.warn('[SYNC] Falha ao ler cache local', error);
+        return null;
+      }
+    }
+
+    function applyStateFromSource(payload, source = 'local') {
+      if (!payload || typeof payload !== 'object') return;
+      suppressCloudSync = true;
+      AppState.matchId = payload.matchId || AppState.matchId || Date.now().toString();
+      AppState.config = payload.config || AppState.config;
+      AppState.lineup = payload.lineup || AppState.lineup;
+      AppState.targetPlans = payload.targetPlans || AppState.targetPlans;
+      AppState.currentTargets = payload.currentTargets || AppState.currentTargets;
+      AppState.matchRules = payload.matchRules || AppState.matchRules;
+      AppState.archivedMatches = payload.archivedMatches || AppState.archivedMatches;
+      sdkEvents = Array.isArray(payload.events) ? payload.events.map(normalizeStoredEvent) : sdkEvents;
+      AppState.events = [...sdkEvents];
+      suppressCloudSync = false;
+      console.info(`[SYNC] Estado aplicado da fonte: ${source}`, { matchId: AppState.matchId, events: AppState.events.length });
+    }
+
+    function updateUiAfterStateSync() {
+      loadConfigToForm();
+      updateLineupSelectors();
+      updateLineupDisplay();
+      renderTargetPlan();
+      renderHistoryMatchSelector();
+      renderReportMatchSelector();
+      updateAllStats();
+      renderHistory();
+      renderRecentEvents();
+    }
+
+    function resolveConflictByUpdatedAt(remoteMatch, localCache) {
+      if (!remoteMatch) return localCache;
+      if (!localCache) return remoteMatch;
+      const remoteUpdatedAt = toEpochMs(remoteMatch.updatedAt || remoteMatch.info?.updatedAt || remoteMatch.savedAt);
+      const localUpdatedAt = toEpochMs(localCache.updatedAt || localCache.savedAt);
+      const winner = remoteUpdatedAt >= localUpdatedAt ? 'remote' : 'local';
+      console.info('[SYNC] Conflito local/remoto resolvido por updatedAt', { winner, remoteUpdatedAt, localUpdatedAt });
+      return winner === 'remote' ? remoteMatch : localCache;
+    }
+
     function subscribeToCurrentMatch() {
       if (!firestoreDb || !AppState.auth.user?.uid || !AppState.matchId) return;
       unsubscribeMatchDoc?.();
@@ -1193,7 +1284,7 @@
       unsubscribeMatchDoc = onSnapshot(matchRef, (snap) => {
         if (!snap.exists()) return;
         const data = snap.data();
-        if (data.ownerId !== AppState.auth.user.uid) return;
+        if ((data.ownerUid || data.ownerId) !== AppState.auth.user.uid) return;
         if (snap.metadata.hasPendingWrites) {
           updateSyncStatus(navigator.onLine ? 'syncing' : 'offline');
           return;
@@ -1206,91 +1297,40 @@
         AppState.currentTargets = data.currentTargets || AppState.currentTargets;
         AppState.matchRules = data.matchRules || AppState.matchRules;
         AppState.archivedMatches = data.archivedMatches || AppState.archivedMatches;
-        loadConfigToForm();
-        updateLineupSelectors();
-        updateLineupDisplay();
-        renderTargetPlan();
-        saveToLocalStorage();
+        persistStateToCache();
         suppressCloudSync = false;
+        updateUiAfterStateSync();
       });
 
       unsubscribeMatchEvents = onSnapshot(collection(matchRef, 'events'), (snap) => {
         const remoteEvents = [];
-        snap.forEach(doc => remoteEvents.push(normalizeStoredEvent({ __backendId: doc.id, ...doc.data(), matchId: AppState.matchId })));
+        snap.forEach((eventDoc) => remoteEvents.push(normalizeStoredEvent({ __backendId: eventDoc.id, ...eventDoc.data(), matchId: AppState.matchId })));
+        console.info('[SYNC] Snapshot de eventos atualizado', { matchId: AppState.matchId, total: remoteEvents.length });
         applyRemoteEvents(remoteEvents);
       });
     }
 
-    async function restoreLatestOngoingMatch() {
-      if (!firestoreDb || !AppState.auth.user?.uid) return;
-      const querySnapshot = await getDocs(query(
+    async function loadMatchesFromFirestore(user) {
+      if (!user?.uid || !firestoreDb) return { loaded: false, remoteState: null };
+      console.info('[SYNC] Usuário autenticado detectado, carregando Firestore', { uid: user.uid, email: user.email || '' });
+      let matchesSnap = await getDocs(query(
         collection(firestoreDb, 'matches'),
-        where('ownerId', '==', AppState.auth.user.uid),
-        where('status', 'in', ['live', 'draft']),
-        orderBy('updatedAt', 'desc'),
-        limit(1)
-      ));
-      if (querySnapshot.empty) return;
-      const doc = querySnapshot.docs[0];
-      if (!doc?.id) return;
-      AppState.matchId = doc.id;
-      subscribeToCurrentMatch();
-      showToast('🔄 Partida live/draft restaurada da nuvem');
-    }
-
-    async function initFirebaseSync() {
-      AppState.sync.deviceId = getDeviceId();
-      await enableFirestorePersistence();
-
-      unsubscribeAuth = observeAuthState(async (user) => {
-        AppState.auth.user = user || null;
-        updateAuthStatusLabel(user);
-        if (!user) {
-          unsubscribeMatchDoc?.();
-          unsubscribeMatchEvents?.();
-          updateSyncStatus('local');
-          return;
-        }
-        updateSyncStatus('syncing');
-        await loadAllMatchesFromCloud();
-        loadConfigToForm();
-        updateLineupSelectors();
-        updateLineupDisplay();
-        renderTargetPlan();
-        renderHistoryMatchSelector();
-        renderReportMatchSelector();
-        updateAllStats();
-        renderHistory();
-        renderRecentEvents();
-        subscribeToCurrentMatch();
-        enqueueCloudSync('auth-state');
-      });
-
-      window.addEventListener('online', () => enqueueCloudSync('online'));
-      window.addEventListener('offline', () => updateSyncStatus('offline'));
-    }
-
-    // =====================================================
-    // CLOUD PERSISTENCE (FIRESTORE)
-    // =====================================================
-    
-    function saveToLocalStorage() {
-      if (!suppressCloudSync) enqueueCloudSync('state-change');
-    }
-    
-    function loadFromLocalStorage() {
-      AppState.matchId = Date.now().toString();
-      AppState.events = [];
-      sdkEvents = [];
-    }
-
-    async function loadAllMatchesFromCloud() {
-      if (!AppState.auth.user?.uid) return;
-      const matchesSnap = await getDocs(query(
-        collection(firestoreDb, 'matches'),
-        where('ownerId', '==', AppState.auth.user.uid),
+        where('ownerUid', '==', user.uid),
         orderBy('updatedAt', 'desc')
       ));
+
+      if (matchesSnap.empty) {
+        matchesSnap = await getDocs(query(
+          collection(firestoreDb, 'matches'),
+          where('ownerId', '==', user.uid),
+          orderBy('updatedAt', 'desc')
+        ));
+      }
+
+      if (matchesSnap.empty) {
+        console.info('[SYNC] Nenhuma partida remota encontrada para o usuário');
+        return { loaded: false, remoteState: null };
+      }
 
       const matchDocs = matchesSnap.docs;
       const allEvents = [];
@@ -1304,7 +1344,9 @@
             date: matchData.date || '',
             myTeam: matchData.myTeam || 'Minha Equipe',
             opponentTeam: matchData.opponentTeam || 'Adversário',
-            score: matchData.score || { my: 0, opponent: 0 }
+            score: matchData.score || { my: 0, opponent: 0 },
+            endedAt: toEpochMs(matchData.updatedAt) || Date.now(),
+            updatedAt: toEpochMs(matchData.updatedAt)
           });
         }
         const eventsSnap = await getDocs(collection(firestoreDb, 'matches', matchDoc.id, 'events'));
@@ -1313,24 +1355,157 @@
         });
       }
 
-      AppState.archivedMatches = archived;
-      sdkEvents = allEvents;
-      AppState.events = [...sdkEvents];
-
       const activeMatch = matchDocs.find((d) => {
         const status = d.data()?.status;
         return status === 'live' || status === 'draft';
       }) || matchDocs[0];
 
-      if (activeMatch) {
-        AppState.matchId = activeMatch.id;
-        const data = activeMatch.data() || {};
-        AppState.config = data.config || AppState.config;
-        AppState.lineup = data.lineup || AppState.lineup;
-        AppState.targetPlans = data.targetPlans || AppState.targetPlans;
-        AppState.currentTargets = data.currentTargets || AppState.currentTargets;
-        AppState.matchRules = data.matchRules || AppState.matchRules;
+      const activeData = activeMatch?.data() || {};
+      const remoteState = {
+        updatedAt: toEpochMs(activeData.updatedAt),
+        matchId: activeMatch?.id,
+        config: activeData.config || AppState.config,
+        lineup: activeData.lineup || AppState.lineup,
+        targetPlans: activeData.targetPlans || AppState.targetPlans,
+        currentTargets: activeData.currentTargets || AppState.currentTargets,
+        matchRules: activeData.matchRules || AppState.matchRules,
+        archivedMatches: archived,
+        events: allEvents
+      };
+
+      applyStateFromSource(remoteState, 'firestore');
+      persistStateToCache();
+      console.info('[SYNC] Partidas carregadas do Firestore', { matches: matchDocs.length, events: allEvents.length, activeMatchId: AppState.matchId });
+      return { loaded: true, remoteState };
+    }
+
+    function subscribeToUserMatches(user) {
+      if (!firestoreDb || !user?.uid) return;
+      unsubscribeUserMatches?.();
+
+      const knownMatches = new Map();
+      const applyMatches = (sourceLabel, snap) => {
+        snap.docs.forEach((matchDoc) => knownMatches.set(matchDoc.id, { id: matchDoc.id, ...matchDoc.data() }));
+        const remoteMatches = Array.from(knownMatches.values()).sort((a, b) => toEpochMs(b.updatedAt) - toEpochMs(a.updatedAt));
+        console.info('[SYNC] Snapshot de partidas do usuário atualizado', { source: sourceLabel, total: remoteMatches.length, fromCache: snap.metadata.fromCache });
+        if (!remoteMatches.length) return;
+
+        const liveMatch = remoteMatches.find((m) => m.status === 'live' || m.status === 'draft') || remoteMatches[0];
+        if (liveMatch?.id && liveMatch.id !== AppState.matchId) {
+          AppState.matchId = liveMatch.id;
+          subscribeToCurrentMatch();
+        }
+
+        const archived = remoteMatches
+          .filter((match) => match.status === 'ended')
+          .map((match) => ({
+            id: match.id,
+            date: match.date || '',
+            myTeam: match.myTeam || 'Minha Equipe',
+            opponentTeam: match.opponentTeam || 'Adversário',
+            score: match.score || { my: 0, opponent: 0 },
+            endedAt: toEpochMs(match.updatedAt) || Date.now(),
+            updatedAt: toEpochMs(match.updatedAt)
+          }));
+
+        AppState.archivedMatches = archived;
+        persistStateToCache();
+        renderHistoryMatchSelector();
+        renderReportMatchSelector();
+        renderHistory();
+      };
+
+      const qOwnerUid = query(collection(firestoreDb, 'matches'), where('ownerUid', '==', user.uid), orderBy('updatedAt', 'desc'));
+      const qOwnerId = query(collection(firestoreDb, 'matches'), where('ownerId', '==', user.uid), orderBy('updatedAt', 'desc'));
+
+      const unsubA = onSnapshot(qOwnerUid, (snap) => applyMatches('ownerUid', snap), (error) => {
+        console.error('[SYNC] Listener de partidas (ownerUid) falhou', error);
+      });
+      const unsubB = onSnapshot(qOwnerId, (snap) => applyMatches('ownerId', snap), (error) => {
+        console.error('[SYNC] Listener de partidas (ownerId) falhou', error);
+      });
+
+      unsubscribeUserMatches = () => {
+        unsubA?.();
+        unsubB?.();
+      };
+    }
+
+    async function initFirebaseSync() {
+      AppState.sync.deviceId = getDeviceId();
+      await enableFirestorePersistence();
+
+      unsubscribeAuth = observeAuthState(async (user) => {
+        AppState.auth.user = user || null;
+        updateAuthStatusLabel(user);
+        if (!user) {
+          unsubscribeUserMatches?.();
+          unsubscribeMatchDoc?.();
+          unsubscribeMatchEvents?.();
+          updateSyncStatus('local');
+          const localCache = readStateFromCache();
+          if (localCache) {
+            console.info('[SYNC] Usuário deslogado, usando fallback local');
+            applyStateFromSource(localCache, 'local-fallback');
+            updateUiAfterStateSync();
+          }
+          return;
+        }
+
+        updateSyncStatus('syncing');
+        try {
+          const localCache = readStateFromCache(user.uid);
+          const { loaded, remoteState } = await loadMatchesFromFirestore(user);
+          if (!loaded && localCache) {
+            console.info('[SYNC] Firestore sem dados remotos, aplicando cache local');
+            applyStateFromSource(localCache, 'local-fallback-no-remote');
+          } else if (loaded && localCache) {
+            applyStateFromSource(resolveConflictByUpdatedAt(remoteState, localCache), 'conflict-resolution');
+          }
+
+          updateUiAfterStateSync();
+          subscribeToUserMatches(user);
+          subscribeToCurrentMatch();
+          enqueueCloudSync('auth-state');
+        } catch (error) {
+          console.error('[SYNC] Falha ao inicializar Firebase, usando fallback local', error);
+          const localCache = readStateFromCache(user.uid);
+          if (localCache) {
+            console.info('[SYNC] Fallback local usado após falha Firestore');
+            applyStateFromSource(localCache, 'local-fallback-firestore-error');
+            updateUiAfterStateSync();
+          }
+          updateSyncStatus(navigator.onLine ? 'error' : 'offline');
+        }
+      });
+
+      window.addEventListener('online', () => enqueueCloudSync('online'));
+      window.addEventListener('offline', () => updateSyncStatus('offline'));
+      window.addEventListener('focus', () => {
+        if (AppState.auth.user?.uid) enqueueCloudSync('tab-focus');
+      });
+    }
+
+    // =====================================================
+    // CLOUD PERSISTENCE (FIRESTORE)
+    // =====================================================
+    
+    function saveToLocalStorage() {
+      persistStateToCache();
+      if (!suppressCloudSync) enqueueCloudSync('state-change');
+    }
+    
+    function loadFromLocalStorage() {
+      const cache = readStateFromCache();
+      if (cache) {
+        console.info('[SYNC] Cache local carregado na inicialização (pré-auth)');
+        applyStateFromSource(cache, 'boot-local-cache');
+        if (!AppState.matchId) AppState.matchId = Date.now().toString();
+        return;
       }
+      AppState.matchId = Date.now().toString();
+      AppState.events = [];
+      sdkEvents = [];
     }
 
     function getEventId(event) {
@@ -1344,7 +1519,9 @@
       await setDoc(matchRef, createMatchPayload(), { merge: true });
       await setDoc(doc(collection(matchRef, 'events'), eventId), {
         ...event,
+        ownerUid: AppState.auth.user.uid,
         ownerId: AppState.auth.user.uid,
+        ownerEmail: AppState.auth.user.email || '',
         deviceId: AppState.sync.deviceId,
         matchId: AppState.matchId,
         team: event.team || '',
