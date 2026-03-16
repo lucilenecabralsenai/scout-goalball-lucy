@@ -802,6 +802,7 @@
     
     // Local storage for offline persistence
     const STORAGE_KEY = 'scout_goalball_pro_data';
+    const ONGOING_MATCH_STORAGE_KEY = 'scout_goalball_pro_ongoing_match';
     
     // SDK Data
     let sdkEvents = [];
@@ -953,7 +954,24 @@
     // Data Handler for Data SDK
     const dataHandler = {
       onDataChanged(data) {
-        sdkEvents = data.filter(d => d.type === 'event' || d.type === 'substitution' || d.type === 'target_change' || d.type === 'timeout').map(normalizeStoredEvent);
+        const incomingEvents = data
+          .filter(d => d.type === 'event' || d.type === 'substitution' || d.type === 'target_change' || d.type === 'timeout')
+          .map(normalizeStoredEvent);
+
+        const hasPersistedEvents = Array.isArray(AppState.events) && AppState.events.length > 0;
+        const hasIncomingEvents = incomingEvents.length > 0;
+
+        // Protege a partida em andamento já persistida para evitar zerar tudo
+        // quando o SDK retorna coleção vazia ao abrir uma nova sessão.
+        if (!hasIncomingEvents && hasPersistedEvents) {
+          sdkEvents = [...AppState.events];
+          updateAllStats();
+          renderHistory();
+          renderRecentEvents();
+          return;
+        }
+
+        sdkEvents = incomingEvents;
         AppState.events = sdkEvents;
         saveToLocalStorage();
         updateAllStats();
@@ -998,6 +1016,18 @@
           matchRules: AppState.matchRules
         };
         localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+
+        const ongoingMatchSnapshot = {
+          matchId: AppState.matchId,
+          events: sdkEvents.filter(e => e.matchId === AppState.matchId),
+          lineup: AppState.lineup,
+          currentTargets: AppState.currentTargets,
+          targetPlans: AppState.targetPlans,
+          config: AppState.config,
+          matchRules: AppState.matchRules,
+          savedAt: new Date().toISOString()
+        };
+        localStorage.setItem(ONGOING_MATCH_STORAGE_KEY, JSON.stringify(ongoingMatchSnapshot));
       } catch (e) {
         console.error('Failed to save to localStorage:', e);
       }
@@ -1006,6 +1036,7 @@
     function loadFromLocalStorage() {
       try {
         const data = localStorage.getItem(STORAGE_KEY);
+        const ongoingMatchData = localStorage.getItem(ONGOING_MATCH_STORAGE_KEY);
         if (data) {
           const parsed = JSON.parse(data);
           AppState.config = parsed.config || AppState.config;
@@ -1036,6 +1067,16 @@
           };
           sdkEvents = [...AppState.events];
           AppState.matchId = parsed.matchId || Date.now().toString();
+
+          const parsedOngoing = ongoingMatchData ? JSON.parse(ongoingMatchData) : null;
+          const currentMatchHasEvents = sdkEvents.some(e => e.matchId === AppState.matchId);
+          const ongoingHasEvents = Array.isArray(parsedOngoing?.events) && parsedOngoing.events.length > 0;
+
+          if (!currentMatchHasEvents && ongoingHasEvents && parsedOngoing.matchId) {
+            AppState.matchId = parsedOngoing.matchId;
+            sdkEvents = [...sdkEvents, ...parsedOngoing.events.map(normalizeStoredEvent)];
+            AppState.events = [...sdkEvents];
+          }
         } else {
           AppState.matchId = Date.now().toString();
         }
@@ -4534,6 +4575,10 @@ populateHeatmapAthletes();
       initializeEventListeners();
       initTacticalBoard();
       await initDataSdk();
+
+      if (getCurrentMatchEvents().length > 0) {
+        showToast('🔄 Partida em andamento restaurada');
+      }
     }
     
     init();
