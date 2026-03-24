@@ -816,7 +816,7 @@
 
     import { db as firestoreDb, enableFirestorePersistence } from "./firebase.js";
     import { loginWithEmail, loginWithGoogle, logout, observeAuthState } from "./auth.js";
-    import { collection, doc, getDocs, limit, onSnapshot, orderBy, query, serverTimestamp, setDoc, where } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
+    import { collection, doc, getDocs, limit, onSnapshot, query, serverTimestamp, setDoc, where } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
 
     
     // Application State
@@ -1547,6 +1547,10 @@
       return winner === 'remote' ? remoteMatch : localCache;
     }
 
+    function sortDocsByUpdatedAtDesc(docs = []) {
+      return [...docs].sort((a, b) => toEpochMs(b.data()?.updatedAt) - toEpochMs(a.data()?.updatedAt));
+    }
+
     function subscribeToCurrentMatch() {
       if (!firestoreDb || !AppState.auth.user?.uid || !AppState.matchId) return;
       unsubscribeMatchDoc?.();
@@ -1589,15 +1593,13 @@
       console.info('[SYNC] Usuário autenticado detectado, carregando Firestore', { uid: user.uid, email: user.email || '' });
       let matchesSnap = await getDocs(query(
         collection(firestoreDb, 'matches'),
-        where('ownerUid', '==', user.uid),
-        orderBy('updatedAt', 'desc')
+        where('ownerUid', '==', user.uid)
       ));
 
       if (matchesSnap.empty) {
         matchesSnap = await getDocs(query(
           collection(firestoreDb, 'matches'),
-          where('ownerId', '==', user.uid),
-          orderBy('updatedAt', 'desc')
+          where('ownerId', '==', user.uid)
         ));
       }
 
@@ -1606,7 +1608,7 @@
         return { loaded: false, remoteState: null };
       }
 
-      const matchDocs = matchesSnap.docs;
+      const matchDocs = sortDocsByUpdatedAtDesc(matchesSnap.docs);
       const allEvents = [];
       const archived = [];
 
@@ -1690,8 +1692,8 @@
         renderHistory();
       };
 
-      const qOwnerUid = query(collection(firestoreDb, 'matches'), where('ownerUid', '==', user.uid), orderBy('updatedAt', 'desc'));
-      const qOwnerId = query(collection(firestoreDb, 'matches'), where('ownerId', '==', user.uid), orderBy('updatedAt', 'desc'));
+      const qOwnerUid = query(collection(firestoreDb, 'matches'), where('ownerUid', '==', user.uid));
+      const qOwnerId = query(collection(firestoreDb, 'matches'), where('ownerId', '==', user.uid));
 
       const unsubA = onSnapshot(qOwnerUid, (snap) => applyMatches('ownerUid', snap), (error) => {
         console.error('[SYNC] Listener de partidas (ownerUid) falhou', error);
