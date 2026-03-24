@@ -1553,9 +1553,9 @@
       }, 500);
     }
 
-    function applyRemoteEvents(events) {
+    function applyRemoteEvents(matchId, events) {
       suppressCloudSync = true;
-      const preserved = sdkEvents.filter(e => e.matchId !== AppState.matchId);
+      const preserved = sdkEvents.filter(e => e.matchId !== matchId);
       sdkEvents = [...preserved, ...events.map(normalizeStoredEvent)];
       AppState.events = [...sdkEvents];
       saveToLocalStorage();
@@ -1663,8 +1663,10 @@
       if (!firestoreDb || !AppState.auth.user?.uid || !AppState.matchId) return;
       unsubscribeMatchDoc?.();
       unsubscribeMatchEvents?.();
-      const matchRef = doc(collection(firestoreDb, 'matches'), AppState.matchId);
+      const subscribedMatchId = AppState.matchId;
+      const matchRef = doc(collection(firestoreDb, 'matches'), subscribedMatchId);
       unsubscribeMatchDoc = onSnapshot(matchRef, (snap) => {
+        if (AppState.matchId !== subscribedMatchId) return;
         if (!snap.exists()) return;
         const data = snap.data();
         if ((data.ownerUid || data.ownerId) !== AppState.auth.user.uid) return;
@@ -1690,10 +1692,11 @@
       });
 
       unsubscribeMatchEvents = onSnapshot(collection(matchRef, 'events'), (snap) => {
+        if (AppState.matchId !== subscribedMatchId) return;
         const remoteEvents = [];
-        snap.forEach((eventDoc) => remoteEvents.push(normalizeStoredEvent({ __backendId: eventDoc.id, ...eventDoc.data(), matchId: AppState.matchId })));
-        console.info('[SYNC] Snapshot de eventos atualizado', { matchId: AppState.matchId, total: remoteEvents.length });
-        applyRemoteEvents(remoteEvents);
+        snap.forEach((eventDoc) => remoteEvents.push(normalizeStoredEvent({ __backendId: eventDoc.id, ...eventDoc.data(), matchId: subscribedMatchId })));
+        console.info('[SYNC] Snapshot de eventos atualizado', { matchId: subscribedMatchId, total: remoteEvents.length });
+        applyRemoteEvents(subscribedMatchId, remoteEvents);
       });
     }
 
@@ -1780,8 +1783,9 @@
         console.info('[SYNC] Snapshot de partidas do usuário atualizado', { source: sourceLabel, total: remoteMatches.length, fromCache: snap.metadata.fromCache });
         if (!remoteMatches.length) return;
 
+        const hasCurrentMatchRemotely = remoteMatches.some((match) => match.id === AppState.matchId);
         const liveMatch = remoteMatches.find((m) => m.status === 'live' || m.status === 'draft') || remoteMatches[0];
-        if (liveMatch?.id && liveMatch.id !== AppState.matchId) {
+        if (!hasCurrentMatchRemotely && liveMatch?.id && liveMatch.id !== AppState.matchId) {
           AppState.matchId = liveMatch.id;
           subscribeToCurrentMatch();
         }
@@ -2553,6 +2557,10 @@
       resetRequestControl();
       AppState.targetPlans = {};
       AppState.currentTargets = {};
+      const historySelect = document.getElementById('history-match-select');
+      if (historySelect) historySelect.value = 'current';
+      const historyFilter = document.getElementById('history-filter');
+      if (historyFilter) historyFilter.value = 'all';
       resetAttackState();
       closeAttackModal();
       closeTargetChangeModal();
@@ -2569,6 +2577,10 @@
 
     async function startNewMatch() {
       const previousMatchId = AppState.matchId;
+      unsubscribeMatchDoc?.();
+      unsubscribeMatchDoc = null;
+      unsubscribeMatchEvents?.();
+      unsubscribeMatchEvents = null;
       const currentMatchEvents = getCurrentMatchEvents();
       if (currentMatchEvents.length > 0) {
         AppState.archivedMatches = [
@@ -2799,6 +2811,10 @@
 
     async function openSavedMatch(matchId) {
       if (!matchId) return;
+      unsubscribeMatchDoc?.();
+      unsubscribeMatchDoc = null;
+      unsubscribeMatchEvents?.();
+      unsubscribeMatchEvents = null;
       const local = getSavedMatchesForManager().find((item) => item.id === matchId);
       const remote = await readMatchMetadataFromCloud(matchId);
       const selected = remote || local;
@@ -2943,6 +2959,10 @@
       const currentEvents = getCurrentMatchEvents();
       const score = getScoreForMatch(AppState.matchId);
       const previousMatchId = AppState.matchId;
+      unsubscribeMatchDoc?.();
+      unsubscribeMatchDoc = null;
+      unsubscribeMatchEvents?.();
+      unsubscribeMatchEvents = null;
       const matchSummary = {
         id: AppState.matchId,
         competition: AppState.config.competition || '',
