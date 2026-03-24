@@ -1497,13 +1497,19 @@
       console.info(`[SYNC] Estado aplicado da fonte: ${source}`, { matchId: AppState.matchId, events: AppState.events.length });
     }
 
-    function updateUiAfterStateSync() {
+    function refreshConfigAndLineupUi() {
       loadConfigToForm();
+      renderSavedTeamSelectors();
+      renderTeamManagement();
       updateLineupSelectors();
       updateLineupDisplay();
       renderSavedTeamSelectors();
       renderTeamManagement();
       renderTargetPlan();
+    }
+
+    function updateUiAfterStateSync() {
+      refreshConfigAndLineupUi();
       renderHistoryMatchSelector();
       renderReportMatchSelector();
       updateAllStats();
@@ -1536,12 +1542,15 @@
         }
         updateSyncStatus(snap.metadata.fromCache ? 'offline' : 'synced');
         suppressCloudSync = true;
-        AppState.config = data.config || AppState.config;
+        AppState.config = { ...AppState.config, ...(data.config || {}) };
+        AppState.teamRegistry = normalizeTeamRegistry(data.teamRegistry || AppState.teamRegistry);
+        migrateLegacyTeams();
         AppState.lineup = data.lineup || AppState.lineup;
         AppState.targetPlans = data.targetPlans || AppState.targetPlans;
         AppState.currentTargets = data.currentTargets || AppState.currentTargets;
         AppState.matchRules = data.matchRules || AppState.matchRules;
         AppState.archivedMatches = data.archivedMatches || AppState.archivedMatches;
+        validateLineupIndices();
         persistStateToCache();
         suppressCloudSync = false;
         updateUiAfterStateSync();
@@ -1610,6 +1619,7 @@
         updatedAt: toEpochMs(activeData.updatedAt),
         matchId: activeMatch?.id,
         config: activeData.config || AppState.config,
+        teamRegistry: activeData.teamRegistry || AppState.teamRegistry,
         lineup: activeData.lineup || AppState.lineup,
         targetPlans: activeData.targetPlans || AppState.targetPlans,
         currentTargets: activeData.currentTargets || AppState.currentTargets,
@@ -2847,12 +2857,12 @@
         return;
       }
       
-      saveToLocalStorage();
       validateLineupIndices();
       ensureOpponentLineupDefaults();
       updateLineupSelectors();
       updateLineupDisplay();
       renderTargetPlan();
+      saveToLocalStorage();
       showToast('✅ Configuração salva com sucesso!');
     }
 
