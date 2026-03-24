@@ -471,20 +471,46 @@
      </div>
     </section><!-- Histórico Tab -->
     <section id="tab-historico" class="tab-content hidden">
-     <div class="max-w-4xl mx-auto">
+     <div class="max-w-4xl mx-auto space-y-4">
+      <div class="bg-white rounded-xl p-4 card-shadow">
+       <div class="flex items-center justify-between gap-3 mb-4">
+        <div>
+         <h2 class="text-lg font-semibold text-slate-800">🗂️ Partidas salvas</h2>
+         <p class="text-sm text-slate-500">Abra, edite metadados e exclua partidas de teste sem afetar os lances.</p>
+        </div>
+       </div>
+       <div id="saved-matches-list" class="space-y-3">
+        <p class="text-slate-500 text-sm text-center py-6">Nenhuma partida salva.</p>
+       </div>
+      </div>
       <div class="bg-white rounded-xl p-4 card-shadow">
        <div class="flex items-center justify-between mb-4">
         <h2 class="text-lg font-semibold text-slate-800">📋 Histórico de Lances</h2>
-        <div class="flex gap-2 flex-wrap"><select id="history-match-select" class="px-3 py-1 border rounded-lg text-sm"> <option value="current">Partida atual</option> </select> <select id="history-filter" class="px-3 py-1 border rounded-lg text-sm"> <option value="all">Todos</option> <option value="1T">1º Tempo</option> <option value="2T">2º Tempo</option> <option value="PR">Prorrogação</option> </select>
-         <div class="flex gap-2 flex-wrap"><select id="history-match-select" class="px-3 py-1 border rounded-lg text-sm"> <option value="current">Partida atual</option> </select> <select id="history-filter" class="px-3 py-1 border rounded-lg text-sm"> <option value="all">Todos</option> <option value="1T">1º Tempo</option> <option value="2T">2º Tempo</option> <option value="PR">Prorrogação</option> <option value="PN">Penalidades</option> </select>
-        </div>
+        <div class="flex gap-2 flex-wrap"><select id="history-match-select" class="px-3 py-1 border rounded-lg text-sm"> <option value="current">Partida atual</option> </select> <select id="history-filter" class="px-3 py-1 border rounded-lg text-sm"> <option value="all">Todos</option> <option value="1T">1º Tempo</option> <option value="2T">2º Tempo</option> <option value="PR">Prorrogação</option> <option value="PN">Penalidades</option> </select></div>
        </div>
-      <div id="history-match-meta" class="text-xs text-slate-500 mb-3"></div>
+       <div id="history-match-meta" class="text-xs text-slate-500 mb-3"></div>
        <div id="history-list" class="space-y-2 max-h-[60vh] overflow-y-auto scrollbar-thin">
         <p class="text-slate-500 text-sm text-center py-8">Nenhum lance registrado ainda</p>
        </div>
       </div>
      </div><!-- Edit Event Modal -->
+     <div id="edit-match-modal" class="hidden fixed inset-0 modal-overlay z-50 flex items-center justify-center p-4">
+      <div class="bg-white rounded-2xl w-full max-w-lg">
+       <div class="sticky top-0 bg-white border-b px-4 py-3 flex items-center justify-between">
+        <h3 class="text-lg font-semibold">✏️ Editar metadados da partida</h3><button id="close-edit-match-modal" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100">✕</button>
+       </div>
+       <div class="p-4 space-y-3">
+        <input type="hidden" id="edit-match-id">
+        <div><label class="block text-sm font-medium text-slate-600 mb-1">Competição</label><input id="edit-match-competition" type="text" class="w-full px-3 py-2 border border-slate-300 rounded-lg"></div>
+        <div><label class="block text-sm font-medium text-slate-600 mb-1">Data</label><input id="edit-match-date" type="date" class="w-full px-3 py-2 border border-slate-300 rounded-lg"></div>
+        <div><label class="block text-sm font-medium text-slate-600 mb-1">Local</label><input id="edit-match-location" type="text" class="w-full px-3 py-2 border border-slate-300 rounded-lg"></div>
+        <div><label class="block text-sm font-medium text-slate-600 mb-1">Minha equipe</label><input id="edit-match-my-team" type="text" class="w-full px-3 py-2 border border-slate-300 rounded-lg"></div>
+        <div><label class="block text-sm font-medium text-slate-600 mb-1">Adversário</label><input id="edit-match-opponent-team" type="text" class="w-full px-3 py-2 border border-slate-300 rounded-lg"></div>
+        <div><label class="block text-sm font-medium text-slate-600 mb-1">Observações</label><textarea id="edit-match-notes" rows="3" class="w-full px-3 py-2 border border-slate-300 rounded-lg" placeholder="Opcional"></textarea></div>
+        <button id="save-match-edit" class="w-full btn-primary text-white py-3 rounded-xl font-semibold">💾 Salvar metadados</button>
+       </div>
+      </div>
+     </div>
      <div id="edit-event-modal" class="hidden fixed inset-0 modal-overlay z-50 flex items-center justify-center p-4">
       <div class="bg-white rounded-2xl w-full max-w-lg max-h-[90%] overflow-y-auto">
        <div class="sticky top-0 bg-white border-b px-4 py-3 flex items-center justify-between">
@@ -834,7 +860,7 @@
 
     import { db as firestoreDb, enableFirestorePersistence } from "./firebase.js";
     import { loginWithEmail, loginWithGoogle, logout, observeAuthState } from "./auth.js";
-    import { collection, doc, getDocs, limit, onSnapshot, query, serverTimestamp, setDoc, where } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
+    import { collection, deleteDoc, doc, getDoc, getDocs, limit, onSnapshot, query, serverTimestamp, setDoc, where } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
 
     
     // Application State
@@ -843,6 +869,7 @@
         competition: '',
         location: '',
         date: '',
+        notes: '',
         myTeam: '',
         opponentTeam: '',
         myAthletes: [],
@@ -1427,6 +1454,7 @@
           competition: AppState.config.competition || '',
           location: AppState.config.location || '',
           date: AppState.config.date || '',
+          notes: AppState.config.notes || '',
           teams: {
             myTeam: AppState.config.myTeam || 'Minha Equipe',
             opponentTeam: AppState.config.opponentTeam || 'Adversário'
@@ -1437,6 +1465,7 @@
         competition: AppState.config.competition || '',
         location: AppState.config.location || '',
         date: AppState.config.date || '',
+        notes: AppState.config.notes || '',
         myTeam: AppState.config.myTeam || 'Minha Equipe',
         opponentTeam: AppState.config.opponentTeam || 'Adversário',
         score,
@@ -1680,10 +1709,14 @@
         if (matchData.status === 'ended') {
           archived.push({
             id: matchDoc.id,
+            competition: matchData.competition || '',
             date: matchData.date || '',
+            location: matchData.location || '',
+            notes: matchData.notes || '',
             myTeam: matchData.myTeam || 'Minha Equipe',
             opponentTeam: matchData.opponentTeam || 'Adversário',
             score: matchData.score || { my: 0, opponent: 0 },
+            status: 'ended',
             endedAt: toEpochMs(matchData.updatedAt) || Date.now(),
             updatedAt: toEpochMs(matchData.updatedAt)
           });
@@ -1740,10 +1773,14 @@
           .filter((match) => match.status === 'ended')
           .map((match) => ({
             id: match.id,
+            competition: match.competition || '',
             date: match.date || '',
+            location: match.location || '',
+            notes: match.notes || '',
             myTeam: match.myTeam || 'Minha Equipe',
             opponentTeam: match.opponentTeam || 'Adversário',
             score: match.score || { my: 0, opponent: 0 },
+            status: 'ended',
             endedAt: toEpochMs(match.updatedAt) || Date.now(),
             updatedAt: toEpochMs(match.updatedAt)
           }));
@@ -2482,9 +2519,12 @@
             location: AppState.config.location || '',
             myTeam: AppState.config.myTeam || 'Minha Equipe',
             opponentTeam: AppState.config.opponentTeam || 'Adversário',
+            notes: AppState.config.notes || '',
             ...getScoreForMatch(AppState.matchId),
             eventsCount: getCurrentMatchEvents().length,
-            endedAt: new Date().toISOString()
+            status: 'ended',
+            endedAt: new Date().toISOString(),
+            updatedAt: Date.now()
           }
         ];
       }
@@ -2515,12 +2555,100 @@
       return { myGoals, oppGoals };
     }
 
+    function getMatchScoreParts(match = {}) {
+      if (typeof match.myGoals === 'number' || typeof match.oppGoals === 'number') {
+        return { myGoals: Number(match.myGoals || 0), oppGoals: Number(match.oppGoals || 0) };
+      }
+      if (match.score && typeof match.score === 'object') {
+        return {
+          myGoals: Number(match.score.my ?? match.score.myGoals ?? 0),
+          oppGoals: Number(match.score.opponent ?? match.score.oppGoals ?? 0)
+        };
+      }
+      return { myGoals: 0, oppGoals: 0 };
+    }
+
+    function buildCurrentMatchSummary() {
+      const score = getScoreForMatch(AppState.matchId);
+      return {
+        id: AppState.matchId,
+        competition: AppState.config.competition || '',
+        date: AppState.config.date || '',
+        location: AppState.config.location || '',
+        myTeam: AppState.config.myTeam || 'Minha Equipe',
+        opponentTeam: AppState.config.opponentTeam || 'Adversário',
+        notes: AppState.config.notes || '',
+        myGoals: score.myGoals,
+        oppGoals: score.oppGoals,
+        eventsCount: getCurrentMatchEvents().length,
+        status: 'in-progress',
+        updatedAt: Date.now()
+      };
+    }
+
     function formatMatchLabel(match) {
-      const score = `${match.myGoals ?? 0} x ${match.oppGoals ?? 0}`;
+      const scoreData = getMatchScoreParts(match);
+      const score = `${scoreData.myGoals} x ${scoreData.oppGoals}`;
       const date = match.date || new Date(match.endedAt || Date.now()).toLocaleDateString('pt-BR');
       const myTeam = match.myTeam || 'Minha Equipe';
       const opponentTeam = match.opponentTeam || 'Adversário';
       return `${date} • ${myTeam} ${score} ${opponentTeam}`;
+    }
+
+    function getSavedMatchesForManager() {
+      const current = buildCurrentMatchSummary();
+      const archived = (AppState.archivedMatches || []).map((match) => {
+        const score = getMatchScoreParts(match);
+        const isInProgress = match.id === AppState.matchId;
+        return {
+          ...match,
+          myGoals: score.myGoals,
+          oppGoals: score.oppGoals,
+          status: isInProgress ? 'in-progress' : (match.status || 'ended')
+        };
+      });
+      const unique = new Map([[current.id, current]]);
+      archived.forEach((match) => unique.set(match.id, { ...unique.get(match.id), ...match }));
+      return Array.from(unique.values()).sort((a, b) => {
+        const aTime = toEpochMs(a.updatedAt || a.endedAt || a.createdAt || a.date);
+        const bTime = toEpochMs(b.updatedAt || b.endedAt || b.createdAt || b.date);
+        return bTime - aTime;
+      });
+    }
+
+    function renderSavedMatchesManager() {
+      const container = document.getElementById('saved-matches-list');
+      if (!container) return;
+      const matches = getSavedMatchesForManager();
+      if (!matches.length) {
+        container.innerHTML = '<p class="text-slate-500 text-sm text-center py-6">Nenhuma partida salva.</p>';
+        return;
+      }
+      container.innerHTML = matches.map((match) => {
+        const score = getMatchScoreParts(match);
+        const statusText = match.status === 'ended' ? 'Finalizada' : 'Em andamento';
+        const statusClass = match.status === 'ended' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700';
+        return `
+          <div class="border border-slate-200 rounded-xl p-4">
+            <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-3">
+              <div class="space-y-1 text-sm text-slate-700">
+                <div class="font-semibold text-slate-900">${escapeHtml(match.competition || 'Competição não informada')}</div>
+                <div>📅 ${escapeHtml(match.date || '-')} • 📍 ${escapeHtml(match.location || '-')}</div>
+                <div>🏐 ${escapeHtml(match.myTeam || 'Minha Equipe')} <span class="font-semibold">${score.myGoals} x ${score.oppGoals}</span> ${escapeHtml(match.opponentTeam || 'Adversário')}</div>
+                <div class="text-xs text-slate-500">ID: ${escapeHtml(match.id)}</div>
+              </div>
+              <div class="flex flex-col items-start md:items-end gap-2">
+                <span class="text-xs px-2 py-1 rounded-full ${statusClass}">${statusText}</span>
+                <div class="flex flex-wrap gap-2">
+                  <button class="open-saved-match-btn px-3 py-2 rounded-lg border border-blue-200 text-blue-700 text-sm" data-match-id="${escapeAttribute(match.id)}">Abrir</button>
+                  <button class="edit-saved-match-btn px-3 py-2 rounded-lg border border-slate-300 text-slate-700 text-sm" data-match-id="${escapeAttribute(match.id)}">Editar</button>
+                  <button class="delete-saved-match-btn px-3 py-2 rounded-lg border border-red-200 text-red-700 text-sm ${match.id === AppState.matchId ? 'opacity-50 cursor-not-allowed' : ''}" data-match-id="${escapeAttribute(match.id)}" ${match.id === AppState.matchId ? 'disabled' : ''}>Excluir</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
     }
 
     function renderHistoryMatchSelector() {
@@ -2540,6 +2668,7 @@
       }
 
       renderHistoryMeta();
+      renderSavedMatchesManager();
     }
 
     function renderHistoryMeta() {
@@ -2559,13 +2688,191 @@
         return;
       }
 
-      meta.textContent = `Encerrada em ${new Date(match.endedAt).toLocaleString('pt-BR')} • ${formatMatchLabel(match)} • ${match.eventsCount || 0} registros`;
+      const statusText = match.status === 'ended' ? 'Finalizada' : 'Em andamento';
+      meta.textContent = `${statusText} • ${formatMatchLabel(match)} • ${(match.eventsCount || 0)} registros`;
     }
 
     function getSelectedHistoryMatchId() {
       const select = document.getElementById('history-match-select');
       if (!select || select.value === 'current') return AppState.matchId;
       return select.value;
+    }
+
+    async function readMatchMetadataFromCloud(matchId) {
+      if (!AppState.auth.user?.uid || !firestoreDb || !matchId) return null;
+      try {
+        const snap = await getDoc(doc(collection(firestoreDb, 'matches'), matchId));
+        if (!snap.exists()) return null;
+        const data = snap.data() || {};
+        if ((data.ownerUid || data.ownerId) !== AppState.auth.user.uid) return null;
+        const score = getMatchScoreParts(data);
+        return {
+          id: matchId,
+          competition: data.competition || '',
+          date: data.date || '',
+          location: data.location || '',
+          myTeam: data.myTeam || 'Minha Equipe',
+          opponentTeam: data.opponentTeam || 'Adversário',
+          notes: data.notes || '',
+          myGoals: score.myGoals,
+          oppGoals: score.oppGoals,
+          status: data.status === 'ended' ? 'ended' : 'in-progress'
+        };
+      } catch (error) {
+        console.error('Falha ao ler metadados da partida:', error);
+        return null;
+      }
+    }
+
+    function applyMatchMetadataToCurrentState(metadata = {}) {
+      AppState.config.competition = metadata.competition || '';
+      AppState.config.date = metadata.date || '';
+      AppState.config.location = metadata.location || '';
+      AppState.config.myTeam = metadata.myTeam || 'Minha Equipe';
+      AppState.config.opponentTeam = metadata.opponentTeam || 'Adversário';
+      AppState.config.notes = metadata.notes || '';
+    }
+
+    async function openSavedMatch(matchId) {
+      if (!matchId) return;
+      const local = getSavedMatchesForManager().find((item) => item.id === matchId);
+      const remote = await readMatchMetadataFromCloud(matchId);
+      const selected = remote || local;
+      if (!selected) {
+        showToast('⚠️ Partida não encontrada.');
+        return;
+      }
+      AppState.matchId = matchId;
+      applyMatchMetadataToCurrentState(selected);
+      loadConfigToForm();
+      renderHistoryMatchSelector();
+      renderReportMatchSelector();
+      const historySelect = document.getElementById('history-match-select');
+      if (historySelect && [...historySelect.options].some((opt) => opt.value === matchId)) {
+        historySelect.value = matchId;
+      }
+      renderHistory();
+      updateAllStats();
+      renderRecentEvents();
+      saveToLocalStorage();
+      subscribeToCurrentMatch();
+      showToast('✅ Partida carregada no histórico.');
+    }
+
+    function openMatchMetadataEditModal(matchId) {
+      const match = getSavedMatchesForManager().find((item) => item.id === matchId);
+      if (!match) return;
+      document.getElementById('edit-match-id').value = match.id;
+      document.getElementById('edit-match-competition').value = match.competition || '';
+      document.getElementById('edit-match-date').value = match.date || '';
+      document.getElementById('edit-match-location').value = match.location || '';
+      document.getElementById('edit-match-my-team').value = match.myTeam || 'Minha Equipe';
+      document.getElementById('edit-match-opponent-team').value = match.opponentTeam || 'Adversário';
+      document.getElementById('edit-match-notes').value = match.notes || '';
+      document.getElementById('edit-match-modal').classList.remove('hidden');
+    }
+
+    async function saveMatchMetadataEdit() {
+      const matchId = document.getElementById('edit-match-id').value;
+      if (!matchId) return;
+      const metadata = {
+        competition: document.getElementById('edit-match-competition').value.trim(),
+        date: document.getElementById('edit-match-date').value,
+        location: document.getElementById('edit-match-location').value.trim(),
+        myTeam: document.getElementById('edit-match-my-team').value.trim() || 'Minha Equipe',
+        opponentTeam: document.getElementById('edit-match-opponent-team').value.trim() || 'Adversário',
+        notes: document.getElementById('edit-match-notes').value.trim()
+      };
+
+      AppState.archivedMatches = AppState.archivedMatches.map((match) => match.id === matchId
+        ? { ...match, ...metadata, updatedAt: Date.now() }
+        : match);
+      if (AppState.matchId === matchId) {
+        applyMatchMetadataToCurrentState(metadata);
+        loadConfigToForm();
+      }
+
+      if (AppState.auth.user?.uid && firestoreDb) {
+        try {
+          const matchRef = doc(collection(firestoreDb, 'matches'), matchId);
+          const existingSnap = await getDoc(matchRef);
+          const existingData = existingSnap.exists() ? (existingSnap.data() || {}) : {};
+          const existingConfig = (existingData.config && typeof existingData.config === 'object') ? existingData.config : {};
+          const existingInfo = (existingData.info && typeof existingData.info === 'object') ? existingData.info : {};
+          const existingTeams = (existingInfo.teams && typeof existingInfo.teams === 'object') ? existingInfo.teams : {};
+          await setDoc(doc(collection(firestoreDb, 'matches'), matchId), {
+            ...metadata,
+            info: {
+              ...existingInfo,
+              competition: metadata.competition,
+              location: metadata.location,
+              date: metadata.date,
+              teams: {
+                ...existingTeams,
+                myTeam: metadata.myTeam,
+                opponentTeam: metadata.opponentTeam
+              },
+              notes: metadata.notes
+            },
+            config: {
+              ...existingConfig,
+              competition: metadata.competition,
+              location: metadata.location,
+              date: metadata.date,
+              myTeam: metadata.myTeam,
+              opponentTeam: metadata.opponentTeam,
+              notes: metadata.notes
+            },
+            updatedAt: serverTimestamp()
+          }, { merge: true });
+        } catch (error) {
+          console.error('Falha ao atualizar metadados no Firestore:', error);
+          showToast('⚠️ Metadados salvos localmente. Firebase indisponível no momento.');
+        }
+      }
+
+      saveToLocalStorage();
+      renderHistoryMatchSelector();
+      renderReportMatchSelector();
+      renderHistory();
+      document.getElementById('edit-match-modal').classList.add('hidden');
+      showToast('✅ Metadados da partida atualizados.');
+    }
+
+    async function deleteSavedMatch(matchId) {
+      if (!matchId) return;
+      if (matchId === AppState.matchId) {
+        showToast('⚠️ Não é permitido excluir a partida atualmente carregada.');
+        return;
+      }
+      const match = getSavedMatchesForManager().find((item) => item.id === matchId);
+      if (!match) return;
+      const confirmed = window.confirm(`Excluir a partida "${formatMatchLabel(match)}"? Essa ação não pode ser desfeita.`);
+      if (!confirmed) return;
+
+      AppState.archivedMatches = AppState.archivedMatches.filter((item) => item.id !== matchId);
+      sdkEvents = sdkEvents.filter((event) => event.matchId !== matchId);
+      AppState.events = [...sdkEvents];
+
+      if (AppState.auth.user?.uid && firestoreDb) {
+        try {
+          const eventsRef = collection(firestoreDb, 'matches', matchId, 'events');
+          const eventsSnap = await getDocs(eventsRef);
+          await Promise.all(eventsSnap.docs.map((eventDoc) => deleteDoc(eventDoc.ref)));
+          await deleteDoc(doc(collection(firestoreDb, 'matches'), matchId));
+        } catch (error) {
+          console.error('Falha ao excluir partida no Firestore:', error);
+          showToast('⚠️ Partida removida localmente. Falha ao remover no Firebase.');
+        }
+      }
+
+      saveToLocalStorage();
+      renderHistoryMatchSelector();
+      renderReportMatchSelector();
+      renderHistory();
+      updateAllStats();
+      renderRecentEvents();
+      showToast('🗑️ Partida excluída com sucesso.');
     }
 
     function endMatch() {
@@ -2578,10 +2885,13 @@
         location: AppState.config.location || '',
         myTeam: AppState.config.myTeam || 'Minha Equipe',
         opponentTeam: AppState.config.opponentTeam || 'Adversário',
+        notes: AppState.config.notes || '',
         myGoals: score.myGoals,
         oppGoals: score.oppGoals,
         eventsCount: currentEvents.length,
-        endedAt: new Date().toISOString()
+        status: 'ended',
+        endedAt: new Date().toISOString(),
+        updatedAt: Date.now()
       };
 
       AppState.archivedMatches = [
@@ -5001,6 +5311,19 @@ function renderHeatmap(optionsOrFilter) {
       // Histórico tab
       document.getElementById('history-match-select').addEventListener('change', renderHistory);
       document.getElementById('history-filter').addEventListener('change', renderHistory);
+      document.getElementById('saved-matches-list').addEventListener('click', async (e) => {
+        try {
+          const openBtn = e.target.closest('.open-saved-match-btn');
+          const editBtn = e.target.closest('.edit-saved-match-btn');
+          const deleteBtn = e.target.closest('.delete-saved-match-btn');
+          if (openBtn) await openSavedMatch(openBtn.dataset.matchId);
+          if (editBtn) openMatchMetadataEditModal(editBtn.dataset.matchId);
+          if (deleteBtn && !deleteBtn.disabled) await deleteSavedMatch(deleteBtn.dataset.matchId);
+        } catch (error) {
+          console.error('Falha ao processar ação de partida salva:', error);
+          showToast('⚠️ Não foi possível concluir esta ação agora.');
+        }
+      });
       
       document.getElementById('history-list').addEventListener('click', (e) => {
         if (e.target.classList.contains('delete-event-btn')) {
@@ -5016,6 +5339,10 @@ function renderHeatmap(optionsOrFilter) {
       document.getElementById('close-edit-modal').addEventListener('click', () => {
         document.getElementById('edit-event-modal').classList.add('hidden');
       });
+      document.getElementById('close-edit-match-modal').addEventListener('click', () => {
+        document.getElementById('edit-match-modal').classList.add('hidden');
+      });
+      document.getElementById('save-match-edit').addEventListener('click', saveMatchMetadataEdit);
       
       document.getElementById('edit-form-content').addEventListener('click', (e) => {
         if (e.target.id === 'save-edit') {
