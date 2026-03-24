@@ -3909,9 +3909,12 @@
       const isMyAttack = attackerTeam === 'my';
       const orientation = getAttackCourtOrientation(attackerTeam, AppState.lineup);
       const originOnLeft = orientation.originSide === 'left';
-      const roleKeys = isMyAttack
+      const baseRoleKeys = isMyAttack
         ? [{ key: 'left', label: 'Ala E' }, { key: 'center', label: 'Pivô' }, { key: 'right', label: 'Ala D' }]
         : [{ key: 'opponentLeft', label: 'Ala E' }, { key: 'opponentCenter', label: 'Pivô' }, { key: 'opponentRight', label: 'Ala D' }];
+      const roleKeys = originOnLeft
+        ? baseRoleKeys
+        : [baseRoleKeys[2], baseRoleKeys[1], baseRoleKeys[0]];
       const athletes = isMyAttack ? AppState.config.myAthletes : AppState.config.opponentAthletes;
       const athleteBtns = roleKeys.map((r, roleIdx) => {
         const athleteIndex = AppState.lineup[r.key];
