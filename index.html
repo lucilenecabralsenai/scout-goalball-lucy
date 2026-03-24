@@ -93,6 +93,15 @@
     }
 
     .court-col { min-height: 170px; }
+
+    .mini-court-grid-line {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      background: #111827;
+      opacity: 0.7;
+    }
   </style>
   <style>body { box-sizing: border-box; }</style>
  </head>
@@ -145,6 +154,8 @@
         <div><label class="block text-sm font-medium text-slate-600 mb-1">Local</label> <input type="text" id="config-location" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="Local da partida">
         </div>
         <div><label class="block text-sm font-medium text-slate-600 mb-1">Data</label> <input type="date" id="config-date" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+        </div>
+        <div><label class="block text-sm font-medium text-slate-600 mb-1">Lado inicial da Minha Equipe</label> <select id="config-my-initial-side" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500"><option value="left">Lado esquerdo</option><option value="right">Lado direito</option></select>
         </div>
        </div>
       </div>
@@ -295,6 +306,13 @@
       </div><div class="bg-white rounded-xl p-3 card-shadow border border-slate-200">
        <div class="text-sm text-slate-600">Posse de bola atual</div>
        <div id="possession-indicator" class="text-lg font-bold text-blue-700">Minha Equipe</div>
+      </div><div class="bg-white rounded-xl p-3 card-shadow border border-slate-200">
+       <div class="flex items-center justify-between gap-2">
+        <div>
+         <div class="text-sm text-slate-600">Lados atuais da quadra</div>
+         <div id="court-sides-indicator" class="text-sm font-semibold text-slate-800">Minha Equipe: Esquerda • Adversário: Direita</div>
+        </div><button id="btn-toggle-court-sides" class="px-3 py-2 rounded-lg border border-slate-300 text-sm text-slate-700">↔️ Trocar lados</button>
+       </div>
       </div><!-- Attack Modal -->
       <div id="attack-modal" class="hidden fixed inset-0 modal-overlay z-50 flex items-center justify-center p-4">
        <div class="bg-white rounded-2xl w-full max-w-lg max-h-[90%] overflow-y-auto">
@@ -848,7 +866,11 @@
           'PR': 'my',
           'PN': 'my'
         },
-        possessionTeam: 'my'
+        possessionTeam: 'my',
+        myInitialSide: 'left',
+        myCurrentSide: 'left',
+        opponentCurrentSide: 'right',
+        hasSideSwapOccurred: false
       },
       targetPlans: {},
       currentTargets: {},
@@ -1097,6 +1119,37 @@
       if (!isValidOppIndex(AppState.lineup.opponentLeft)) AppState.lineup.opponentLeft = null;
       if (!isValidOppIndex(AppState.lineup.opponentCenter)) AppState.lineup.opponentCenter = null;
       if (!isValidOppIndex(AppState.lineup.opponentRight)) AppState.lineup.opponentRight = null;
+    }
+
+    function normalizeCourtSide(side) {
+      return side === 'right' ? 'right' : 'left';
+    }
+
+    function getOppositeCourtSide(side) {
+      return normalizeCourtSide(side) === 'left' ? 'right' : 'left';
+    }
+
+    function syncCourtSidesFromState({ persist = true } = {}) {
+      AppState.lineup.myInitialSide = normalizeCourtSide(AppState.lineup.myInitialSide);
+      AppState.lineup.hasSideSwapOccurred = Boolean(AppState.lineup.hasSideSwapOccurred);
+      AppState.lineup.myCurrentSide = AppState.lineup.hasSideSwapOccurred
+        ? getOppositeCourtSide(AppState.lineup.myInitialSide)
+        : AppState.lineup.myInitialSide;
+      AppState.lineup.opponentCurrentSide = getOppositeCourtSide(AppState.lineup.myCurrentSide);
+      if (persist) saveToLocalStorage();
+    }
+
+    function normalizeLineupState() {
+      AppState.lineup.phaseStarters = {
+        '1T': 'my',
+        '2T': 'opponent',
+        'PR': 'my',
+        'PN': 'my',
+        ...(AppState.lineup.phaseStarters || {})
+      };
+      AppState.lineup.myInitialSide = normalizeCourtSide(AppState.lineup.myInitialSide || 'left');
+      AppState.lineup.hasSideSwapOccurred = Boolean(AppState.lineup.hasSideSwapOccurred || (AppState.lineup.phase && AppState.lineup.phase !== '1T'));
+      syncCourtSidesFromState({ persist: false });
     }
 
     function migrateLegacyTeams() {
@@ -1506,6 +1559,7 @@
       AppState.teamRegistry = normalizeTeamRegistry(payload.teamRegistry || AppState.teamRegistry);
       migrateLegacyTeams();
       AppState.lineup = payload.lineup || AppState.lineup;
+      normalizeLineupState();
       AppState.targetPlans = payload.targetPlans || AppState.targetPlans;
       AppState.currentTargets = payload.currentTargets || AppState.currentTargets;
       AppState.matchRules = payload.matchRules || AppState.matchRules;
@@ -1570,6 +1624,7 @@
         AppState.teamRegistry = normalizeTeamRegistry(data.teamRegistry || AppState.teamRegistry);
         migrateLegacyTeams();
         AppState.lineup = data.lineup || AppState.lineup;
+        normalizeLineupState();
         AppState.targetPlans = data.targetPlans || AppState.targetPlans;
         AppState.currentTargets = data.currentTargets || AppState.currentTargets;
         AppState.matchRules = data.matchRules || AppState.matchRules;
@@ -1933,10 +1988,29 @@
       el.className = `text-lg font-bold ${team === 'my' ? 'text-blue-700' : 'text-red-700'}`;
     }
 
+    function updateCourtSideDisplay() {
+      const el = document.getElementById('court-sides-indicator');
+      if (!el) return;
+      const myLabel = AppState.lineup.myCurrentSide === 'right' ? 'Direita' : 'Esquerda';
+      const oppLabel = AppState.lineup.opponentCurrentSide === 'right' ? 'Direita' : 'Esquerda';
+      el.textContent = `Minha Equipe: ${myLabel} • Adversário: ${oppLabel}`;
+    }
+
     function setPossessionForPhase(phase) {
       AppState.lineup.possessionTeam = AppState.lineup.phaseStarters[phase] || 'my';
       updatePossessionDisplay();
       saveToLocalStorage();
+    }
+
+    function getAttackCourtOrientation(attackingTeam, currentMatchState = AppState.lineup) {
+      const mySide = normalizeCourtSide(currentMatchState.myCurrentSide || 'left');
+      const opponentSide = normalizeCourtSide(currentMatchState.opponentCurrentSide || 'right');
+      const originSide = attackingTeam === 'my' ? mySide : opponentSide;
+      const targetSide = getOppositeCourtSide(originSide);
+      return {
+        originSide,
+        targetSide
+      };
     }
 
     function applyAttackPossessionRule(event) {
@@ -2408,6 +2482,8 @@
       }
       AppState.matchId = Date.now().toString();
       resetRequestControl();
+      AppState.lineup.hasSideSwapOccurred = false;
+      syncCourtSidesFromState({ persist: false });
       setPossessionForPhase(AppState.lineup.phase);
       renderHistoryMatchSelector();
       renderReportMatchSelector();
@@ -2507,6 +2583,8 @@
 
       const previousMatchId = AppState.matchId;
       AppState.matchId = Date.now().toString();
+      AppState.lineup.hasSideSwapOccurred = false;
+      syncCourtSidesFromState({ persist: false });
       saveToLocalStorage();
       renderHistoryMatchSelector();
       resetRequestControl();
@@ -2823,6 +2901,7 @@
       document.getElementById('config-competition').value = AppState.config.competition || '';
       document.getElementById('config-location').value = AppState.config.location || '';
       document.getElementById('config-date').value = AppState.config.date || '';
+      document.getElementById('config-my-initial-side').value = normalizeCourtSide(AppState.lineup.myInitialSide || 'left');
       document.getElementById('config-my-team').value = AppState.config.myTeam || '';
       document.getElementById('config-opponent-team').value = AppState.config.opponentTeam || '';
       document.getElementById('opponent-toggle').checked = AppState.config.showOpponent;
@@ -2841,6 +2920,8 @@
       AppState.config.competition = document.getElementById('config-competition').value;
       AppState.config.location = document.getElementById('config-location').value;
       AppState.config.date = document.getElementById('config-date').value;
+      AppState.lineup.myInitialSide = normalizeCourtSide(document.getElementById('config-my-initial-side').value);
+      syncCourtSidesFromState({ persist: false });
       AppState.config.myTeam = document.getElementById('config-my-team').value;
       AppState.config.opponentTeam = document.getElementById('config-opponent-team').value;
       
@@ -2885,6 +2966,7 @@
       ensureOpponentLineupDefaults();
       updateLineupSelectors();
       updateLineupDisplay();
+      updateCourtSideDisplay();
       renderTargetPlan();
       saveToLocalStorage();
       showToast('✅ Configuração salva com sucesso!');
@@ -3104,6 +3186,7 @@
           subOut.innerHTML += `<option value="${idx}">${display}</option>`;
         }
       });
+      updateCourtSideDisplay();
     }
     
     async function registerSubstitution({ team, subOutIdx, subInIdx, enforceMyLineup = false }) {
@@ -3353,21 +3436,39 @@
       if (!container) return;
       const attackerTeam = attackState.team;
       const isMyAttack = attackerTeam === 'my';
-      const sideA = isMyAttack ? 'left' : 'right';
-      const sideB = isMyAttack ? 'right' : 'left';
+      const orientation = getAttackCourtOrientation(attackerTeam, AppState.lineup);
+      const originOnLeft = orientation.originSide === 'left';
       const roleKeys = isMyAttack
         ? [{ key: 'left', label: 'Ala E' }, { key: 'center', label: 'Pivô' }, { key: 'right', label: 'Ala D' }]
         : [{ key: 'opponentLeft', label: 'Ala E' }, { key: 'opponentCenter', label: 'Pivô' }, { key: 'opponentRight', label: 'Ala D' }];
       const athletes = isMyAttack ? AppState.config.myAthletes : AppState.config.opponentAthletes;
-      const athleteBtns = roleKeys.map(r => {
-        const idx = AppState.lineup[r.key];
-        const a = (idx !== null && idx !== undefined) ? athletes[idx] : null;
+      const athleteBtns = roleKeys.map((r, roleIdx) => {
+        const athleteIndex = AppState.lineup[r.key];
+        const a = (athleteIndex !== null && athleteIndex !== undefined) ? athletes[athleteIndex] : null;
         const num = a?.number ? `#${a.number}` : '•';
-        const active = String(idx) === String(attackState.athlete) ? 'active' : '';
-        return `<button class="quick-btn court-athlete-btn w-full border-2 border-slate-300 rounded-lg p-2 text-left ${active}" data-athlete="${idx ?? ''}" title="${escapeAttribute(a ? formatAthleteDisplay(a) : '')}"><div class="font-bold">${num}</div><div class="text-xs text-slate-500">${r.label} ${escapeHtml(a ? formatAthleteDisplay(a, { withHash: false, fallback: 'não definido' }) : 'não definido')}</div></button>`;
+        const active = String(athleteIndex) === String(attackState.athlete) ? 'active' : '';
+        return `<button class="quick-btn court-athlete-btn absolute -translate-x-1/2 -translate-y-1/2 w-14 h-14 md:w-16 md:h-16 rounded-full border-2 border-slate-300 bg-cyan-200/80 text-slate-900 font-bold text-xs md:text-sm ${active}" style="left:${originOnLeft ? '13%' : '87%'}; top:${18 + (roleIdx * 32)}%;" data-athlete="${athleteIndex ?? ''}" title="${escapeAttribute(a ? formatAthleteDisplay(a) : '')}"><span>${num}</span><span class="sr-only">${r.label}</span></button>`;
       }).join('');
-      const targetBtns = OFFICIAL_TARGETS.map(t => `<button class="quick-btn court-target-btn border-2 border-slate-300 rounded-lg py-2 text-xs ${attackState.target===t?'active':''}" data-target="${t}">${t}</button>`).join('');
-      container.innerHTML = `<div class="grid grid-cols-[1fr_72px_1fr] gap-2 items-start"><div class="court-col space-y-2 order-${sideA==='left'?'1':'3'}"><div class="text-xs text-slate-500">Arremessador</div>${athleteBtns}</div><div class="order-2 rounded-xl border border-slate-200 bg-white p-2 text-center text-xs text-slate-500">Mini quadra</div><div class="court-col order-${sideB==='right'?'3':'1'}"><div class="text-xs text-slate-500 mb-2">Alvo</div><div class="grid grid-cols-3 gap-1">${targetBtns}</div></div></div>`;
+      const targetOrder = ['6', '5', '4/5', '4', 'Meio', '3', '2/3', '2', '1'];
+      const targetBtns = targetOrder.map((targetLabel, zoneIndex) => {
+        const isActive = attackState.target === targetLabel ? 'active' : '';
+        return `<button class="quick-btn court-target-btn absolute -translate-y-1/2 border-2 border-slate-300 bg-white rounded-md text-xs md:text-sm font-medium h-[10.8%] w-9 md:w-10 ${isActive}" style="left:${originOnLeft ? '92%' : '1%'}; top:${6 + zoneIndex * 10.5}%;" data-target="${targetLabel}">${targetLabel === 'Meio' ? 'M' : targetLabel}</button>`;
+      }).join('');
+      container.innerHTML = `
+        <div class="mb-2 text-xs text-slate-500 flex items-center justify-between">
+          <span>Origem: ${orientation.originSide === 'left' ? 'lado esquerdo' : 'lado direito'}</span>
+          <span>Alvo: ${orientation.targetSide === 'left' ? 'lado esquerdo' : 'lado direito'}</span>
+        </div>
+        <div class="relative w-full rounded-xl border-2 border-slate-800 bg-slate-200 overflow-hidden" style="aspect-ratio: 2 / 1;">
+          <div class="mini-court-grid-line" style="left:18%;"></div>
+          <div class="mini-court-grid-line" style="left:34%;"></div>
+          <div class="mini-court-grid-line" style="left:50%;"></div>
+          <div class="mini-court-grid-line" style="left:66%;"></div>
+          <div class="mini-court-grid-line" style="left:82%;"></div>
+          ${athleteBtns}
+          ${targetBtns}
+        </div>
+      `;
     }
 
     function openAttackModal() {
@@ -4697,6 +4798,7 @@ function renderHeatmap(optionsOrFilter) {
       // Escalação tab
       document.querySelectorAll('.phase-btn').forEach(btn => {
         btn.addEventListener('click', () => {
+          const previousPhase = AppState.lineup.phase;
           document.querySelectorAll('.phase-btn').forEach(b => {
             b.classList.remove('bg-blue-600', 'text-white');
             b.classList.add('bg-slate-200', 'text-slate-700');
@@ -4705,11 +4807,19 @@ function renderHeatmap(optionsOrFilter) {
           btn.classList.add('bg-blue-600', 'text-white');
           ensureFirstHalfRequestRule(btn.dataset.phase);
           AppState.lineup.phase = btn.dataset.phase;
+          if (previousPhase === '1T' && btn.dataset.phase !== '1T') {
+            AppState.lineup.hasSideSwapOccurred = true;
+            syncCourtSidesFromState({ persist: false });
+          } else if (btn.dataset.phase === '1T') {
+            AppState.lineup.hasSideSwapOccurred = false;
+            syncCourtSidesFromState({ persist: false });
+          }
           document.getElementById('current-phase').textContent = 
             btn.dataset.phase === '1T' ? '1º Tempo' : 
             btn.dataset.phase === '2T' ? '2º Tempo' : 
             btn.dataset.phase === 'PR' ? 'Prorrogação' : 'Penalidades';
           setPossessionForPhase(btn.dataset.phase);
+          renderMiniCourtSelector();
         });
       });
       
@@ -4725,6 +4835,22 @@ function renderHeatmap(optionsOrFilter) {
             saveToLocalStorage();
           }
         });
+      });
+
+      document.getElementById('config-my-initial-side').addEventListener('change', (e) => {
+        AppState.lineup.myInitialSide = normalizeCourtSide(e.target.value);
+        syncCourtSidesFromState({ persist: false });
+        updateCourtSideDisplay();
+        renderMiniCourtSelector();
+      });
+
+      document.getElementById('btn-toggle-court-sides').addEventListener('click', () => {
+        AppState.lineup.hasSideSwapOccurred = !AppState.lineup.hasSideSwapOccurred;
+        syncCourtSidesFromState({ persist: false });
+        updateCourtSideDisplay();
+        renderMiniCourtSelector();
+        saveToLocalStorage();
+        showToast('↔️ Lados da quadra invertidos.');
       });
 
       ['left', 'center', 'right'].forEach(pos => {
@@ -5617,6 +5743,7 @@ populateHeatmapAthletes();
           AppState.teamRegistry = normalizeTeamRegistry(parsed.teamRegistry || AppState.teamRegistry);
           migrateLegacyTeams();
           AppState.lineup = parsed.lineup || AppState.lineup;
+          normalizeLineupState();
           AppState.targetPlans = parsed.targetPlans || AppState.targetPlans;
           AppState.currentTargets = parsed.currentTargets || AppState.currentTargets;
           AppState.matchRules = parsed.matchRules || AppState.matchRules;
@@ -5653,6 +5780,7 @@ populateHeatmapAthletes();
     
     async function init() {
       loadFromLocalStorage();
+      normalizeLineupState();
       migrateLegacyTeams();
       loadConfigToForm();
       renderAthleteInputs();
@@ -5669,6 +5797,7 @@ populateHeatmapAthletes();
         if (sel) sel.value = AppState.lineup.phaseStarters[phase] || 'my';
       });
       updatePossessionDisplay();
+      updateCourtSideDisplay();
       initializeEventListeners();
       initTacticalBoard();
       await initDataSdk();
