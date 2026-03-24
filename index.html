@@ -2190,17 +2190,27 @@
       return period === 'all' ? 'Geral' : getPhaseLabel(period);
     }
 
-    function getTopZones(events) {
-      const counts = {};
-      events.filter(e => e.team === 'my').forEach(event => {
-        const zone = normalizeTarget(event.target) || 'N/D';
-        counts[zone] = (counts[zone] || 0) + 1;
-      });
-      return Object.entries(counts)
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 3)
-        .map(([zone, count]) => `${zone} (${count})`)
-        .join(' • ') || 'Sem dados';
+    function getTopZones(input, fallback = '-') {
+      if (Array.isArray(input)) {
+        const counts = {};
+        input.filter(e => e.team === 'my').forEach(event => {
+          const zone = normalizeTarget(event.target) || 'N/D';
+          counts[zone] = (counts[zone] || 0) + 1;
+        });
+        return Object.entries(counts)
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, 3)
+          .map(([zone, count]) => `${zone} (${count})`)
+          .join(' • ') || 'Sem dados';
+      }
+
+      const zoneCounts = input && typeof input === 'object' ? input : {};
+      const sorted = Object.entries(zoneCounts)
+        .sort((a, b) => b[1] - a[1] || LIVE_READING_TARGETS.indexOf(a[0]) - LIVE_READING_TARGETS.indexOf(b[0]));
+      if (!sorted.length || sorted[0][1] === 0) return fallback;
+      const topValue = sorted[0][1];
+      const leaders = sorted.filter(([, value]) => value === topValue).map(([zone]) => getLiveTargetLabel(zone));
+      return `${leaders.join(' / ')} (${topValue})`;
     }
 
     function getLatestRelevantEvents(events) {
@@ -4426,15 +4436,6 @@
 
     function getLiveTargetLabel(target) {
       return target === 'Meio' ? 'M' : target;
-    }
-
-    function getTopZones(zoneCounts, fallback = '-') {
-      const sorted = Object.entries(zoneCounts)
-        .sort((a, b) => b[1] - a[1] || LIVE_READING_TARGETS.indexOf(a[0]) - LIVE_READING_TARGETS.indexOf(b[0]));
-      if (!sorted.length || sorted[0][1] === 0) return fallback;
-      const topValue = sorted[0][1];
-      const leaders = sorted.filter(([, value]) => value === topValue).map(([zone]) => getLiveTargetLabel(zone));
-      return `${leaders.join(' / ')} (${topValue})`;
     }
 
     function renderLiveGameReading(matchEvents) {
