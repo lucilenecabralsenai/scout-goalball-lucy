@@ -2939,7 +2939,7 @@
       showToast('🗑️ Partida excluída com sucesso.');
     }
 
-    function endMatch() {
+    async function endMatch() {
       const currentEvents = getCurrentMatchEvents();
       const score = getScoreForMatch(AppState.matchId);
       const previousMatchId = AppState.matchId;
