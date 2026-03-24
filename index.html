@@ -1397,6 +1397,12 @@
     let unsubscribeUserMatches = null;
     let syncDebounceTimer = null;
     let suppressCloudSync = false;
+    let matchIdSequence = 0;
+
+    function generateMatchId() {
+      matchIdSequence += 1;
+      return `match-${Date.now()}-${matchIdSequence}-${Math.random().toString(36).slice(2, 8)}`;
+    }
 
     function getDeviceId() {
       const existing = localStorage.getItem(DEVICE_ID_STORAGE_KEY);
@@ -1523,6 +1529,17 @@
       updateSyncStatus(navigator.onLine ? 'synced' : 'offline');
     }
 
+    async function finalizeMatchInCloud(matchId) {
+      if (!firestoreDb || !AppState.auth.user?.uid || !matchId) return;
+      const previousMatchId = AppState.matchId;
+      AppState.matchId = matchId;
+      try {
+        await pushCurrentMatchToCloud('ended');
+      } finally {
+        AppState.matchId = previousMatchId;
+      }
+    }
+
     function enqueueCloudSync(reason = '') {
       if (suppressCloudSync || !AppState.auth.user || !firestoreDb) return;
       if (syncDebounceTimer) clearTimeout(syncDebounceTimer);
@@ -1590,7 +1607,7 @@
     function applyStateFromSource(payload, source = 'local') {
       if (!payload || typeof payload !== 'object') return;
       suppressCloudSync = true;
-      AppState.matchId = payload.matchId || AppState.matchId || Date.now().toString();
+      AppState.matchId = payload.matchId || AppState.matchId || generateMatchId();
       AppState.config = { ...AppState.config, ...(payload.config || {}) };
       normalizeConfigAthletes();
       AppState.teamRegistry = normalizeTeamRegistry(payload.teamRegistry || AppState.teamRegistry);
@@ -1877,10 +1894,10 @@
       if (cache) {
         console.info('[SYNC] Cache local carregado na inicialização (pré-auth)');
         applyStateFromSource(cache, 'boot-local-cache');
-        if (!AppState.matchId) AppState.matchId = Date.now().toString();
+        if (!AppState.matchId) AppState.matchId = generateMatchId();
         return;
       }
-      AppState.matchId = Date.now().toString();
+      AppState.matchId = generateMatchId();
       AppState.events = [];
       sdkEvents = [];
     }
@@ -2508,8 +2525,52 @@
       };
     }
 
-    function startNewMatch() {
-      if (getCurrentMatchEvents().length > 0) {
+    function syncPhaseUiFromState() {
+      document.querySelectorAll('.phase-btn').forEach(btn => {
+        const isCurrent = btn.dataset.phase === AppState.lineup.phase;
+        btn.classList.toggle('active', isCurrent);
+        btn.classList.toggle('bg-blue-600', isCurrent);
+        btn.classList.toggle('text-white', isCurrent);
+        btn.classList.toggle('bg-slate-200', !isCurrent);
+        btn.classList.toggle('text-slate-700', !isCurrent);
+      });
+      const currentPhaseEl = document.getElementById('current-phase');
+      if (currentPhaseEl) currentPhaseEl.textContent = getPhaseLabel(AppState.lineup.phase);
+    }
+
+    function resetCurrentMatchState() {
+      AppState.lineup.left = null;
+      AppState.lineup.center = null;
+      AppState.lineup.right = null;
+      AppState.lineup.opponentLeft = null;
+      AppState.lineup.opponentCenter = null;
+      AppState.lineup.opponentRight = null;
+      AppState.lineup.phase = '1T';
+      AppState.lineup.hasSideSwapOccurred = false;
+      AppState.lineup.myInitialSide = normalizeCourtSide(AppState.lineup.myInitialSide || 'left');
+      syncCourtSidesFromState({ persist: false });
+      setPossessionForPhase('1T');
+      resetRequestControl();
+      AppState.targetPlans = {};
+      AppState.currentTargets = {};
+      resetAttackState();
+      closeAttackModal();
+      closeTargetChangeModal();
+      closeQuickSubModal();
+      closeTimeoutActionModal();
+      closeTimeoutReport();
+      updateLineupSelectors();
+      updateLineupDisplay();
+      renderTargetPlan();
+      syncPhaseUiFromState();
+      updateCourtSideDisplay();
+      updatePossessionDisplay();
+    }
+
+    async function startNewMatch() {
+      const previousMatchId = AppState.matchId;
+      const currentMatchEvents = getCurrentMatchEvents();
+      if (currentMatchEvents.length > 0) {
         AppState.archivedMatches = [
           ...AppState.archivedMatches.filter(m => m.id !== AppState.matchId),
           {
@@ -2527,12 +2588,15 @@
             updatedAt: Date.now()
           }
         ];
+        try {
+          await finalizeMatchInCloud(previousMatchId);
+        } catch (error) {
+          console.warn('[SYNC] Não foi possível marcar a partida anterior como encerrada (Nova Partida)', error);
+        }
       }
-      AppState.matchId = Date.now().toString();
-      resetRequestControl();
-      AppState.lineup.hasSideSwapOccurred = false;
-      syncCourtSidesFromState({ persist: false });
-      setPossessionForPhase(AppState.lineup.phase);
+      AppState.matchId = generateMatchId();
+      resetCurrentMatchState();
+      saveToLocalStorage();
       renderHistoryMatchSelector();
       renderReportMatchSelector();
       renderHistory();
@@ -2878,6 +2942,7 @@
     function endMatch() {
       const currentEvents = getCurrentMatchEvents();
       const score = getScoreForMatch(AppState.matchId);
+      const previousMatchId = AppState.matchId;
       const matchSummary = {
         id: AppState.matchId,
         competition: AppState.config.competition || '',
@@ -2899,14 +2964,13 @@
         matchSummary
       ];
 
-      const previousMatchId = AppState.matchId;
-      AppState.matchId = Date.now().toString();
-      AppState.lineup.hasSideSwapOccurred = false;
-      syncCourtSidesFromState({ persist: false });
-      saveToLocalStorage();
-      renderHistoryMatchSelector();
-      resetRequestControl();
-      setPossessionForPhase(AppState.lineup.phase);
+      try {
+        await finalizeMatchInCloud(previousMatchId);
+      } catch (error) {
+        console.warn('[SYNC] Não foi possível marcar a partida encerrada no Firebase', error);
+      }
+      AppState.matchId = generateMatchId();
+      resetCurrentMatchState();
       saveToLocalStorage();
       renderHistoryMatchSelector();
       renderReportMatchSelector();
