@@ -940,14 +940,30 @@
       return escapeHtml(String(value ?? '')).replace(/"/g, '&quot;');
     }
 
+    function coerceAthleteObject(athlete) {
+      if (!athlete || typeof athlete !== 'object') return {};
+      return athlete;
+    }
+
     function normalizeAthlete(athlete = {}) {
+      const safeAthlete = coerceAthleteObject(athlete);
       return {
-        id: athlete.id || `ath-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-        name: String(athlete.name || '').trim(),
-        number: String(athlete.number || '').trim(),
-        role: String(athlete.role || athlete.position || '').trim(),
-        notes: String(athlete.notes || athlete.observation || '').trim()
+        id: safeAthlete.id || `ath-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+        name: String(safeAthlete.name || '').trim(),
+        number: String(safeAthlete.number || '').trim(),
+        role: String(safeAthlete.role || safeAthlete.position || '').trim(),
+        notes: String(safeAthlete.notes || safeAthlete.observation || '').trim()
       };
+    }
+
+    function normalizeAthleteList(list) {
+      if (!Array.isArray(list)) return [];
+      return Array.from(list, (athlete) => normalizeAthlete(athlete));
+    }
+
+    function normalizeConfigAthletes() {
+      AppState.config.myAthletes = normalizeAthleteList(AppState.config.myAthletes);
+      AppState.config.opponentAthletes = normalizeAthleteList(AppState.config.opponentAthletes);
     }
 
     function normalizeTeam(team = {}) {
@@ -1012,20 +1028,23 @@
     }
 
     function isAthleteEmpty(athlete = {}) {
-      return !String(athlete.name || '').trim()
-        && !String(athlete.number || '').trim()
-        && !String(athlete.role || '').trim()
-        && !String(athlete.notes || '').trim();
+      const safeAthlete = coerceAthleteObject(athlete);
+      return !String(safeAthlete.name || '').trim()
+        && !String(safeAthlete.number || '').trim()
+        && !String(safeAthlete.role || '').trim()
+        && !String(safeAthlete.notes || '').trim();
     }
 
     function hasAthleteIdentity(athlete = {}) {
-      return Boolean(String(athlete.name || '').trim() || String(athlete.number || '').trim());
+      const safeAthlete = coerceAthleteObject(athlete);
+      return Boolean(String(safeAthlete.name || '').trim() || String(safeAthlete.number || '').trim());
     }
 
     function formatAthleteDisplay(athlete = {}, options = {}) {
       const { withHash = true, fallback = 'Atleta não identificado', pendingName = 'nome pendente', pendingNumber = 'sem nº' } = options;
-      const number = String(athlete.number || '').trim();
-      const name = String(athlete.name || '').trim();
+      const safeAthlete = coerceAthleteObject(athlete);
+      const number = String(safeAthlete.number || '').trim();
+      const name = String(safeAthlete.name || '').trim();
       if (number && name) return `${withHash ? '#' : ''}${number} — ${name}`;
       if (number) return `${withHash ? '#' : ''}${number} — ${pendingName}`;
       if (name) return `${name} — ${pendingNumber}`;
@@ -1483,6 +1502,7 @@
       suppressCloudSync = true;
       AppState.matchId = payload.matchId || AppState.matchId || Date.now().toString();
       AppState.config = { ...AppState.config, ...(payload.config || {}) };
+      normalizeConfigAthletes();
       AppState.teamRegistry = normalizeTeamRegistry(payload.teamRegistry || AppState.teamRegistry);
       migrateLegacyTeams();
       AppState.lineup = payload.lineup || AppState.lineup;
@@ -2797,6 +2817,7 @@
     }
     
     function loadConfigToForm() {
+      normalizeConfigAthletes();
       document.getElementById('config-competition').value = AppState.config.competition || '';
       document.getElementById('config-location').value = AppState.config.location || '';
       document.getElementById('config-date').value = AppState.config.date || '';
@@ -2842,6 +2863,7 @@
           number: oppNumbers[i].value
         });
       });
+      normalizeConfigAthletes();
 
       const myDuplicates = sanitizeDuplicateNumbers(AppState.config.myAthletes.filter(a => a.name || a.number));
       if (myDuplicates.length) {
