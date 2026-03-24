@@ -461,35 +461,6 @@
          </div>
         </div>
        </div>
-      </div>
-      <div class="bg-white rounded-xl p-4 card-shadow border border-slate-200">
-       <div class="flex items-center justify-between gap-2 mb-3">
-        <h3 class="text-base font-semibold text-slate-800">🧠 Leitura rápida do jogo</h3>
-        <span class="text-xs text-slate-500">Atualização automática</span>
-       </div>
-       <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
-        <div class="rounded-lg border border-slate-200 bg-slate-50 p-3">
-         <div class="text-xs font-semibold text-slate-600 uppercase tracking-wide mb-2">Distribuição de ataques por zona</div>
-         <div id="live-zone-distribution" class="grid grid-cols-3 sm:grid-cols-5 gap-2 text-xs">
-          <div class="rounded bg-white border border-slate-200 px-2 py-1"><span class="text-slate-500">1</span> <span class="font-semibold text-slate-800">0</span></div>
-         </div>
-        </div>
-        <div class="rounded-lg border border-slate-200 bg-slate-50 p-3 space-y-2">
-         <div class="flex items-center justify-between text-sm">
-          <span class="text-slate-600">Principal zona (minha equipe)</span>
-          <span id="live-top-zone-my" class="font-semibold text-green-700">-</span>
-         </div>
-         <div class="flex items-center justify-between text-sm">
-          <span class="text-slate-600">Principal zona (adversário)</span>
-          <span id="live-top-zone-opponent" class="font-semibold text-red-700">-</span>
-         </div>
-         <div class="h-px bg-slate-200"></div>
-         <div class="flex items-center justify-between text-sm">
-          <span class="text-slate-600">Atleta mais ativo</span>
-          <span id="live-most-active-athlete" class="font-semibold text-blue-700">-</span>
-         </div>
-        </div>
-       </div>
       </div><!-- Recent Events -->
       <div class="bg-white rounded-xl p-4 card-shadow">
        <h3 class="text-lg font-semibold text-slate-800 mb-3">🕐 Últimos Lances</h3>
@@ -956,7 +927,6 @@
 
 
     const OFFICIAL_TARGETS = ['1', '2', '2/3', '3', 'Meio', '4', '4/5', '5', '6'];
-    const LIVE_READING_TARGETS = ['1', '2', '2/3', '3', 'Meio', '4', '4/5', '5', '6'];
     const OFFENSIVE_SYSTEMS = ['Livre', 'Cone Aberto', 'Cone Fechado', 'Espelho', 'Arrasta', 'Diagonal Direita', 'Diagonal Esquerda', 'X', 'Bloco Direito', 'Bloco Esquerdo'];
     const GAME_SITUATIONS = ['Livre', 'Flutuou', 'Inverteu', 'Passou a bola', 'Contra-ataque', 'Buscou a bola no ala contrário'];
     const LEGACY_TARGET_MAP = { 'M': 'Meio', 'meio': 'Meio' };
@@ -4416,70 +4386,6 @@
         `;
       }).join('');
     }
-
-    function getLiveTargetLabel(target) {
-      return target === 'Meio' ? 'M' : target;
-    }
-
-    function getTopZones(zoneCounts, fallback = '-') {
-      const sorted = Object.entries(zoneCounts)
-        .sort((a, b) => b[1] - a[1] || LIVE_READING_TARGETS.indexOf(a[0]) - LIVE_READING_TARGETS.indexOf(b[0]));
-      if (!sorted.length || sorted[0][1] === 0) return fallback;
-      const topValue = sorted[0][1];
-      const leaders = sorted.filter(([, value]) => value === topValue).map(([zone]) => getLiveTargetLabel(zone));
-      return `${leaders.join(' / ')} (${topValue})`;
-    }
-
-    function renderLiveGameReading(matchEvents) {
-      const distributionEl = document.getElementById('live-zone-distribution');
-      const topMyEl = document.getElementById('live-top-zone-my');
-      const topOppEl = document.getElementById('live-top-zone-opponent');
-      const mostActiveEl = document.getElementById('live-most-active-athlete');
-      if (!distributionEl || !topMyEl || !topOppEl || !mostActiveEl) return;
-
-      const zoneTotals = Object.fromEntries(LIVE_READING_TARGETS.map((zone) => [zone, 0]));
-      const myZoneTotals = Object.fromEntries(LIVE_READING_TARGETS.map((zone) => [zone, 0]));
-      const oppZoneTotals = Object.fromEntries(LIVE_READING_TARGETS.map((zone) => [zone, 0]));
-      const athleteTotals = new Map();
-
-      matchEvents.forEach((event, index) => {
-        if (!isShotEvent(event)) return;
-        const normalizedTarget = normalizeTarget(event.target);
-        if (LIVE_READING_TARGETS.includes(normalizedTarget)) {
-          zoneTotals[normalizedTarget] += 1;
-          if (event.team === 'my') myZoneTotals[normalizedTarget] += 1;
-          if (event.team === 'opponent') oppZoneTotals[normalizedTarget] += 1;
-        }
-
-        const athleteNumber = String(event.athleteNumber || '').trim();
-        const athleteName = String(event.athleteName || '').trim();
-        if (!athleteNumber && !athleteName) return;
-        const athleteLabel = `${athleteNumber || '?'} - ${athleteName || 'N/A'}`;
-        const key = `${event.team || 'unknown'}|${athleteNumber}|${athleteName}`;
-        const existing = athleteTotals.get(key) || { label: athleteLabel, team: event.team || 'my', count: 0, firstIndex: index };
-        existing.count += 1;
-        athleteTotals.set(key, existing);
-      });
-
-      distributionEl.innerHTML = LIVE_READING_TARGETS.map((zone) => `
-        <div class="rounded bg-white border border-slate-200 px-2 py-1 flex items-center justify-between gap-2">
-          <span class="text-slate-500">${getLiveTargetLabel(zone)}</span>
-          <span class="font-semibold text-slate-800">${zoneTotals[zone] || 0}</span>
-        </div>
-      `).join('');
-
-      topMyEl.textContent = getTopZones(myZoneTotals);
-      topOppEl.textContent = getTopZones(oppZoneTotals);
-
-      const activeRanking = [...athleteTotals.values()].sort((a, b) => b.count - a.count || a.firstIndex - b.firstIndex);
-      if (!activeRanking.length || activeRanking[0].count === 0) {
-        mostActiveEl.textContent = '-';
-        return;
-      }
-      const leader = activeRanking[0];
-      const teamLabel = leader.team === 'opponent' ? 'ADV' : 'MIN';
-      mostActiveEl.textContent = `${leader.label} (${teamLabel}: ${leader.count})`;
-    }
     
     function updateAllStats() {
       // Update live stats in Jogo tab
@@ -4501,7 +4407,6 @@
       updateScore();
       renderGameOnCourtSummary();
       renderAttackModalQuickInfo();
-      renderLiveGameReading(matchEvents);
     }
     
     // =====================================================
