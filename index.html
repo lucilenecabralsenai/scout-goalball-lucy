@@ -495,6 +495,16 @@
           <span class="text-slate-600">Atleta mais ativo</span>
           <span id="live-most-active-athlete" class="font-semibold text-blue-700">-</span>
          </div>
+         <div class="h-px bg-slate-200"></div>
+         <div>
+          <div class="flex items-center justify-between text-[11px] font-semibold uppercase tracking-wide text-slate-500 mb-1">
+           <span>Avisos automáticos</span>
+           <span class="normal-case font-medium text-slate-400">Últimos lances</span>
+          </div>
+          <div id="live-behavior-alerts" class="space-y-1 text-xs text-slate-600">
+           <p class="text-slate-400">Sem padrão repetitivo relevante no momento.</p>
+          </div>
+         </div>
         </div>
        </div>
       </div><!-- Recent Events -->
@@ -960,6 +970,13 @@
     
     // SDK Data
     let sdkEvents = [];
+    const BEHAVIOR_ALERT_WINDOW = 5;
+    const BEHAVIOR_ALERT_RECENT_WINDOW = 3;
+    const BEHAVIOR_ALERT_COOLDOWN_EVENTS = 2;
+    const behaviorAlertState = {
+      lastSignature: '',
+      lastEventCount: 0
+    };
 
 
     const OFFICIAL_TARGETS = ['1', '2', '2/3', '3', 'Meio', '4', '4/5', '5', '6'];
@@ -4438,6 +4455,130 @@
       return target === 'Meio' ? 'M' : target;
     }
 
+    function resolveAthleteFromEvent(event) {
+      if (!event) return null;
+      const number = String(event.athleteNumber || '').trim();
+      const name = String(event.athleteName || '').trim();
+      return { number, name, label: `${number || '?'} - ${name || 'N/A'}` };
+    }
+
+    function getPivotAthleteForTeam(team) {
+      if (team === 'my') {
+        const idx = AppState.lineup.center;
+        const athlete = idx !== null ? AppState.config.myAthletes?.[idx] : null;
+        if (!athlete) return null;
+        const number = String(athlete.number || '').trim();
+        const name = String(athlete.name || '').trim();
+        return { number, name, label: `${number || '?'} - ${name || 'N/A'}` };
+      }
+      const configured = getConfiguredOpponentIndices();
+      const idx = AppState.lineup.opponentCenter ?? configured[1] ?? null;
+      const athlete = idx !== null ? AppState.config.opponentAthletes?.[idx] : null;
+      if (!athlete) return null;
+      const number = String(athlete.number || '').trim();
+      const name = String(athlete.name || '').trim();
+      return { number, name, label: `${number || '?'} - ${name || 'N/A'}` };
+    }
+
+    function buildBehaviorAlerts(matchEvents) {
+      const shotEvents = matchEvents.filter(isShotEvent);
+      const alerts = [];
+      const rightSideTargets = new Set(['4', '4/5', '5', '6']);
+
+      const buildTeamTargetAlert = (team) => {
+        const teamEvents = shotEvents.filter((event) => event.team === team);
+        const latestThree = teamEvents.slice(-BEHAVIOR_ALERT_RECENT_WINDOW);
+        if (latestThree.length < BEHAVIOR_ALERT_RECENT_WINDOW) return;
+        const targetTotals = latestThree.reduce((acc, event) => {
+          const target = normalizeTarget(event.target);
+          if (!target) return acc;
+          acc[target] = (acc[target] || 0) + 1;
+          return acc;
+        }, {});
+        const ranking = Object.entries(targetTotals).sort((a, b) => b[1] - a[1]);
+        if (!ranking.length || ranking[0][1] < 2) return;
+        const [target, count] = ranking[0];
+        const teamLabel = team === 'opponent' ? 'Adversário' : 'Minha equipe';
+        alerts.push({
+          key: `${team}-target-recent-${target}-${count}`,
+          priority: team === 'opponent' ? 0 : 2,
+          text: `${teamLabel} repetiu alvo ${target} em ${count} das últimas ${BEHAVIOR_ALERT_RECENT_WINDOW} jogadas.`
+        });
+      };
+
+      buildTeamTargetAlert('opponent');
+      buildTeamTargetAlert('my');
+
+      const myLastFive = shotEvents.filter((event) => event.team === 'my').slice(-BEHAVIOR_ALERT_WINDOW);
+      if (myLastFive.length === BEHAVIOR_ALERT_WINDOW) {
+        const totals = myLastFive.reduce((acc, event) => {
+          const target = normalizeTarget(event.target);
+          if (!target) return acc;
+          acc[target] = (acc[target] || 0) + 1;
+          return acc;
+        }, {});
+        const ranking = Object.entries(totals).sort((a, b) => b[1] - a[1]);
+        if (ranking.length && ranking[0][1] >= 4) {
+          const [target, count] = ranking[0];
+          alerts.push({
+            key: `my-heavy-target-${target}-${count}`,
+            priority: 1,
+            text: `Minha equipe está concentrando ataques no alvo ${target} (${count} de ${BEHAVIOR_ALERT_WINDOW} lances).`
+          });
+        }
+      }
+
+      const buildPivotRightAlert = (team) => {
+        const pivot = getPivotAthleteForTeam(team);
+        if (!pivot || (!pivot.number && !pivot.name)) return;
+        const pivotEvents = shotEvents
+          .filter((event) => {
+            if (event.team !== team) return false;
+            const athlete = resolveAthleteFromEvent(event);
+            if (!athlete) return false;
+            if (pivot.number && athlete.number) return athlete.number === pivot.number;
+            return pivot.name && athlete.name && athlete.name.toLowerCase() === pivot.name.toLowerCase();
+          })
+          .slice(-BEHAVIOR_ALERT_WINDOW);
+        if (pivotEvents.length < 3) return;
+        const rightHits = pivotEvents.filter((event) => rightSideTargets.has(normalizeTarget(event.target))).length;
+        if (rightHits < 3 || (rightHits / pivotEvents.length) < 0.67) return;
+        const teamLabel = team === 'opponent' ? 'Pivô adversário' : 'Nosso pivô';
+        alerts.push({
+          key: `${team}-pivot-right-${rightHits}-${pivotEvents.length}`,
+          priority: team === 'opponent' ? 0 : 3,
+          text: `${teamLabel} está concentrando ataques no lado direito (${rightHits}/${pivotEvents.length}).`
+        });
+      };
+
+      buildPivotRightAlert('opponent');
+      buildPivotRightAlert('my');
+
+      return alerts.sort((a, b) => a.priority - b.priority).slice(0, 2);
+    }
+
+    function renderBehaviorAlerts(matchEvents) {
+      const container = document.getElementById('live-behavior-alerts');
+      if (!container) return;
+      const alerts = buildBehaviorAlerts(matchEvents);
+      if (!alerts.length) {
+        behaviorAlertState.lastSignature = '';
+        container.innerHTML = '<p class="text-slate-400">Sem padrão repetitivo relevante no momento.</p>';
+        return;
+      }
+      const signature = alerts.map((alert) => alert.key).join('|');
+      const eventsCount = matchEvents.length;
+      const canRenderRepeated = behaviorAlertState.lastSignature !== signature
+        || (eventsCount - behaviorAlertState.lastEventCount) >= BEHAVIOR_ALERT_COOLDOWN_EVENTS;
+      if (canRenderRepeated) {
+        behaviorAlertState.lastSignature = signature;
+        behaviorAlertState.lastEventCount = eventsCount;
+      }
+      container.innerHTML = alerts.map((alert) => `
+        <p class="rounded-md border border-amber-200 bg-amber-50 px-2 py-1 text-amber-800">⚠️ ${alert.text}</p>
+      `).join('');
+    }
+
     function renderLiveGameReading(matchEvents) {
       const distributionEl = document.getElementById('live-zone-distribution');
       const topMyEl = document.getElementById('live-top-zone-my');
@@ -4479,11 +4620,13 @@
       const activeRanking = [...athleteTotals.values()].sort((a, b) => b.count - a.count || a.firstIndex - b.firstIndex);
       if (!activeRanking.length || activeRanking[0].count === 0) {
         mostActiveEl.textContent = '-';
+        renderBehaviorAlerts(matchEvents);
         return;
       }
       const leader = activeRanking[0];
       const teamLabel = leader.team === 'opponent' ? 'ADV' : 'MIN';
       mostActiveEl.textContent = `${leader.label} (${teamLabel}: ${leader.count})`;
+      renderBehaviorAlerts(matchEvents);
     }
     
     function updateAllStats() {
