@@ -3827,6 +3827,10 @@
       defenseLocation: '', ballOutcome: '', gameSituation: 'Livre', noAttackPenalty: false,
       observation: '', penaltyTeam: 'my', penaltyAthlete: ''
     };
+    let attackSmartDefaults = {
+      ballType: '',
+      gameSituation: 'Livre'
+    };
     let attackSaveInFlight = false;
 
     let targetChangeState = {
@@ -3877,6 +3881,7 @@
     function openAttackModal() {
       document.getElementById('attack-modal').classList.remove('hidden');
       resetAttackState();
+      applyAttackSmartDefaults();
       attackState.team = AppState.lineup.possessionTeam || 'my';
       updateAttackAthleteSelector(attackState.team);
       const preferredBtn = document.querySelector(`.team-select-btn[data-team="${attackState.team}"]`);
@@ -3903,8 +3908,6 @@
     function resetAttackState() {
       attackState = { team:'my', athlete:'', ballType:'', target:'', result:'', penaltyType:'', defenseLocation:'', ballOutcome:'', gameSituation:'Livre', noAttackPenalty:false, observation:'', penaltyTeam:'my', penaltyAthlete:'' };
       document.querySelectorAll('.quick-btn').forEach(b => b.classList.remove('active'));
-      const defaultSituationBtn = document.querySelector('.situation-btn[data-situation="Livre"]');
-      if (defaultSituationBtn) defaultSituationBtn.classList.add('active');
       document.querySelectorAll('.team-select-btn').forEach(btn => { btn.classList.remove('border-blue-500','bg-blue-50','text-blue-700'); btn.classList.add('border-slate-300','text-slate-600'); });
       document.querySelector('[data-team="my"]').classList.add('border-blue-500','bg-blue-50','text-blue-700');
       document.getElementById('attack-athlete').value = '';
@@ -3913,6 +3916,26 @@
       document.getElementById('penalty-no-attack').checked = false;
       document.getElementById('penalty-note').value = '';
       updateConditionalBlocks();
+    }
+
+    function applyAttackSmartDefaults() {
+      attackState.ballType = attackSmartDefaults.ballType || '';
+      attackState.gameSituation = attackSmartDefaults.gameSituation || 'Livre';
+      document.querySelectorAll('.ball-type-btn').forEach((btn) => {
+        btn.classList.toggle('active', normalizeBallType(btn.dataset.type) === attackState.ballType);
+      });
+      document.querySelectorAll('.situation-btn').forEach((btn) => {
+        btn.classList.toggle('active', normalizeGameSituation(btn.dataset.situation) === attackState.gameSituation);
+      });
+    }
+
+    function saveAttackSmartDefaultsFromState() {
+      if (attackState.ballType) {
+        attackSmartDefaults.ballType = normalizeBallType(attackState.ballType);
+      }
+      if (attackState.gameSituation) {
+        attackSmartDefaults.gameSituation = normalizeGameSituation(attackState.gameSituation);
+      }
     }
 
     function updateAttackAthleteSelector(team) {
@@ -3983,7 +4006,8 @@
         if (attackState.result === 'penalidade') AppState.matchRules.pendingPenaltyShotTeam = attackState.team === 'my' ? 'opponent' : 'my';
         if (isPenaltyGoal) AppState.matchRules.pendingPenaltyShotTeam = null;
         if (!noAttackPenalty) applyAttackPossessionRule(event);
-        prepareAttackForNextRegister({ preserveSecondary: source === 'auto' });
+        saveAttackSmartDefaultsFromState();
+        prepareAttackForNextRegister();
         if (source === 'auto') {
           showToast('⚡ Lance salvo automaticamente (modo ultra rápido)');
         } else {
@@ -4326,22 +4350,10 @@
       oppEl.innerHTML = oppRows.map(row => `<div>${row}</div>`).join('');
     }
 
-    function prepareAttackForNextRegister(options = {}) {
-      const preserveSecondary = !!options.preserveSecondary;
-      const previousBallType = attackState.ballType;
-      const previousGameSituation = attackState.gameSituation;
+    function prepareAttackForNextRegister() {
       const team = AppState.lineup.possessionTeam || 'my';
       resetAttackState();
-      if (preserveSecondary) {
-        attackState.ballType = previousBallType;
-        attackState.gameSituation = previousGameSituation || 'Livre';
-        document.querySelectorAll('.ball-type-btn').forEach((btn) => {
-          btn.classList.toggle('active', normalizeBallType(btn.dataset.type) === attackState.ballType);
-        });
-        document.querySelectorAll('.situation-btn').forEach((btn) => {
-          btn.classList.toggle('active', normalizeGameSituation(btn.dataset.situation) === attackState.gameSituation);
-        });
-      }
+      applyAttackSmartDefaults();
       attackState.team = team;
       updateAttackAthleteSelector(team);
       const preferredBtn = document.querySelector(`.team-select-btn[data-team="${team}"]`);
