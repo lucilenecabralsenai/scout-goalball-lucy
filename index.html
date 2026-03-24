@@ -3827,6 +3827,7 @@
       defenseLocation: '', ballOutcome: '', gameSituation: 'Livre', noAttackPenalty: false,
       observation: '', penaltyTeam: 'my', penaltyAthlete: ''
     };
+    let attackSaveInFlight = false;
 
     let targetChangeState = {
       athlete: '',
@@ -3930,7 +3931,18 @@
       renderMiniCourtSelector();
     }
 
-    async function saveAttack() {
+    function shouldTriggerUltraFastAutoSave() {
+      return attackState.athlete !== '' && !!attackState.target && !!attackState.result;
+    }
+
+    async function tryAutoSaveAttack(trigger) {
+      if (!shouldTriggerUltraFastAutoSave() || attackSaveInFlight) return;
+      await saveAttack({ source: 'auto', trigger });
+    }
+
+    async function saveAttack(options = {}) {
+      const source = options.source || 'manual';
+      if (attackSaveInFlight) return;
       if (!attackState.result) return showToast('⚠️ Selecione o resultado do lance');
       const noAttackPenalty = attackState.result === 'penalidade' && attackState.noAttackPenalty;
       const quickResult = ['fora','ballover'].includes(attackState.result);
@@ -3961,19 +3973,28 @@
         defenseStructure:'', ballBehavior:'', subIn:'', subOut:'', position:'', newTargets:''
       };
       if (sdkEvents.length >= 999) return showToast('⚠️ Limite de 999 registros atingido!');
-      if (window.dataSdk) {
-        const result = await window.dataSdk.create(event);
-        if (!result.isOk) createLocalEvent(event);
-      } else createLocalEvent(event);
+      attackSaveInFlight = true;
+      try {
+        if (window.dataSdk) {
+          const result = await window.dataSdk.create(event);
+          if (!result.isOk) createLocalEvent(event);
+        } else createLocalEvent(event);
 
-      if (attackState.result === 'penalidade') AppState.matchRules.pendingPenaltyShotTeam = attackState.team === 'my' ? 'opponent' : 'my';
-      if (isPenaltyGoal) AppState.matchRules.pendingPenaltyShotTeam = null;
-      if (!noAttackPenalty) applyAttackPossessionRule(event);
-      prepareAttackForNextRegister();
-      showToast('✅ Lance registrado!');
-      updateScore();
-      renderAttackModalQuickInfo();
-      saveToLocalStorage();
+        if (attackState.result === 'penalidade') AppState.matchRules.pendingPenaltyShotTeam = attackState.team === 'my' ? 'opponent' : 'my';
+        if (isPenaltyGoal) AppState.matchRules.pendingPenaltyShotTeam = null;
+        if (!noAttackPenalty) applyAttackPossessionRule(event);
+        prepareAttackForNextRegister({ preserveSecondary: source === 'auto' });
+        if (source === 'auto') {
+          showToast('⚡ Lance salvo automaticamente (modo ultra rápido)');
+        } else {
+          showToast('✅ Lance registrado!');
+        }
+        updateScore();
+        renderAttackModalQuickInfo();
+        saveToLocalStorage();
+      } finally {
+        attackSaveInFlight = false;
+      }
     }
 
 
@@ -4305,9 +4326,22 @@
       oppEl.innerHTML = oppRows.map(row => `<div>${row}</div>`).join('');
     }
 
-    function prepareAttackForNextRegister() {
+    function prepareAttackForNextRegister(options = {}) {
+      const preserveSecondary = !!options.preserveSecondary;
+      const previousBallType = attackState.ballType;
+      const previousGameSituation = attackState.gameSituation;
       const team = AppState.lineup.possessionTeam || 'my';
       resetAttackState();
+      if (preserveSecondary) {
+        attackState.ballType = previousBallType;
+        attackState.gameSituation = previousGameSituation || 'Livre';
+        document.querySelectorAll('.ball-type-btn').forEach((btn) => {
+          btn.classList.toggle('active', normalizeBallType(btn.dataset.type) === attackState.ballType);
+        });
+        document.querySelectorAll('.situation-btn').forEach((btn) => {
+          btn.classList.toggle('active', normalizeGameSituation(btn.dataset.situation) === attackState.gameSituation);
+        });
+      }
       attackState.team = team;
       updateAttackAthleteSelector(team);
       const preferredBtn = document.querySelector(`.team-select-btn[data-team="${team}"]`);
@@ -5350,16 +5384,18 @@ function renderHeatmap(optionsOrFilter) {
           attackState.athlete = athleteBtn.dataset.athlete;
           document.getElementById('attack-athlete').value = attackState.athlete;
           renderMiniCourtSelector();
+          tryAutoSaveAttack('athlete');
         }
         if (targetBtn) {
           attackState.target = targetBtn.dataset.target;
           renderMiniCourtSelector();
+          tryAutoSaveAttack('target');
         }
       });
 
       document.querySelectorAll('.ball-type-btn').forEach(btn => btn.addEventListener('click', () => { document.querySelectorAll('.ball-type-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active'); attackState.ballType = normalizeBallType(btn.dataset.type); }));
       document.querySelectorAll('.situation-btn').forEach(btn => btn.addEventListener('click', () => { document.querySelectorAll('.situation-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active'); attackState.gameSituation = normalizeGameSituation(btn.dataset.situation); }));
-      document.querySelectorAll('.result-btn').forEach(btn => btn.addEventListener('click', () => { document.querySelectorAll('.result-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active'); attackState.result = btn.dataset.result; if (btn.dataset.result !== 'penalidade') { attackState.noAttackPenalty = false; document.getElementById('penalty-no-attack').checked = false; } updateConditionalBlocks(); }));
+      document.querySelectorAll('.result-btn').forEach(btn => btn.addEventListener('click', () => { document.querySelectorAll('.result-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active'); attackState.result = btn.dataset.result; if (btn.dataset.result !== 'penalidade') { attackState.noAttackPenalty = false; document.getElementById('penalty-no-attack').checked = false; } updateConditionalBlocks(); tryAutoSaveAttack('result'); }));
       document.querySelectorAll('.defense-location-btn').forEach(btn => btn.addEventListener('click', () => { document.querySelectorAll('.defense-location-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active'); attackState.defenseLocation = btn.dataset.defenseLocation; }));
       document.querySelectorAll('.ball-outcome-btn').forEach(btn => btn.addEventListener('click', () => { document.querySelectorAll('.ball-outcome-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active'); attackState.ballOutcome = btn.dataset.ballOutcome; }));
       document.querySelectorAll('.penalty-team-btn').forEach(btn => btn.addEventListener('click', () => { document.querySelectorAll('.penalty-team-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active'); attackState.penaltyTeam = btn.dataset.penaltyTeam; updateAttackAthleteSelector(btn.dataset.penaltyTeam); }));
