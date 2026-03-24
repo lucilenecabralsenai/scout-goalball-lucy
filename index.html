@@ -2858,20 +2858,28 @@
 
       if (AppState.auth.user?.uid && firestoreDb) {
         try {
+          const matchRef = doc(collection(firestoreDb, 'matches'), matchId);
+          const existingSnap = await getDoc(matchRef);
+          const existingData = existingSnap.exists() ? (existingSnap.data() || {}) : {};
+          const existingConfig = (existingData.config && typeof existingData.config === 'object') ? existingData.config : {};
+          const existingInfo = (existingData.info && typeof existingData.info === 'object') ? existingData.info : {};
+          const existingTeams = (existingInfo.teams && typeof existingInfo.teams === 'object') ? existingInfo.teams : {};
           await setDoc(doc(collection(firestoreDb, 'matches'), matchId), {
             ...metadata,
             info: {
+              ...existingInfo,
               competition: metadata.competition,
               location: metadata.location,
               date: metadata.date,
               teams: {
+                ...existingTeams,
                 myTeam: metadata.myTeam,
                 opponentTeam: metadata.opponentTeam
               },
               notes: metadata.notes
             },
             config: {
-              ...(AppState.matchId === matchId ? AppState.config : {}),
+              ...existingConfig,
               competition: metadata.competition,
               location: metadata.location,
               date: metadata.date,
@@ -5368,12 +5376,17 @@ function renderHeatmap(optionsOrFilter) {
       document.getElementById('history-match-select').addEventListener('change', renderHistory);
       document.getElementById('history-filter').addEventListener('change', renderHistory);
       document.getElementById('saved-matches-list').addEventListener('click', async (e) => {
-        const openBtn = e.target.closest('.open-saved-match-btn');
-        const editBtn = e.target.closest('.edit-saved-match-btn');
-        const deleteBtn = e.target.closest('.delete-saved-match-btn');
-        if (openBtn) await openSavedMatch(openBtn.dataset.matchId);
-        if (editBtn) openMatchMetadataEditModal(editBtn.dataset.matchId);
-        if (deleteBtn && !deleteBtn.disabled) await deleteSavedMatch(deleteBtn.dataset.matchId);
+        try {
+          const openBtn = e.target.closest('.open-saved-match-btn');
+          const editBtn = e.target.closest('.edit-saved-match-btn');
+          const deleteBtn = e.target.closest('.delete-saved-match-btn');
+          if (openBtn) await openSavedMatch(openBtn.dataset.matchId);
+          if (editBtn) openMatchMetadataEditModal(editBtn.dataset.matchId);
+          if (deleteBtn && !deleteBtn.disabled) await deleteSavedMatch(deleteBtn.dataset.matchId);
+        } catch (error) {
+          console.error('Falha ao processar ação de partida salva:', error);
+          showToast('⚠️ Não foi possível concluir esta ação agora.');
+        }
       });
       
       document.getElementById('history-list').addEventListener('click', (e) => {
