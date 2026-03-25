@@ -954,7 +954,8 @@
       },
       sync: {
         status: 'local',
-        deviceId: null
+        deviceId: null,
+        pendingFinalizations: []
       },
       auth: {
         user: null
@@ -1450,6 +1451,7 @@
     let syncDebounceTimer = null;
     let suppressCloudSync = false;
     let matchIdSequence = 0;
+    let lastCloudSyncErrorAt = 0;
 
     function generateMatchId() {
       matchIdSequence += 1;
@@ -1591,6 +1593,8 @@
       AppState.matchId = matchId;
       try {
         await pushCurrentMatchToCloud('ended');
+        clearPendingFinalization(matchId);
+        persistStateToCache();
       } finally {
         AppState.matchId = previousMatchId;
       }
@@ -1605,6 +1609,10 @@
         } catch (error) {
           console.error('Cloud sync failed:', reason, error);
           updateSyncStatus(navigator.onLine ? 'error' : 'offline');
+          if (Date.now() - lastCloudSyncErrorAt > 8000) {
+            showToast('⚠️ Falha no Firebase. Dados preservados localmente e nova tentativa será feita automaticamente.');
+            lastCloudSyncErrorAt = Date.now();
+          }
         }
       }, 500);
     }
@@ -1638,8 +1646,29 @@
         currentTargets: AppState.currentTargets,
         matchRules: AppState.matchRules,
         archivedMatches: AppState.archivedMatches,
-        events: AppState.events
+        events: AppState.events,
+        sync: {
+          pendingFinalizations: [...new Set(AppState.sync.pendingFinalizations || [])]
+        }
       };
+    }
+
+    function getPendingFinalizationSet() {
+      return new Set(AppState.sync.pendingFinalizations || []);
+    }
+
+    function markPendingFinalization(matchId) {
+      if (!matchId) return;
+      const pending = getPendingFinalizationSet();
+      pending.add(matchId);
+      AppState.sync.pendingFinalizations = [...pending];
+    }
+
+    function clearPendingFinalization(matchId) {
+      if (!matchId) return;
+      const pending = getPendingFinalizationSet();
+      if (!pending.delete(matchId)) return;
+      AppState.sync.pendingFinalizations = [...pending];
     }
 
     function persistStateToCache() {
@@ -1674,6 +1703,13 @@
       AppState.currentTargets = payload.currentTargets || AppState.currentTargets;
       AppState.matchRules = payload.matchRules || AppState.matchRules;
       AppState.archivedMatches = payload.archivedMatches || AppState.archivedMatches;
+      const pendingFinalizations = Array.isArray(payload.sync?.pendingFinalizations)
+        ? payload.sync.pendingFinalizations
+        : [];
+      AppState.sync.pendingFinalizations = [...new Set([
+        ...(AppState.sync.pendingFinalizations || []),
+        ...pendingFinalizations
+      ].filter(Boolean))];
       sdkEvents = Array.isArray(payload.events) ? payload.events.map(normalizeStoredEvent) : sdkEvents;
       AppState.events = [...sdkEvents];
       validateLineupIndices();
@@ -1864,8 +1900,21 @@
             endedAt: toEpochMs(match.updatedAt) || Date.now(),
             updatedAt: toEpochMs(match.updatedAt)
           }));
-
-        AppState.archivedMatches = archived;
+        const localArchivedById = new Map((AppState.archivedMatches || []).map((match) => [match.id, match]));
+        const pendingFinalizations = getPendingFinalizationSet();
+        archived.forEach((match) => {
+          const local = localArchivedById.get(match.id);
+          const localUpdatedAt = toEpochMs(local?.updatedAt || local?.endedAt || local?.date);
+          const remoteUpdatedAt = toEpochMs(match.updatedAt || match.endedAt || match.date);
+          const resolved = remoteUpdatedAt >= localUpdatedAt ? match : { ...match, ...local };
+          localArchivedById.set(match.id, resolved);
+        });
+        localArchivedById.forEach((localMatch, id) => {
+          if (!pendingFinalizations.has(id)) return;
+          if (archived.some((remoteMatch) => remoteMatch.id === id)) return;
+          localArchivedById.set(id, localMatch);
+        });
+        AppState.archivedMatches = Array.from(localArchivedById.values());
         persistStateToCache();
         renderHistoryMatchSelector();
         renderReportMatchSelector();
@@ -2660,6 +2709,7 @@
       unsubscribeMatchEvents = null;
       const currentMatchEvents = previousMatchId ? getCurrentMatchEvents() : [];
       if (previousMatchId && currentMatchEvents.length > 0) {
+        markPendingFinalization(previousMatchId);
         AppState.archivedMatches = [
           ...AppState.archivedMatches.filter(m => m.id !== AppState.matchId),
           {
@@ -2677,10 +2727,13 @@
             updatedAt: Date.now()
           }
         ];
+        saveToLocalStorage();
         try {
           await finalizeMatchInCloud(previousMatchId);
         } catch (error) {
           console.warn('[SYNC] Não foi possível marcar a partida anterior como encerrada (Nova Partida)', error);
+          saveToLocalStorage();
+          showToast('⚠️ Partida anterior salva localmente. Firebase indisponível no momento.');
         }
       }
       AppState.matchId = generateMatchId();
@@ -3017,6 +3070,7 @@
       if (!confirmed) return;
 
       AppState.archivedMatches = AppState.archivedMatches.filter((item) => item.id !== matchId);
+      clearPendingFinalization(matchId);
       sdkEvents = sdkEvents.filter((event) => event.matchId !== matchId);
       AppState.events = [...sdkEvents];
 
@@ -3066,15 +3120,19 @@
         updatedAt: Date.now()
       };
 
+      markPendingFinalization(previousMatchId);
       AppState.archivedMatches = [
         ...AppState.archivedMatches.filter(m => m.id !== AppState.matchId),
         matchSummary
       ];
+      saveToLocalStorage();
 
       try {
         await finalizeMatchInCloud(previousMatchId);
       } catch (error) {
         console.warn('[SYNC] Não foi possível marcar a partida encerrada no Firebase', error);
+        saveToLocalStorage();
+        showToast('⚠️ Partida encerrada e salva localmente. Firebase indisponível no momento.');
       }
       AppState.matchId = null;
       resetCurrentMatchState();
