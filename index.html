@@ -140,7 +140,7 @@
 </div>
 <!-- Navigation -->
    <nav class="bg-white border-b border-slate-200 px-2 py-2 flex-shrink-0 overflow-x-auto">
-    <div class="flex gap-1 min-w-max"><button class="tab-btn active px-4 py-2 rounded-lg text-sm font-medium transition-all" data-tab="config">⚙️ Config</button> <button class="tab-btn px-4 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 transition-all" data-tab="escalacao">👥 Escalação</button> <button class="tab-btn px-4 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 transition-all" data-tab="jogo">🎮 Jogo</button> <button class="tab-btn px-4 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 transition-all" data-tab="historico">📋 Histórico</button> <button class="tab-btn px-4 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 transition-all" data-tab="relatorio">📊 Relatório</button> <button class="tab-btn px-4 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 transition-all" data-tab="analise">📈 Análise</button> <button class="tab-btn px-4 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 transition-all" data-tab="prancheta">🧠 Prancheta</button>
+    <div class="flex gap-1 min-w-max"><button class="tab-btn active px-4 py-2 rounded-lg text-sm font-medium transition-all" data-tab="config">⚙️ Config</button> <button class="tab-btn px-4 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 transition-all" data-tab="escalacao">👥 Escalação</button> <button class="tab-btn px-4 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 transition-all" data-tab="jogo">🎮 Jogo</button> <button class="tab-btn px-4 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 transition-all" data-tab="historico">📋 Histórico</button> <button class="tab-btn px-4 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 transition-all" data-tab="relatorio">📊 Relatório</button> <button class="tab-btn px-4 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 transition-all" data-tab="analise">📈 Análise</button> <button class="tab-btn px-4 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 transition-all" data-tab="treinos">🏋️ Treinos</button> <button class="tab-btn px-4 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 transition-all" data-tab="prancheta">🧠 Prancheta</button>
     </div>
    </nav><!-- Main Content -->
    <main class="flex-1 overflow-auto p-4"><!-- Config Tab -->
@@ -841,6 +841,49 @@
        </div>
       </div>
      </div>
+    </section><!-- Treinos Tab -->
+    <section id="tab-treinos" class="tab-content hidden">
+     <div class="max-w-6xl mx-auto space-y-4">
+      <div class="bg-white rounded-xl p-5 card-shadow space-y-4">
+       <div>
+        <h2 class="text-lg font-semibold text-slate-800">🏋️ Registro de Treinos Individuais</h2>
+        <p class="text-sm text-slate-500">Treinos são vinculados somente aos atletas e não dependem de equipes.</p>
+       </div>
+       <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <div><label class="block text-sm font-medium text-slate-600 mb-1">Data</label><input id="training-date" type="date" class="w-full px-3 py-2 border border-slate-300 rounded-lg"></div>
+        <div><label class="block text-sm font-medium text-slate-600 mb-1">Tipo</label><input id="training-type" type="text" class="w-full px-3 py-2 border border-slate-300 rounded-lg" placeholder="Ex.: Físico, Técnico"></div>
+        <div><label class="block text-sm font-medium text-slate-600 mb-1">Observações gerais</label><input id="training-notes" type="text" class="w-full px-3 py-2 border border-slate-300 rounded-lg" placeholder="Resumo do treino"></div>
+       </div>
+       <div class="border-t border-slate-200 pt-4">
+        <div class="flex items-center justify-between mb-3">
+         <h3 class="font-semibold text-slate-700">Atividades/Testes</h3>
+         <button id="add-training-activity" class="px-3 py-2 rounded-lg border border-slate-300 text-sm text-slate-700">+ Atividade</button>
+        </div>
+        <div id="training-activities-list" class="space-y-3"></div>
+       </div>
+       <div class="border-t border-slate-200 pt-4">
+        <h3 class="font-semibold text-slate-700 mb-2">Resultados por atleta</h3>
+        <div id="training-results-grid" class="space-y-4"></div>
+       </div>
+       <button id="save-training-btn" class="w-full btn-success text-white py-3 rounded-xl font-semibold">💾 Salvar treino</button>
+      </div>
+      <div class="bg-white rounded-xl p-5 card-shadow space-y-4">
+       <h2 class="text-lg font-semibold text-slate-800">📊 Análise de Treinos</h2>
+       <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div><label class="block text-sm font-medium text-slate-600 mb-1">Filtrar por atividade</label><select id="training-analysis-activity" class="w-full px-3 py-2 border border-slate-300 rounded-lg"><option value="all">Todas as atividades</option></select></div>
+        <div><label class="block text-sm font-medium text-slate-600 mb-1">Comparar atletas</label><div id="training-athlete-compare" class="border border-slate-200 rounded-lg p-2 max-h-28 overflow-auto text-sm"></div></div>
+       </div>
+       <div id="training-analysis-summary" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3"></div>
+       <div>
+        <h3 class="font-semibold text-slate-700 mb-2">Histórico de evolução</h3>
+        <div id="training-analysis-timeline" class="space-y-2 text-sm"></div>
+       </div>
+      </div>
+      <div class="bg-white rounded-xl p-5 card-shadow">
+       <h2 class="text-lg font-semibold text-slate-800 mb-3">📚 Treinos salvos</h2>
+       <div id="training-history-list" class="space-y-2"></div>
+      </div>
+     </div>
     </section><!-- Prancheta Tab -->
     <section id="tab-prancheta" class="tab-content hidden">
      <div class="max-w-6xl mx-auto space-y-4">
@@ -923,6 +966,8 @@
         selectedOpponentTeamId: ''
       },
       teamRegistry: [],
+      athleteRegistry: [],
+      trainings: [],
       lineup: {
         left: null,
         center: null,
@@ -1017,6 +1062,8 @@
       other: ''
     };
     let teamEditorState = createEmptyTeamDraft();
+    const TRAINING_MEASURE_TYPES = ['tempo', 'quantidade', 'nota', 'acertos', 'carga', 'observação'];
+    let trainingDraftState = null;
 
     function createEmptyAthleteDraft() {
       return {
@@ -1085,6 +1132,110 @@
       return Array.isArray(list)
         ? list.map(normalizeTeam).filter(team => team.name || team.athletes.some(a => a.name || a.number))
         : [];
+    }
+
+    function createEmptyTrainingActivity() {
+      return {
+        id: `tr-act-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+        name: '',
+        measureType: 'quantidade'
+      };
+    }
+
+    function createEmptyTrainingDraft() {
+      return {
+        date: new Date().toISOString().slice(0, 10),
+        type: '',
+        notes: '',
+        activities: [createEmptyTrainingActivity()],
+        results: {}
+      };
+    }
+
+    function normalizeTrainingActivity(activity = {}) {
+      return {
+        id: String(activity.id || `tr-act-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`),
+        name: String(activity.name || '').trim(),
+        measureType: TRAINING_MEASURE_TYPES.includes(activity.measureType) ? activity.measureType : 'quantidade'
+      };
+    }
+
+    function normalizeTrainingItem(training = {}) {
+      const activities = Array.isArray(training.activities) ? training.activities.map(normalizeTrainingActivity) : [];
+      const validActivityIds = new Set(activities.map(activity => activity.id));
+      const results = Array.isArray(training.results)
+        ? training.results
+          .map((result) => ({
+            activityId: String(result.activityId || ''),
+            athleteId: String(result.athleteId || ''),
+            value: String(result.value || '').trim()
+          }))
+          .filter((result) => result.activityId && validActivityIds.has(result.activityId) && result.athleteId && result.value)
+        : [];
+      return {
+        id: String(training.id || `training-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`),
+        date: String(training.date || '').slice(0, 10),
+        type: String(training.type || '').trim(),
+        notes: String(training.notes || '').trim(),
+        activities,
+        results,
+        createdAt: training.createdAt || new Date().toISOString(),
+        updatedAt: training.updatedAt || new Date().toISOString()
+      };
+    }
+
+    function normalizeTrainings(list) {
+      return Array.isArray(list)
+        ? list.map(normalizeTrainingItem).filter(training => training.date && training.activities.length)
+        : [];
+    }
+
+    function getAthleteIdentityKey(athlete = {}) {
+      const number = String(athlete.number || '').trim().toLowerCase();
+      const name = String(athlete.name || '').trim().toLowerCase();
+      if (!number && !name) return '';
+      return `${number}::${name}`;
+    }
+
+    function rebuildGlobalAthleteRegistry({ persist = false } = {}) {
+      const byKey = new Map();
+      const registerAthlete = (athlete) => {
+        if (!athlete) return;
+        const normalized = {
+          id: String(athlete.id || '').trim(),
+          name: String(athlete.name || '').trim(),
+          number: String(athlete.number || '').trim(),
+          role: String(athlete.role || athlete.position || '').trim(),
+          notes: String(athlete.notes || athlete.observation || '').trim()
+        };
+        const key = getAthleteIdentityKey(normalized);
+        if (!key) return;
+        if (byKey.has(key)) {
+          const existing = byKey.get(key);
+          if (!existing.role && normalized.role) existing.role = normalized.role;
+          if (!existing.notes && normalized.notes) existing.notes = normalized.notes;
+          return;
+        }
+        byKey.set(key, {
+          id: normalized.id || `ath-global-${btoa(unescape(encodeURIComponent(key))).replace(/=+$/g, '')}`,
+          name: normalized.name,
+          number: normalized.number,
+          role: normalized.role,
+          notes: normalized.notes
+        });
+      };
+
+      normalizeAthleteList(AppState.athleteRegistry).forEach(registerAthlete);
+      AppState.teamRegistry.forEach(team => team.athletes.forEach(registerAthlete));
+      normalizeAthleteList(AppState.config.myAthletes).forEach(registerAthlete);
+      normalizeAthleteList(AppState.config.opponentAthletes).forEach(registerAthlete);
+
+      AppState.athleteRegistry = Array.from(byKey.values()).sort((a, b) => {
+        const na = String(a.name || '');
+        const nb = String(b.name || '');
+        return na.localeCompare(nb, 'pt-BR');
+      });
+      if (persist) saveToLocalStorage();
     }
 
     function getSavedTeamById(teamId) {
@@ -1537,6 +1688,8 @@
         statistics,
         config: AppState.config,
         teamRegistry: AppState.teamRegistry,
+        athleteRegistry: AppState.athleteRegistry,
+        trainings: AppState.trainings,
         lineup: AppState.lineup,
         targetPlans: AppState.targetPlans,
         currentTargets: AppState.currentTargets,
@@ -1641,6 +1794,8 @@
         matchId: AppState.matchId,
         config: AppState.config,
         teamRegistry: AppState.teamRegistry,
+        athleteRegistry: AppState.athleteRegistry,
+        trainings: AppState.trainings,
         lineup: AppState.lineup,
         targetPlans: AppState.targetPlans,
         currentTargets: AppState.currentTargets,
@@ -1696,7 +1851,10 @@
       AppState.config = { ...AppState.config, ...(payload.config || {}) };
       normalizeConfigAthletes();
       AppState.teamRegistry = normalizeTeamRegistry(payload.teamRegistry || AppState.teamRegistry);
+      AppState.athleteRegistry = normalizeAthleteList(payload.athleteRegistry || AppState.athleteRegistry);
+      AppState.trainings = normalizeTrainings(payload.trainings || AppState.trainings);
       migrateLegacyTeams();
+      rebuildGlobalAthleteRegistry();
       AppState.lineup = payload.lineup || AppState.lineup;
       normalizeLineupState();
       AppState.targetPlans = payload.targetPlans || AppState.targetPlans;
@@ -1726,6 +1884,7 @@
       renderSavedTeamSelectors();
       renderTeamManagement();
       renderTargetPlan();
+      renderTrainingModule();
     }
 
     function updateUiAfterStateSync() {
@@ -1735,6 +1894,7 @@
       updateAllStats();
       renderHistory();
       renderRecentEvents();
+      renderTrainingModule();
     }
 
     function resolveConflictByUpdatedAt(remoteMatch, localCache) {
@@ -1769,8 +1929,12 @@
         updateSyncStatus(snap.metadata.fromCache ? 'offline' : 'synced');
         suppressCloudSync = true;
         AppState.config = { ...AppState.config, ...(data.config || {}) };
+        normalizeConfigAthletes();
         AppState.teamRegistry = normalizeTeamRegistry(data.teamRegistry || AppState.teamRegistry);
+        AppState.athleteRegistry = normalizeAthleteList(data.athleteRegistry || AppState.athleteRegistry);
+        AppState.trainings = normalizeTrainings(data.trainings || AppState.trainings);
         migrateLegacyTeams();
+        rebuildGlobalAthleteRegistry();
         AppState.lineup = data.lineup || AppState.lineup;
         normalizeLineupState();
         AppState.targetPlans = data.targetPlans || AppState.targetPlans;
@@ -1851,6 +2015,8 @@
         matchId: activeMatch?.id || null,
         config: activeData.config || AppState.config,
         teamRegistry: activeData.teamRegistry || AppState.teamRegistry,
+        athleteRegistry: activeData.athleteRegistry || AppState.athleteRegistry,
+        trainings: activeData.trainings || AppState.trainings,
         lineup: activeData.lineup || AppState.lineup,
         targetPlans: activeData.targetPlans || AppState.targetPlans,
         currentTargets: activeData.currentTargets || AppState.currentTargets,
@@ -3190,6 +3356,9 @@
       if (tabId === 'analise') {
         renderAnalysis();
       }
+      if (tabId === 'treinos') {
+        renderTrainingModule();
+      }
       if (tabId === 'prancheta') {
         requestAnimationFrame(() => {
           refreshTacticalBoardLayout();
@@ -3282,6 +3451,7 @@
       if (side === 'opponent') AppState.config.showOpponent = true;
       AppState.config[side === 'my' ? 'myTeam' : 'opponentTeam'] = team.name;
       AppState.config[side === 'my' ? 'myAthletes' : 'opponentAthletes'] = buildConfigAthletesFromTeam(team);
+      rebuildGlobalAthleteRegistry();
       validateLineupIndices();
       ensureOpponentLineupDefaults();
       loadConfigToForm();
@@ -3444,6 +3614,7 @@
     
     function loadConfigToForm() {
       normalizeConfigAthletes();
+      rebuildGlobalAthleteRegistry();
       document.getElementById('config-competition').value = AppState.config.competition || '';
       document.getElementById('config-location').value = AppState.config.location || '';
       document.getElementById('config-date').value = AppState.config.date || '';
@@ -3514,6 +3685,7 @@
       updateLineupDisplay();
       updateCourtSideDisplay();
       renderTargetPlan();
+      renderTrainingModule();
       saveToLocalStorage();
       showToast('✅ Configuração salva com sucesso!');
     }
@@ -3564,6 +3736,8 @@
 
       renderSavedTeamSelectors();
       renderTeamManagement();
+      rebuildGlobalAthleteRegistry();
+      renderTrainingModule();
       saveToLocalStorage();
       resetTeamEditor();
       showToast('✅ Equipe salva com sucesso!');
@@ -3579,6 +3753,8 @@
       if (AppState.config.selectedOpponentTeamId === teamId) clearSavedTeamSelection('opponent');
       renderSavedTeamSelectors();
       renderTeamManagement();
+      rebuildGlobalAthleteRegistry();
+      renderTrainingModule();
       saveToLocalStorage();
       resetTeamEditor();
       showToast('🗑️ Equipe excluída.');
@@ -5497,6 +5673,240 @@ function renderHeatmap(optionsOrFilter) {
     }
     
     // =====================================================
+    // TREINOS TAB FUNCTIONS
+    // =====================================================
+
+    function getTrainingAthletes() {
+      rebuildGlobalAthleteRegistry();
+      return AppState.athleteRegistry.filter(hasAthleteIdentity);
+    }
+
+    function getMeasureTypeInputHint(measureType) {
+      if (measureType === 'tempo') return 'Ex.: 12.3 ou 01:12';
+      if (measureType === 'observação') return 'Observação do atleta';
+      return 'Resultado';
+    }
+
+    function renderTrainingDraftActivities() {
+      const list = document.getElementById('training-activities-list');
+      if (!list || !trainingDraftState) return;
+      list.innerHTML = trainingDraftState.activities.map((activity, idx) => `
+        <div class="border border-slate-200 rounded-xl p-3 grid grid-cols-1 md:grid-cols-[1fr_180px_auto] gap-2 items-center" data-training-activity-row="${idx}">
+          <input type="text" class="training-activity-name px-3 py-2 border border-slate-300 rounded-lg" placeholder="Nome da atividade (ex.: Velocidade)" value="${escapeAttribute(activity.name)}" data-index="${idx}">
+          <select class="training-activity-measure px-3 py-2 border border-slate-300 rounded-lg" data-index="${idx}">
+            ${TRAINING_MEASURE_TYPES.map(type => `<option value="${type}" ${activity.measureType === type ? 'selected' : ''}>${type}</option>`).join('')}
+          </select>
+          <button class="remove-training-activity px-3 py-2 rounded-lg border border-red-200 text-red-700 text-sm" data-index="${idx}">Remover</button>
+        </div>
+      `).join('');
+    }
+
+    function renderTrainingResultsGrid() {
+      const container = document.getElementById('training-results-grid');
+      if (!container || !trainingDraftState) return;
+      const athletes = getTrainingAthletes();
+      if (!athletes.length) {
+        container.innerHTML = '<div class="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-3">Cadastre atletas no sistema para lançar resultados de treino.</div>';
+        return;
+      }
+      container.innerHTML = trainingDraftState.activities.map(activity => `
+        <div class="border border-slate-200 rounded-xl p-3">
+          <div class="flex items-center justify-between mb-2">
+            <h4 class="font-semibold text-slate-700">${escapeHtml(activity.name || 'Atividade sem nome')}</h4>
+            <span class="text-xs px-2 py-1 rounded bg-slate-100 text-slate-600">${escapeHtml(activity.measureType)}</span>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+            ${athletes.map(athlete => {
+              const key = `${activity.id}::${athlete.id}`;
+              return `
+                <label class="flex flex-col gap-1 text-sm">
+                  <span class="text-slate-600">${escapeHtml(formatAthleteDisplay(athlete, { withHash: false }))}</span>
+                  <input type="text" class="training-result-input px-3 py-2 border border-slate-300 rounded-lg" data-activity-id="${activity.id}" data-athlete-id="${athlete.id}" placeholder="${escapeAttribute(getMeasureTypeInputHint(activity.measureType))}" value="${escapeAttribute(trainingDraftState.results[key] || '')}">
+                </label>
+              `;
+            }).join('')}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function parseTrainingValue(value, measureType) {
+      const raw = String(value || '').trim().replace(',', '.');
+      if (!raw) return null;
+      if (measureType === 'observação') return null;
+      if (measureType === 'tempo') {
+        if (raw.includes(':')) {
+          const parts = raw.split(':').map(Number).filter(n => !Number.isNaN(n));
+          if (!parts.length) return null;
+          if (parts.length === 2) return parts[0] * 60 + parts[1];
+        }
+      }
+      const parsed = Number(raw);
+      return Number.isFinite(parsed) ? parsed : null;
+    }
+
+    function formatTrainingNumeric(value, measureType) {
+      if (value === null || value === undefined || Number.isNaN(value)) return '-';
+      if (measureType === 'tempo') return `${value.toFixed(2)} s`;
+      return String(Number(value.toFixed(2))).replace('.', ',');
+    }
+
+    function renderTrainingAnalysis() {
+      const activityFilter = document.getElementById('training-analysis-activity')?.value || 'all';
+      const checkedAthletes = Array.from(document.querySelectorAll('.training-compare-athlete:checked')).map(input => input.value);
+      const summary = document.getElementById('training-analysis-summary');
+      const timeline = document.getElementById('training-analysis-timeline');
+      if (!summary || !timeline) return;
+
+      const trainingMap = new Map(AppState.trainings.map(training => [training.id, training]));
+      const records = [];
+      AppState.trainings.forEach((training) => {
+        training.results.forEach((result) => {
+          const activity = training.activities.find(item => item.id === result.activityId);
+          if (!activity) return;
+          if (activityFilter !== 'all' && activity.id !== activityFilter) return;
+          records.push({
+            trainingId: training.id,
+            trainingDate: training.date,
+            athleteId: result.athleteId,
+            activityName: activity.name,
+            measureType: activity.measureType,
+            rawValue: result.value,
+            numericValue: parseTrainingValue(result.value, activity.measureType)
+          });
+        });
+      });
+
+      const filtered = checkedAthletes.length ? records.filter(record => checkedAthletes.includes(record.athleteId)) : records;
+      if (!filtered.length) {
+        summary.innerHTML = '<p class="col-span-full text-sm text-slate-500">Sem dados de treino para os filtros selecionados.</p>';
+        timeline.innerHTML = '<p class="text-sm text-slate-500">Nenhuma evolução disponível.</p>';
+        return;
+      }
+
+      const athletesById = Object.fromEntries(getTrainingAthletes().map(athlete => [athlete.id, athlete]));
+      const grouped = filtered.reduce((acc, item) => {
+        if (!acc[item.athleteId]) acc[item.athleteId] = [];
+        acc[item.athleteId].push(item);
+        return acc;
+      }, {});
+
+      const cards = Object.entries(grouped).map(([athleteId, entries]) => {
+        const athlete = athletesById[athleteId];
+        const numericEntries = entries.filter(item => item.numericValue !== null);
+        const ordered = [...entries].sort((a, b) => String(a.trainingDate).localeCompare(String(b.trainingDate)));
+        const last = ordered[ordered.length - 1];
+        const measureType = entries[0]?.measureType || 'quantidade';
+        const avg = numericEntries.length ? numericEntries.reduce((sum, item) => sum + item.numericValue, 0) / numericEntries.length : null;
+        const best = numericEntries.length
+          ? (measureType === 'tempo'
+            ? Math.min(...numericEntries.map(item => item.numericValue))
+            : Math.max(...numericEntries.map(item => item.numericValue)))
+          : null;
+        return `
+          <div class="border border-slate-200 rounded-xl p-3 bg-slate-50">
+            <h4 class="font-semibold text-slate-700">${escapeHtml(formatAthleteDisplay(athlete || {}, { withHash: false, fallback: athleteId }))}</h4>
+            <div class="text-sm text-slate-600 mt-2 space-y-1">
+              <div>Média: <strong>${formatTrainingNumeric(avg, measureType)}</strong></div>
+              <div>Melhor: <strong>${formatTrainingNumeric(best, measureType)}</strong></div>
+              <div>Último: <strong>${escapeHtml(last?.rawValue || '-')}</strong></div>
+            </div>
+          </div>
+        `;
+      });
+      summary.innerHTML = cards.join('');
+
+      const orderedTimeline = [...filtered].sort((a, b) => String(a.trainingDate).localeCompare(String(b.trainingDate)));
+      timeline.innerHTML = orderedTimeline.slice(-40).map((item) => {
+        const athlete = athletesById[item.athleteId];
+        const training = trainingMap.get(item.trainingId);
+        return `<div class="p-2 rounded border border-slate-200 bg-white">${escapeHtml(item.trainingDate)} • <strong>${escapeHtml(formatAthleteDisplay(athlete || {}, { withHash: false, fallback: item.athleteId }))}</strong> • ${escapeHtml(item.activityName)}: ${escapeHtml(item.rawValue)}${training?.type ? ` <span class="text-slate-500">(${escapeHtml(training.type)})</span>` : ''}</div>`;
+      }).join('');
+    }
+
+    function renderTrainingModule() {
+      if (!trainingDraftState) trainingDraftState = createEmptyTrainingDraft();
+      const dateInput = document.getElementById('training-date');
+      const typeInput = document.getElementById('training-type');
+      const notesInput = document.getElementById('training-notes');
+      if (dateInput) dateInput.value = trainingDraftState.date || '';
+      if (typeInput) typeInput.value = trainingDraftState.type || '';
+      if (notesInput) notesInput.value = trainingDraftState.notes || '';
+
+      renderTrainingDraftActivities();
+      renderTrainingResultsGrid();
+
+      const activitySelect = document.getElementById('training-analysis-activity');
+      if (activitySelect) {
+        const current = activitySelect.value || 'all';
+        const options = [{ value: 'all', label: 'Todas as atividades' }];
+        AppState.trainings.forEach((training) => training.activities.forEach((activity) => options.push({ value: activity.id, label: `${activity.name} (${training.date})` })));
+        activitySelect.innerHTML = options.map(option => `<option value="${option.value}">${escapeHtml(option.label || 'Atividade')}</option>`).join('');
+        activitySelect.value = options.some(option => option.value === current) ? current : 'all';
+      }
+
+      const compareContainer = document.getElementById('training-athlete-compare');
+      const athletes = getTrainingAthletes();
+      if (compareContainer) {
+        compareContainer.innerHTML = athletes.length
+          ? athletes.map(athlete => `<label class="flex items-center gap-2"><input type="checkbox" class="training-compare-athlete" value="${athlete.id}"> <span>${escapeHtml(formatAthleteDisplay(athlete, { withHash: false }))}</span></label>`).join('')
+          : '<p class="text-slate-500 text-sm">Sem atletas cadastrados.</p>';
+      }
+
+      const history = document.getElementById('training-history-list');
+      if (history) {
+        if (!AppState.trainings.length) {
+          history.innerHTML = '<p class="text-sm text-slate-500">Nenhum treino salvo.</p>';
+        } else {
+          const sorted = [...AppState.trainings].sort((a, b) => String(b.date).localeCompare(String(a.date)));
+          history.innerHTML = sorted.map(training => `
+            <div class="border border-slate-200 rounded-lg p-3 flex items-center justify-between gap-2">
+              <div>
+                <div class="font-medium text-slate-700">${escapeHtml(training.date)} • ${escapeHtml(training.type || 'Sem tipo')}</div>
+                <div class="text-xs text-slate-500">${training.activities.length} atividade(s) • ${training.results.length} resultado(s)</div>
+              </div>
+              <button class="delete-training-btn px-3 py-2 rounded-lg border border-red-200 text-red-700 text-sm" data-training-id="${training.id}">Excluir</button>
+            </div>
+          `).join('');
+        }
+      }
+      renderTrainingAnalysis();
+    }
+
+    function saveTraining() {
+      if (!trainingDraftState) return;
+      const activities = trainingDraftState.activities
+        .map(normalizeTrainingActivity)
+        .filter(activity => activity.name);
+      if (!trainingDraftState.date || !activities.length) {
+        showToast('⚠️ Informe data e ao menos uma atividade com nome.');
+        return;
+      }
+      const activityIds = new Set(activities.map(activity => activity.id));
+      const results = Object.entries(trainingDraftState.results || {})
+        .map(([key, value]) => {
+          const [activityId, athleteId] = key.split('::');
+          return { activityId, athleteId, value: String(value || '').trim() };
+        })
+        .filter(result => activityIds.has(result.activityId) && result.athleteId && result.value);
+      const training = normalizeTrainingItem({
+        id: `training-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+        date: trainingDraftState.date,
+        type: trainingDraftState.type,
+        notes: trainingDraftState.notes,
+        activities,
+        results,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      });
+      AppState.trainings.unshift(training);
+      trainingDraftState = createEmptyTrainingDraft();
+      renderTrainingModule();
+      saveToLocalStorage();
+      showToast('✅ Treino salvo com sucesso.');
+    }
+
+    // =====================================================
     // EVENT LISTENERS
     // =====================================================
     
@@ -5572,6 +5982,52 @@ function renderHeatmap(optionsOrFilter) {
           updateConfigAthleteValidationHighlights();
         }
       });
+
+      document.getElementById('add-training-activity').addEventListener('click', () => {
+        if (!trainingDraftState) trainingDraftState = createEmptyTrainingDraft();
+        trainingDraftState.activities.push(createEmptyTrainingActivity());
+        renderTrainingModule();
+      });
+      document.getElementById('training-activities-list').addEventListener('input', (e) => {
+        const idx = Number(e.target.dataset.index);
+        if (Number.isNaN(idx) || !trainingDraftState?.activities[idx]) return;
+        if (e.target.classList.contains('training-activity-name')) trainingDraftState.activities[idx].name = e.target.value;
+        if (e.target.classList.contains('training-activity-measure')) trainingDraftState.activities[idx].measureType = e.target.value;
+        renderTrainingResultsGrid();
+      });
+      document.getElementById('training-activities-list').addEventListener('click', (e) => {
+        const btn = e.target.closest('.remove-training-activity');
+        if (!btn || !trainingDraftState) return;
+        const idx = Number(btn.dataset.index);
+        trainingDraftState.activities.splice(idx, 1);
+        if (!trainingDraftState.activities.length) trainingDraftState.activities.push(createEmptyTrainingActivity());
+        renderTrainingModule();
+      });
+      document.getElementById('training-results-grid').addEventListener('input', (e) => {
+        if (!e.target.classList.contains('training-result-input') || !trainingDraftState) return;
+        const key = `${e.target.dataset.activityId}::${e.target.dataset.athleteId}`;
+        trainingDraftState.results[key] = e.target.value;
+      });
+      ['training-date', 'training-type', 'training-notes'].forEach((id) => {
+        document.getElementById(id).addEventListener('input', (e) => {
+          if (!trainingDraftState) trainingDraftState = createEmptyTrainingDraft();
+          if (id === 'training-date') trainingDraftState.date = e.target.value;
+          if (id === 'training-type') trainingDraftState.type = e.target.value;
+          if (id === 'training-notes') trainingDraftState.notes = e.target.value;
+        });
+      });
+      document.getElementById('save-training-btn').addEventListener('click', saveTraining);
+      document.getElementById('training-history-list').addEventListener('click', (e) => {
+        const btn = e.target.closest('.delete-training-btn');
+        if (!btn) return;
+        const trainingId = btn.dataset.trainingId;
+        AppState.trainings = AppState.trainings.filter(training => training.id !== trainingId);
+        saveToLocalStorage();
+        renderTrainingModule();
+        showToast('🗑️ Treino removido.');
+      });
+      document.getElementById('training-analysis-activity').addEventListener('change', renderTrainingAnalysis);
+      document.getElementById('training-athlete-compare').addEventListener('change', renderTrainingAnalysis);
       
       // Escalação tab
       document.querySelectorAll('.phase-btn').forEach(btn => {
@@ -6527,6 +6983,8 @@ populateHeatmapAthletes();
         matchId: AppState.matchId,
         config: AppState.config,
         teamRegistry: AppState.teamRegistry,
+        athleteRegistry: AppState.athleteRegistry,
+        trainings: AppState.trainings,
         lineup: AppState.lineup,
         targetPlans: AppState.targetPlans,
         currentTargets: AppState.currentTargets,
@@ -6553,8 +7011,12 @@ populateHeatmapAthletes();
           if (!parsed.matchId || !Array.isArray(parsed.events)) throw new Error('Arquivo inválido');
           AppState.matchId = parsed.matchId;
           AppState.config = { ...AppState.config, ...(parsed.config || {}) };
+          normalizeConfigAthletes();
           AppState.teamRegistry = normalizeTeamRegistry(parsed.teamRegistry || AppState.teamRegistry);
+          AppState.athleteRegistry = normalizeAthleteList(parsed.athleteRegistry || AppState.athleteRegistry);
+          AppState.trainings = normalizeTrainings(parsed.trainings || AppState.trainings);
           migrateLegacyTeams();
+          rebuildGlobalAthleteRegistry();
           AppState.lineup = parsed.lineup || AppState.lineup;
           normalizeLineupState();
           AppState.targetPlans = parsed.targetPlans || AppState.targetPlans;
@@ -6571,6 +7033,7 @@ populateHeatmapAthletes();
           renderSavedTeamSelectors();
           renderTeamManagement();
           renderTargetPlan();
+          renderTrainingModule();
           renderHistoryMatchSelector();
           renderReportMatchSelector();
           renderHistory();
@@ -6595,10 +7058,15 @@ populateHeatmapAthletes();
       loadFromLocalStorage();
       normalizeLineupState();
       migrateLegacyTeams();
+      AppState.athleteRegistry = normalizeAthleteList(AppState.athleteRegistry);
+      AppState.trainings = normalizeTrainings(AppState.trainings);
+      rebuildGlobalAthleteRegistry();
+      trainingDraftState = createEmptyTrainingDraft();
       loadConfigToForm();
       renderAthleteInputs();
       renderSavedTeamSelectors();
       renderTeamManagement();
+      renderTrainingModule();
       ensureOpponentLineupDefaults();
       updateLineupSelectors();
       updateLineupDisplay();
