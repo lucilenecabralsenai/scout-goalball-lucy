@@ -412,6 +412,14 @@
           <div class="rounded-lg border p-3"><h4 class="font-semibold text-sm mb-2">Resumo de ações</h4><div id="timeout-actions-summary" class="text-sm text-slate-700 space-y-1"></div></div>
          </div>
          <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div class="rounded-lg border border-rose-200 bg-rose-50 p-3"><h4 class="font-semibold text-sm mb-2">Leitura inteligente - Adversário</h4><div id="timeout-smart-opponent" class="text-sm text-slate-700 space-y-1"></div></div>
+          <div class="rounded-lg border border-blue-200 bg-blue-50 p-3"><h4 class="font-semibold text-sm mb-2">Leitura inteligente - Minha equipe</h4><div id="timeout-smart-my" class="text-sm text-slate-700 space-y-1"></div></div>
+         </div>
+         <div class="rounded-lg border border-emerald-200 bg-emerald-50 p-3">
+          <h4 class="font-semibold text-sm mb-2">Sugestões objetivas para o timeout</h4>
+          <div id="timeout-smart-suggestions" class="text-sm text-slate-700 space-y-1"></div>
+         </div>
+         <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
           <div class="rounded-lg border border-blue-200 bg-blue-50 p-3"><h4 id="timeout-my-requests-title" class="font-semibold text-sm mb-1">Banco de pedidos - Minha Equipe</h4><div id="timeout-my-requests" class="text-sm text-slate-700 space-y-1"></div></div>
           <div class="rounded-lg border border-rose-200 bg-rose-50 p-3"><h4 id="timeout-opp-requests-title" class="font-semibold text-sm mb-1">Banco de pedidos - Adversário</h4><div id="timeout-opp-requests" class="text-sm text-slate-700 space-y-1"></div></div>
          </div>
@@ -490,8 +498,33 @@
          </div>
          <div class="h-px bg-slate-200"></div>
          <div class="flex items-center justify-between text-sm">
-          <span class="text-slate-600">Atleta mais ativo</span>
-          <span id="live-most-active-athlete" class="font-semibold text-blue-700">-</span>
+          <span class="text-slate-600">Atleta mais ativo (minha equipe)</span>
+          <span id="live-most-active-athlete-my" class="font-semibold text-green-700">-</span>
+         </div>
+         <div class="flex items-center justify-between text-sm">
+          <span class="text-slate-600">Atleta mais ativo (adversário)</span>
+          <span id="live-most-active-athlete-opponent" class="font-semibold text-red-700">-</span>
+         </div>
+         <div class="h-px bg-slate-200"></div>
+         <div class="flex items-center justify-between text-sm">
+          <span class="text-slate-600">Corredor mais explorado (minha equipe)</span>
+          <span id="live-top-lane-my" class="font-semibold text-green-700">-</span>
+         </div>
+         <div class="flex items-center justify-between text-sm">
+          <span class="text-slate-600">Corredor mais explorado (adversário)</span>
+          <span id="live-top-lane-opponent" class="font-semibold text-red-700">-</span>
+         </div>
+         <div>
+          <div class="text-[11px] font-semibold uppercase tracking-wide text-slate-500 mb-1">Distribuição recente dos ataques</div>
+          <div id="live-recent-distribution" class="space-y-1 text-xs text-slate-700">
+           <p class="text-slate-400">Sem dados recentes.</p>
+          </div>
+         </div>
+         <div>
+          <div class="text-[11px] font-semibold uppercase tracking-wide text-slate-500 mb-1">Aproveitamento (atleta/zona)</div>
+          <div id="live-efficiency-clues" class="space-y-1 text-xs text-slate-700">
+           <p class="text-slate-400">Sem volume suficiente.</p>
+          </div>
          </div>
          <div class="h-px bg-slate-200"></div>
          <div>
@@ -501,6 +534,12 @@
           </div>
           <div id="live-behavior-alerts" class="space-y-1 text-xs text-slate-600">
            <p class="text-slate-400">Sem padrão repetitivo relevante no momento.</p>
+          </div>
+         </div>
+         <div>
+          <div class="text-[11px] font-semibold uppercase tracking-wide text-slate-500 mb-1">Sugestões rápidas</div>
+          <div id="live-decision-suggestions" class="space-y-1 text-xs text-slate-700">
+           <p class="text-slate-400">Sem sugestão crítica no momento.</p>
           </div>
          </div>
         </div>
@@ -1036,6 +1075,8 @@
     const BEHAVIOR_ALERT_WINDOW = 5;
     const BEHAVIOR_ALERT_RECENT_WINDOW = 3;
     const BEHAVIOR_ALERT_COOLDOWN_EVENTS = 2;
+    const RECENT_DISTRIBUTION_WINDOW = 6;
+    const LOW_EFFICIENCY_MIN_ATTEMPTS = 3;
     const behaviorAlertState = {
       lastSignature: '',
       lastEventCount: 0
@@ -4599,10 +4640,14 @@
 
     function openTimeoutReport(team) {
       const attackEvents = getCurrentMatchEvents().filter(e => e.type === 'event');
+      const shotEvents = attackEvents.filter(isShotEvent);
       const score = getScoreForMatch(AppState.matchId);
       const timeoutTeamLabel = getTeamLabel(team);
       const myRequests = formatRequestSummary('my');
       const oppRequests = formatRequestSummary('opponent');
+      const mySummary = summarizeTeamReading(shotEvents, 'my');
+      const oppSummary = summarizeTeamReading(shotEvents, 'opponent');
+      const timeoutSuggestions = buildDecisionSuggestions(mySummary, oppSummary);
 
       const allResults = {
         gol: attackEvents.filter(e => e.result === 'gol').length,
@@ -4628,6 +4673,19 @@
         <div>⚠️ Penalidades: <strong>${allResults.penalidade}</strong></div>
         <div>🔁 Ball Over: <strong>${allResults.ballover}</strong></div>
       `;
+      document.getElementById('timeout-smart-opponent').innerHTML = `
+        <div>Alvo mais usado: <strong>${oppSummary.topTargetEntry ? `${oppSummary.topTargetEntry[0]} (${oppSummary.topTargetEntry[1]})` : '-'}</strong></div>
+        <div>Atleta mais ativo: <strong>${oppSummary.topAthleteEntry ? `${oppSummary.topAthleteEntry[0]} (${oppSummary.topAthleteEntry[1].attacks})` : '-'}</strong></div>
+        <div>Corredor mais explorado: <strong>${oppSummary.topLaneEntry && oppSummary.topLaneEntry[1] > 0 ? `${oppSummary.topLaneEntry[0]} (${oppSummary.topLaneEntry[1]})` : '-'}</strong></div>
+      `;
+      document.getElementById('timeout-smart-my').innerHTML = `
+        <div>Alvo mais usado: <strong>${mySummary.topTargetEntry ? `${mySummary.topTargetEntry[0]} (${mySummary.topTargetEntry[1]})` : '-'}</strong></div>
+        <div>Atleta mais ativo: <strong>${mySummary.topAthleteEntry ? `${mySummary.topAthleteEntry[0]} (${mySummary.topAthleteEntry[1].attacks})` : '-'}</strong></div>
+        <div>Melhor zona de aproveitamento: <strong>${mySummary.bestZoneEfficiency ? `${mySummary.bestZoneEfficiency[0]} (${Math.round((mySummary.bestZoneEfficiency[1].goals / mySummary.bestZoneEfficiency[1].attacks) * 100)}%)` : '-'}</strong></div>
+      `;
+      document.getElementById('timeout-smart-suggestions').innerHTML = timeoutSuggestions
+        .map((item) => `<div>• ${item}</div>`)
+        .join('');
       document.getElementById('timeout-my-requests').innerHTML = myRequests;
       document.getElementById('timeout-opp-requests').innerHTML = oppRequests;
 
@@ -4862,81 +4920,151 @@
       return { number, name, label: `${number || '?'} - ${name || 'N/A'}` };
     }
 
+    function getTargetLane(target) {
+      const normalized = normalizeTarget(target);
+      if (['1', '2', '2/3'].includes(normalized)) return 'Esquerda';
+      if (['3', 'Meio', '4'].includes(normalized)) return 'Centro';
+      if (['4/5', '5', '6'].includes(normalized)) return 'Direita';
+      return '';
+    }
+
+    function summarizeTeamReading(shotEvents, team) {
+      const teamEvents = shotEvents.filter((event) => event.team === team);
+      const targetTotals = {};
+      const laneTotals = { Esquerda: 0, Centro: 0, Direita: 0 };
+      const athleteTotals = {};
+      const zoneStats = {};
+      teamEvents.forEach((event) => {
+        const target = normalizeTarget(event.target);
+        if (target) {
+          targetTotals[target] = (targetTotals[target] || 0) + 1;
+          if (!zoneStats[target]) zoneStats[target] = { attacks: 0, goals: 0 };
+          zoneStats[target].attacks += 1;
+          if (event.result === 'gol') zoneStats[target].goals += 1;
+        }
+        const lane = getTargetLane(target);
+        if (lane) laneTotals[lane] += 1;
+        const athleteLabel = formatAthleteDisplay({ number: event.athleteNumber, name: event.athleteName });
+        athleteTotals[athleteLabel] = athleteTotals[athleteLabel] || { attacks: 0, goals: 0 };
+        athleteTotals[athleteLabel].attacks += 1;
+        if (event.result === 'gol') athleteTotals[athleteLabel].goals += 1;
+      });
+
+      const topTargetEntry = Object.entries(targetTotals).sort((a, b) => b[1] - a[1])[0] || null;
+      const topLaneEntry = Object.entries(laneTotals).sort((a, b) => b[1] - a[1])[0] || null;
+      const athleteRanking = Object.entries(athleteTotals).sort((a, b) => b[1].attacks - a[1].attacks);
+      const topAthleteEntry = athleteRanking[0] || null;
+      const bestAthleteEfficiency = athleteRanking
+        .filter(([, stats]) => stats.attacks >= 2)
+        .sort((a, b) => (b[1].goals / b[1].attacks) - (a[1].goals / a[1].attacks))[0] || null;
+      const bestZoneEfficiency = Object.entries(zoneStats)
+        .filter(([, stats]) => stats.attacks >= 2)
+        .sort((a, b) => (b[1].goals / b[1].attacks) - (a[1].goals / a[1].attacks))[0] || null;
+      const lowZones = Object.entries(zoneStats)
+        .filter(([, stats]) => stats.attacks >= LOW_EFFICIENCY_MIN_ATTEMPTS && stats.goals === 0)
+        .sort((a, b) => b[1].attacks - a[1].attacks);
+
+      return {
+        teamEvents,
+        topTargetEntry,
+        topLaneEntry,
+        topAthleteEntry,
+        bestAthleteEfficiency,
+        bestZoneEfficiency,
+        lowZones,
+        zoneStats
+      };
+    }
+
     function buildBehaviorAlerts(matchEvents) {
       const shotEvents = matchEvents.filter(isShotEvent);
       const alerts = [];
-      const rightSideTargets = new Set(['4', '4/5', '5', '6']);
+      const teams = ['opponent', 'my'];
 
-      const buildTeamTargetAlert = (team) => {
+      teams.forEach((team) => {
         const teamEvents = shotEvents.filter((event) => event.team === team);
         const latestThree = teamEvents.slice(-BEHAVIOR_ALERT_RECENT_WINDOW);
-        if (latestThree.length < BEHAVIOR_ALERT_RECENT_WINDOW) return;
-        const targetTotals = latestThree.reduce((acc, event) => {
+        if (latestThree.length >= BEHAVIOR_ALERT_RECENT_WINDOW) {
+          const repeatedTarget = latestThree.every((event) => normalizeTarget(event.target) === normalizeTarget(latestThree[0].target));
+          if (repeatedTarget) {
+            const target = normalizeTarget(latestThree[0].target) || '-';
+            alerts.push({
+              key: `${team}-same-target-${target}`,
+              priority: team === 'opponent' ? 0 : 3,
+              text: `${getTeamLabel(team)} repetiu o alvo ${target} nas últimas ${BEHAVIOR_ALERT_RECENT_WINDOW} jogadas.`
+            });
+          }
+        }
+
+        const latestFive = teamEvents.slice(-BEHAVIOR_ALERT_WINDOW);
+        if (latestFive.length >= 4) {
+          const athleteTotals = latestFive.reduce((acc, event) => {
+            const key = formatAthleteDisplay({ number: event.athleteNumber, name: event.athleteName });
+            acc[key] = (acc[key] || 0) + 1;
+            return acc;
+          }, {});
+          const [athlete, count] = Object.entries(athleteTotals).sort((a, b) => b[1] - a[1])[0] || [];
+          if (athlete && count >= 4) {
+            alerts.push({
+              key: `${team}-athlete-focus-${athlete}-${count}`,
+              priority: team === 'opponent' ? 1 : 4,
+              text: `${getTeamLabel(team)} concentrou ${count}/${latestFive.length} ataques no atleta ${athlete}.`
+            });
+          }
+        }
+      });
+
+      const oppRecent = shotEvents.filter((event) => event.team === 'opponent').slice(-RECENT_DISTRIBUTION_WINDOW);
+      if (oppRecent.length >= 4) {
+        const zoneTotals = oppRecent.reduce((acc, event) => {
           const target = normalizeTarget(event.target);
           if (!target) return acc;
           acc[target] = (acc[target] || 0) + 1;
           return acc;
         }, {});
-        const ranking = Object.entries(targetTotals).sort((a, b) => b[1] - a[1]);
-        if (!ranking.length || ranking[0][1] < 2) return;
-        const [target, count] = ranking[0];
-        const teamLabel = getTeamLabel(team);
-        alerts.push({
-          key: `${team}-target-recent-${target}-${count}`,
-          priority: team === 'opponent' ? 0 : 2,
-          text: `${teamLabel} repetiu alvo ${target} em ${count} das últimas ${BEHAVIOR_ALERT_RECENT_WINDOW} jogadas.`
-        });
-      };
-
-      buildTeamTargetAlert('opponent');
-      buildTeamTargetAlert('my');
-
-      const myLastFive = shotEvents.filter((event) => event.team === 'my').slice(-BEHAVIOR_ALERT_WINDOW);
-      if (myLastFive.length === BEHAVIOR_ALERT_WINDOW) {
-        const totals = myLastFive.reduce((acc, event) => {
-          const target = normalizeTarget(event.target);
-          if (!target) return acc;
-          acc[target] = (acc[target] || 0) + 1;
-          return acc;
-        }, {});
-        const ranking = Object.entries(totals).sort((a, b) => b[1] - a[1]);
-        if (ranking.length && ranking[0][1] >= 4) {
-          const [target, count] = ranking[0];
+        const [zone, count] = Object.entries(zoneTotals).sort((a, b) => b[1] - a[1])[0] || [];
+        if (zone && count >= 4) {
           alerts.push({
-            key: `my-heavy-target-${target}-${count}`,
-            priority: 1,
-            text: `${getTeamLabel('my')} está concentrando ataques no alvo ${target} (${count} de ${BEHAVIOR_ALERT_WINDOW} lances).`
+            key: `opp-risk-zone-${zone}-${count}`,
+            priority: 0,
+            text: `Risco defensivo alto na zona ${zone}: ${count} de ${oppRecent.length} ataques recentes do adversário.`
           });
         }
       }
 
-      const buildPivotRightAlert = (team) => {
-        const pivot = getPivotAthleteForTeam(team);
-        if (!pivot || (!pivot.number && !pivot.name)) return;
-        const pivotEvents = shotEvents
-          .filter((event) => {
-            if (event.team !== team) return false;
-            const athlete = resolveAthleteFromEvent(event);
-            if (!athlete) return false;
-            if (pivot.number && athlete.number) return athlete.number === pivot.number;
-            return pivot.name && athlete.name && athlete.name.toLowerCase() === pivot.name.toLowerCase();
-          })
-          .slice(-BEHAVIOR_ALERT_WINDOW);
-        if (pivotEvents.length < 3) return;
-        const rightHits = pivotEvents.filter((event) => rightSideTargets.has(normalizeTarget(event.target))).length;
-        if (rightHits < 3 || (rightHits / pivotEvents.length) < 0.67) return;
-        const teamLabel = team === 'opponent' ? `Pivô ${getTeamLabel('opponent')}` : `Pivô ${getTeamLabel('my')}`;
-        alerts.push({
-          key: `${team}-pivot-right-${rightHits}-${pivotEvents.length}`,
-          priority: team === 'opponent' ? 0 : 3,
-          text: `${teamLabel} está concentrando ataques no lado direito (${rightHits}/${pivotEvents.length}).`
-        });
-      };
+      const myRecent = shotEvents.filter((event) => event.team === 'my');
+      const recentFive = myRecent.slice(-5);
+      const previousFive = myRecent.slice(-10, -5);
+      if (recentFive.length === 5 && previousFive.length === 5) {
+        const recentEff = recentFive.filter((event) => event.result === 'gol').length / 5;
+        const prevEff = previousFive.filter((event) => event.result === 'gol').length / 5;
+        if ((prevEff - recentEff) >= 0.25) {
+          alerts.push({
+            key: `my-drop-eff-${Math.round(prevEff * 100)}-${Math.round(recentEff * 100)}`,
+            priority: 2,
+            text: `Queda no aproveitamento ofensivo: ${Math.round(prevEff * 100)}% para ${Math.round(recentEff * 100)}% nos últimos blocos.`
+          });
+        }
+      }
 
-      buildPivotRightAlert('opponent');
-      buildPivotRightAlert('my');
+      if (recentFive.length >= 4) {
+        const ballTypeTotals = recentFive.reduce((acc, event) => {
+          const key = normalizeBallType(event.ballType || '');
+          if (!key) return acc;
+          acc[key] = (acc[key] || 0) + 1;
+          return acc;
+        }, {});
+        const [ballType, typeCount] = Object.entries(ballTypeTotals).sort((a, b) => b[1] - a[1])[0] || [];
+        if (ballType && typeCount >= 4) {
+          alerts.push({
+            key: `my-balltype-repeat-${ballType}-${typeCount}`,
+            priority: 3,
+            text: `Padrão repetitivo: ${typeCount}/${recentFive.length} ataques com bola ${ballType}.`
+          });
+        }
+      }
 
-      return alerts.sort((a, b) => a.priority - b.priority).slice(0, 2);
+      return alerts.sort((a, b) => a.priority - b.priority).slice(0, 3);
     }
 
     function renderBehaviorAlerts(matchEvents) {
@@ -4955,39 +5083,59 @@
       if (canRenderRepeated) {
         behaviorAlertState.lastSignature = signature;
         behaviorAlertState.lastEventCount = eventsCount;
+      } else {
+        return;
       }
       container.innerHTML = alerts.map((alert) => `
         <p class="rounded-md border border-amber-200 bg-amber-50 px-2 py-1 text-amber-800">⚠️ ${alert.text}</p>
       `).join('');
     }
 
+    function buildDecisionSuggestions(mySummary, oppSummary) {
+      const suggestions = [];
+      if (oppSummary.topTargetEntry && oppSummary.topTargetEntry[1] >= 3) {
+        suggestions.push(`Fechar mais a zona ${oppSummary.topTargetEntry[0]} (${oppSummary.topTargetEntry[1]} ataques do adversário).`);
+      }
+      if (oppSummary.topAthleteEntry && oppSummary.topAthleteEntry[1].attacks >= 3) {
+        suggestions.push(`Observar ${oppSummary.topAthleteEntry[0]}, atleta mais ativo do adversário.`);
+      }
+      if (mySummary.bestZoneEfficiency) {
+        const [zone, stats] = mySummary.bestZoneEfficiency;
+        suggestions.push(`Explorar mais a zona ${zone} (${Math.round((stats.goals / stats.attacks) * 100)}% de aproveitamento).`);
+      }
+      if (mySummary.lowZones.length) {
+        const [zone, stats] = mySummary.lowZones[0];
+        suggestions.push(`Evitar insistência na zona ${zone} (${stats.attacks} ataques sem gol).`);
+      }
+      if (!suggestions.length) suggestions.push('Manter variação de alvo e ritmo para reduzir previsibilidade.');
+      return suggestions.slice(0, 3);
+    }
+
     function renderLiveGameReading(matchEvents) {
       const distributionEl = document.getElementById('live-zone-distribution');
       const topMyEl = document.getElementById('live-top-zone-my');
       const topOppEl = document.getElementById('live-top-zone-opponent');
-      const mostActiveEl = document.getElementById('live-most-active-athlete');
-      if (!distributionEl || !topMyEl || !topOppEl || !mostActiveEl) return;
+      const mostActiveMyEl = document.getElementById('live-most-active-athlete-my');
+      const mostActiveOppEl = document.getElementById('live-most-active-athlete-opponent');
+      const topLaneMyEl = document.getElementById('live-top-lane-my');
+      const topLaneOppEl = document.getElementById('live-top-lane-opponent');
+      const recentDistributionEl = document.getElementById('live-recent-distribution');
+      const efficiencyCluesEl = document.getElementById('live-efficiency-clues');
+      const suggestionsEl = document.getElementById('live-decision-suggestions');
+      if (!distributionEl || !topMyEl || !topOppEl || !mostActiveMyEl || !mostActiveOppEl || !topLaneMyEl || !topLaneOppEl || !recentDistributionEl || !efficiencyCluesEl || !suggestionsEl) return;
 
       const myZoneTotals = Object.fromEntries(LIVE_READING_TARGETS.map((zone) => [zone, 0]));
       const oppZoneTotals = Object.fromEntries(LIVE_READING_TARGETS.map((zone) => [zone, 0]));
-      const athleteTotals = new Map();
+      const shotEvents = matchEvents.filter(isShotEvent);
+      const mySummary = summarizeTeamReading(shotEvents, 'my');
+      const oppSummary = summarizeTeamReading(shotEvents, 'opponent');
 
-      matchEvents.forEach((event, index) => {
-        if (!isShotEvent(event)) return;
+      shotEvents.forEach((event) => {
         const normalizedTarget = normalizeTarget(event.target);
         if (LIVE_READING_TARGETS.includes(normalizedTarget)) {
           if (event.team === 'my') myZoneTotals[normalizedTarget] += 1;
           if (event.team === 'opponent') oppZoneTotals[normalizedTarget] += 1;
         }
-
-        const athleteNumber = String(event.athleteNumber || '').trim();
-        const athleteName = String(event.athleteName || '').trim();
-        if (!athleteNumber && !athleteName) return;
-        const athleteLabel = `${athleteNumber || '?'} - ${athleteName || 'N/A'}`;
-        const key = `${event.team || 'unknown'}|${athleteNumber}|${athleteName}`;
-        const existing = athleteTotals.get(key) || { label: athleteLabel, team: event.team || 'my', count: 0, firstIndex: index };
-        existing.count += 1;
-        athleteTotals.set(key, existing);
       });
 
       distributionEl.innerHTML = LIVE_READING_TARGETS.map((zone) => `
@@ -4998,16 +5146,43 @@
 
       topMyEl.textContent = getTopZones(myZoneTotals);
       topOppEl.textContent = getTopZones(oppZoneTotals);
+      mostActiveMyEl.textContent = mySummary.topAthleteEntry ? `${mySummary.topAthleteEntry[0]} (${mySummary.topAthleteEntry[1].attacks})` : '-';
+      mostActiveOppEl.textContent = oppSummary.topAthleteEntry ? `${oppSummary.topAthleteEntry[0]} (${oppSummary.topAthleteEntry[1].attacks})` : '-';
+      topLaneMyEl.textContent = mySummary.topLaneEntry && mySummary.topLaneEntry[1] > 0 ? `${mySummary.topLaneEntry[0]} (${mySummary.topLaneEntry[1]})` : '-';
+      topLaneOppEl.textContent = oppSummary.topLaneEntry && oppSummary.topLaneEntry[1] > 0 ? `${oppSummary.topLaneEntry[0]} (${oppSummary.topLaneEntry[1]})` : '-';
 
-      const activeRanking = [...athleteTotals.values()].sort((a, b) => b.count - a.count || a.firstIndex - b.firstIndex);
-      if (!activeRanking.length || activeRanking[0].count === 0) {
-        mostActiveEl.textContent = '-';
-        renderBehaviorAlerts(matchEvents);
-        return;
-      }
-      const leader = activeRanking[0];
-      const teamLabel = leader.team === 'opponent' ? 'ADV' : 'MIN';
-      mostActiveEl.textContent = `${leader.label} (${teamLabel}: ${leader.count})`;
+      const myRecent = mySummary.teamEvents.slice(-RECENT_DISTRIBUTION_WINDOW);
+      const oppRecent = oppSummary.teamEvents.slice(-RECENT_DISTRIBUTION_WINDOW);
+      const summarizeRecent = (events, teamLabel) => {
+        if (!events.length) return `<p class="text-slate-400">${teamLabel}: sem lances recentes.</p>`;
+        const targetTotals = events.reduce((acc, event) => {
+          const target = normalizeTarget(event.target);
+          if (!target) return acc;
+          acc[target] = (acc[target] || 0) + 1;
+          return acc;
+        }, {});
+        const [target, count] = Object.entries(targetTotals).sort((a, b) => b[1] - a[1])[0] || ['-', 0];
+        return `<p><strong>${teamLabel}:</strong> alvo ${target} em ${count}/${events.length} lances recentes.</p>`;
+      };
+      recentDistributionEl.innerHTML = `
+        ${summarizeRecent(myRecent, 'Minha equipe')}
+        ${summarizeRecent(oppRecent, 'Adversário')}
+      `;
+
+      const myBestAthlete = mySummary.bestAthleteEfficiency
+        ? `${mySummary.bestAthleteEfficiency[0]} (${Math.round((mySummary.bestAthleteEfficiency[1].goals / mySummary.bestAthleteEfficiency[1].attacks) * 100)}%)`
+        : 'sem volume mínimo';
+      const myBestZone = mySummary.bestZoneEfficiency
+        ? `${mySummary.bestZoneEfficiency[0]} (${Math.round((mySummary.bestZoneEfficiency[1].goals / mySummary.bestZoneEfficiency[1].attacks) * 100)}%)`
+        : 'sem volume mínimo';
+      efficiencyCluesEl.innerHTML = `
+        <p><strong>Minha equipe:</strong> melhor atleta ${myBestAthlete}.</p>
+        <p><strong>Minha equipe:</strong> melhor zona ${myBestZone}.</p>
+      `;
+
+      suggestionsEl.innerHTML = buildDecisionSuggestions(mySummary, oppSummary)
+        .map((item) => `<p class="rounded-md border border-emerald-200 bg-emerald-50 px-2 py-1 text-emerald-800">💡 ${item}</p>`)
+        .join('');
       renderBehaviorAlerts(matchEvents);
     }
     
