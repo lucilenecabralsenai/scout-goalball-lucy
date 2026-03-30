@@ -231,10 +231,10 @@
        </div><div class="bg-slate-50 border rounded-lg p-3 mb-4">
         <h3 class="text-sm font-semibold text-slate-700 mb-2">⚽ Posse inicial por tempo</h3>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
-         <label>1º Tempo <select id="starter-1T" class="w-full mt-1 px-2 py-1 border rounded"><option value="my">Minha Equipe</option><option value="opponent">Adversário</option></select></label>
-         <label>2º Tempo <select id="starter-2T" class="w-full mt-1 px-2 py-1 border rounded"><option value="my">Minha Equipe</option><option value="opponent">Adversário</option></select></label>
-         <label>Prorrogação <select id="starter-PR" class="w-full mt-1 px-2 py-1 border rounded"><option value="my">Minha Equipe</option><option value="opponent">Adversário</option></select></label>
-         <label>Penalidades <select id="starter-PN" class="w-full mt-1 px-2 py-1 border rounded"><option value="my">Minha Equipe</option><option value="opponent">Adversário</option></select></label>
+         <label>1º Tempo <select id="starter-1T" class="w-full mt-1 px-2 py-1 border rounded"><option value="my" data-team-option="my">Minha Equipe</option><option value="opponent" data-team-option="opponent">Adversário</option></select></label>
+         <label>2º Tempo <select id="starter-2T" class="w-full mt-1 px-2 py-1 border rounded"><option value="my" data-team-option="my">Minha Equipe</option><option value="opponent" data-team-option="opponent">Adversário</option></select></label>
+         <label>Prorrogação <select id="starter-PR" class="w-full mt-1 px-2 py-1 border rounded"><option value="my" data-team-option="my">Minha Equipe</option><option value="opponent" data-team-option="opponent">Adversário</option></select></label>
+         <label>Penalidades <select id="starter-PN" class="w-full mt-1 px-2 py-1 border rounded"><option value="my" data-team-option="my">Minha Equipe</option><option value="opponent" data-team-option="opponent">Adversário</option></select></label>
         </div>       
        </div><!-- Court Representation -->
        <div class="bg-gradient-to-b from-blue-50 to-slate-50 rounded-xl p-4 border-2 border-blue-200 mb-4">
@@ -324,11 +324,11 @@
           </div>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
             <div class="rounded-lg border border-blue-200 bg-blue-50 p-2">
-              <div class="text-xs font-semibold text-blue-800 mb-1">Minha equipe</div>
+              <div id="attack-modal-my-title" class="text-xs font-semibold text-blue-800 mb-1">Minha equipe</div>
               <div id="attack-modal-my-lineup" class="space-y-1 text-xs text-slate-700"></div>
             </div>
             <div class="rounded-lg border border-rose-200 bg-rose-50 p-2">
-              <div class="text-xs font-semibold text-rose-800 mb-1">Adversário</div>
+              <div id="attack-modal-opponent-title" class="text-xs font-semibold text-rose-800 mb-1">Adversário</div>
               <div id="attack-modal-opponent-lineup" class="space-y-1 text-xs text-slate-700"></div>
             </div>
           </div>
@@ -372,7 +372,7 @@
          <h3 class="text-lg font-semibold">🔄 Substituição Rápida</h3><button id="close-quick-sub-modal" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100">✕</button>
         </div>
         <div class="p-4 space-y-3">
-         <div><label class="block text-sm font-medium text-slate-600 mb-1">Equipe</label><select id="quick-sub-team" class="w-full px-3 py-2 border border-slate-300 rounded-lg"><option value="my">Minha Equipe</option><option value="opponent">Adversário</option></select></div>
+         <div><label class="block text-sm font-medium text-slate-600 mb-1">Equipe</label><select id="quick-sub-team" class="w-full px-3 py-2 border border-slate-300 rounded-lg"><option value="my" data-team-option="my">Minha Equipe</option><option value="opponent" data-team-option="opponent">Adversário</option></select></div>
          <div><label class="block text-sm font-medium text-slate-600 mb-1">Atleta que sai</label><select id="quick-sub-out" class="w-full px-3 py-2 border border-slate-300 rounded-lg"><option value="">Selecionar atleta</option></select></div>
          <div><label class="block text-sm font-medium text-slate-600 mb-1">Atleta que entra</label><select id="quick-sub-in" class="w-full px-3 py-2 border border-slate-300 rounded-lg"><option value="">Selecionar atleta</option></select></div>
          <button id="save-quick-sub" class="w-full btn-success text-white py-3 rounded-xl font-semibold">✅ Confirmar Substituição</button>
@@ -385,7 +385,7 @@
          <h3 class="text-lg font-semibold">⏱️ Registrar Timeout</h3><button id="close-timeout-action-modal" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100">✕</button>
         </div>
         <div class="p-4 space-y-3">
-         <div><label class="block text-sm font-medium text-slate-600 mb-1">Equipe solicitante</label><select id="timeout-team-select" class="w-full px-3 py-2 border border-slate-300 rounded-lg"><option value="my">Minha Equipe</option><option value="opponent">Adversário</option></select></div>
+         <div><label class="block text-sm font-medium text-slate-600 mb-1">Equipe solicitante</label><select id="timeout-team-select" class="w-full px-3 py-2 border border-slate-300 rounded-lg"><option value="my" data-team-option="my">Minha Equipe</option><option value="opponent" data-team-option="opponent">Adversário</option></select></div>
          <button id="confirm-timeout" class="w-full btn-primary text-white py-3 rounded-xl font-semibold">📊 Confirmar e abrir mini relatório</button>
         </div>
        </div>
@@ -407,13 +407,13 @@
           <div class="rounded-lg border border-slate-200 bg-slate-50 p-3"><div class="text-xs text-slate-600">Total de lances</div><div id="timeout-total-events" class="text-sm font-bold">0</div></div>
          </div>
          <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-          <div class="rounded-lg border p-3"><h4 class="font-semibold text-sm mb-2">Indicadores - Minha Equipe</h4><div id="timeout-my-indicators" class="text-sm text-slate-700 space-y-1"></div></div>
-          <div class="rounded-lg border p-3"><h4 class="font-semibold text-sm mb-2">Indicadores - Adversário</h4><div id="timeout-opp-indicators" class="text-sm text-slate-700 space-y-1"></div></div>
+          <div class="rounded-lg border p-3"><h4 id="timeout-my-indicators-title" class="font-semibold text-sm mb-2">Indicadores - Minha Equipe</h4><div id="timeout-my-indicators" class="text-sm text-slate-700 space-y-1"></div></div>
+          <div class="rounded-lg border p-3"><h4 id="timeout-opp-indicators-title" class="font-semibold text-sm mb-2">Indicadores - Adversário</h4><div id="timeout-opp-indicators" class="text-sm text-slate-700 space-y-1"></div></div>
           <div class="rounded-lg border p-3"><h4 class="font-semibold text-sm mb-2">Resumo de ações</h4><div id="timeout-actions-summary" class="text-sm text-slate-700 space-y-1"></div></div>
          </div>
          <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-          <div class="rounded-lg border border-blue-200 bg-blue-50 p-3"><h4 class="font-semibold text-sm mb-1">Banco de pedidos - Minha Equipe</h4><div id="timeout-my-requests" class="text-sm text-slate-700 space-y-1"></div></div>
-          <div class="rounded-lg border border-rose-200 bg-rose-50 p-3"><h4 class="font-semibold text-sm mb-1">Banco de pedidos - Adversário</h4><div id="timeout-opp-requests" class="text-sm text-slate-700 space-y-1"></div></div>
+          <div class="rounded-lg border border-blue-200 bg-blue-50 p-3"><h4 id="timeout-my-requests-title" class="font-semibold text-sm mb-1">Banco de pedidos - Minha Equipe</h4><div id="timeout-my-requests" class="text-sm text-slate-700 space-y-1"></div></div>
+          <div class="rounded-lg border border-rose-200 bg-rose-50 p-3"><h4 id="timeout-opp-requests-title" class="font-semibold text-sm mb-1">Banco de pedidos - Adversário</h4><div id="timeout-opp-requests" class="text-sm text-slate-700 space-y-1"></div></div>
          </div>
          <div class="rounded-xl border border-slate-200 bg-slate-50 p-3">
           <h4 class="font-semibold text-sm mb-2">Quadra de áreas exploradas</h4>
@@ -431,7 +431,7 @@
        <h3 class="text-lg font-semibold text-slate-800 mb-3">📊 Estatísticas em Tempo Real</h3>
        <div class="grid grid-cols-2 gap-4">
         <div class="bg-green-50 rounded-lg p-3 border border-green-200">
-         <h4 class="text-sm font-medium text-green-700 mb-2">Minha Equipe</h4>
+         <h4 id="live-my-team-title" class="text-sm font-medium text-green-700 mb-2">Minha Equipe</h4>
          <div class="space-y-1 text-sm">
           <div class="flex justify-between">
            <span>Arremessos:</span><span id="my-throws">0</span>
@@ -445,7 +445,7 @@
          </div>
         </div>
         <div class="bg-red-50 rounded-lg p-3 border border-red-200">
-         <h4 class="text-sm font-medium text-red-700 mb-2">Adversário</h4>
+         <h4 id="live-opponent-team-title" class="text-sm font-medium text-red-700 mb-2">Adversário</h4>
          <div class="space-y-1 text-sm">
           <div class="flex justify-between">
            <span>Arremessos:</span><span id="opp-throws">0</span>
@@ -572,7 +572,7 @@
        </div>
       </div><!-- Attack Stats -->
       <div class="bg-white rounded-xl p-4 card-shadow">
-       <h3 class="text-lg font-semibold text-slate-800 mb-4">⚡ Estatísticas de Ataque - Minha Equipe</h3>
+       <h3 id="attack-stats-title" class="text-lg font-semibold text-slate-800 mb-4">⚡ Estatísticas de Ataque - Minha Equipe</h3>
        <div id="attack-stats-table" class="overflow-x-auto">
         <table class="w-full text-sm">
          <thead class="bg-slate-100">
@@ -2299,10 +2299,43 @@
     }
 
 
-    function getTeamLabel(team) {
-      return team === 'my'
+    function getTeamLabel(team, options = {}) {
+      const baseName = team === 'my'
         ? (AppState.config.myTeam || 'Minha Equipe')
         : (AppState.config.opponentTeam || 'Adversário');
+      if (!options.withSide) return baseName;
+      const side = team === 'my' ? AppState.lineup.myCurrentSide : AppState.lineup.opponentCurrentSide;
+      const sideLabel = side === 'right' ? 'Direita' : 'Esquerda';
+      return `${baseName} (${sideLabel})`;
+    }
+
+    function refreshTeamNameUI() {
+      const myName = getTeamLabel('my');
+      const oppName = getTeamLabel('opponent');
+      document.querySelectorAll('[data-team-option]').forEach((option) => {
+        option.textContent = option.dataset.teamOption === 'my' ? myName : oppName;
+      });
+      document.querySelectorAll('.team-select-btn').forEach((btn) => {
+        btn.textContent = btn.dataset.team === 'my' ? myName : oppName;
+      });
+      document.querySelectorAll('.penalty-team-btn').forEach((btn) => {
+        btn.textContent = btn.dataset.penaltyTeam === 'my' ? myName : oppName;
+      });
+      const map = {
+        'attack-modal-my-title': myName,
+        'attack-modal-opponent-title': oppName,
+        'timeout-my-indicators-title': `Indicadores - ${myName}`,
+        'timeout-opp-indicators-title': `Indicadores - ${oppName}`,
+        'timeout-my-requests-title': `Banco de pedidos - ${myName}`,
+        'timeout-opp-requests-title': `Banco de pedidos - ${oppName}`,
+        'live-my-team-title': myName,
+        'live-opponent-team-title': oppName,
+        'attack-stats-title': `⚡ Estatísticas de Ataque - ${myName}`
+      };
+      Object.entries(map).forEach(([id, text]) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = text;
+      });
     }
 
     function resetRequestControl() {
@@ -2399,7 +2432,7 @@
       if (!el) return;
       const myLabel = AppState.lineup.myCurrentSide === 'right' ? 'Direita' : 'Esquerda';
       const oppLabel = AppState.lineup.opponentCurrentSide === 'right' ? 'Direita' : 'Esquerda';
-      el.textContent = `Minha Equipe: ${myLabel} • Adversário: ${oppLabel}`;
+      el.textContent = `${getTeamLabel('my')}: ${myLabel} • ${getTeamLabel('opponent')}: ${oppLabel}`;
     }
 
     function setPossessionForPhase(phase) {
@@ -3520,7 +3553,7 @@
       renderSavedTeamSelectors();
       renderTargetPlan();
       saveToLocalStorage();
-      showToast(`✅ ${side === 'my' ? 'Minha equipe' : 'Equipe adversária'} carregada do cadastro.`);
+      showToast(`✅ ${getTeamLabel(side)} carregada do cadastro.`);
     }
 
     function clearSavedTeamSelection(side) {
@@ -4449,8 +4482,8 @@
           ${strips}
           <line x1="90" y1="4" x2="90" y2="166" stroke="#334155" stroke-width="0.7" stroke-dasharray="2,2"></line>
           ${rows}
-          <text x="18" y="3" text-anchor="middle" font-size="5" fill="#1e3a8a">Minha equipe</text>
-          <text x="162" y="3" text-anchor="middle" font-size="5" fill="#9f1239">Adversário</text>
+          <text x="18" y="3" text-anchor="middle" font-size="5" fill="#1e3a8a">${escapeHtml(getTeamLabel('my'))}</text>
+          <text x="162" y="3" text-anchor="middle" font-size="5" fill="#9f1239">${escapeHtml(getTeamLabel('opponent'))}</text>
         </svg>
       `;
     }
@@ -4817,7 +4850,7 @@
         const ranking = Object.entries(targetTotals).sort((a, b) => b[1] - a[1]);
         if (!ranking.length || ranking[0][1] < 2) return;
         const [target, count] = ranking[0];
-        const teamLabel = team === 'opponent' ? 'Adversário' : 'Minha equipe';
+        const teamLabel = getTeamLabel(team);
         alerts.push({
           key: `${team}-target-recent-${target}-${count}`,
           priority: team === 'opponent' ? 0 : 2,
@@ -4842,7 +4875,7 @@
           alerts.push({
             key: `my-heavy-target-${target}-${count}`,
             priority: 1,
-            text: `Minha equipe está concentrando ataques no alvo ${target} (${count} de ${BEHAVIOR_ALERT_WINDOW} lances).`
+            text: `${getTeamLabel('my')} está concentrando ataques no alvo ${target} (${count} de ${BEHAVIOR_ALERT_WINDOW} lances).`
           });
         }
       }
@@ -4862,7 +4895,7 @@
         if (pivotEvents.length < 3) return;
         const rightHits = pivotEvents.filter((event) => rightSideTargets.has(normalizeTarget(event.target))).length;
         if (rightHits < 3 || (rightHits / pivotEvents.length) < 0.67) return;
-        const teamLabel = team === 'opponent' ? 'Pivô adversário' : 'Nosso pivô';
+        const teamLabel = team === 'opponent' ? `Pivô ${getTeamLabel('opponent')}` : `Pivô ${getTeamLabel('my')}`;
         alerts.push({
           key: `${team}-pivot-right-${rightHits}-${pivotEvents.length}`,
           priority: team === 'opponent' ? 0 : 3,
@@ -4949,6 +4982,7 @@
     }
     
     function updateAllStats() {
+      refreshTeamNameUI();
       // Update live stats in Jogo tab
       const matchEvents = getCurrentMatchEvents();
       const myEvents = matchEvents.filter(e => isShotEvent(e) && e.team === 'my');
