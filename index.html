@@ -2299,42 +2299,73 @@
     }
 
 
-    function getTeamLabel(team, options = {}) {
-      const baseName = team === 'my'
+    function getTeamBaseName(team) {
+      return team === 'my'
         ? (AppState.config.myTeam || 'Minha Equipe')
         : (AppState.config.opponentTeam || 'Adversário');
-      if (!options.withSide) return baseName;
+    }
+
+    function getTeamSideLabel(team) {
       const side = team === 'my' ? AppState.lineup.myCurrentSide : AppState.lineup.opponentCurrentSide;
-      const sideLabel = side === 'right' ? 'Direita' : 'Esquerda';
-      return `${baseName} (${sideLabel})`;
+      return side === 'right' ? 'Direita' : 'Esquerda';
+    }
+
+    function getTeamColorMeta(team) {
+      const isMyTeam = team === 'my';
+      return {
+        letter: isMyTeam ? 'A' : 'B',
+        dotClass: isMyTeam ? 'bg-blue-600' : 'bg-red-600',
+        textClass: isMyTeam ? 'text-blue-700' : 'text-red-700'
+      };
+    }
+
+    function getTeamLabel(team, options = {}) {
+      const baseName = getTeamBaseName(team);
+      if (!options.withSide) return baseName;
+      return `${baseName} (${getTeamSideLabel(team)})`;
+    }
+
+    function getTeamDisplayHTML(team, options = {}) {
+      const withSide = options.withSide !== false;
+      const color = getTeamColorMeta(team);
+      const label = getTeamLabel(team, { withSide });
+      return `<span class="inline-flex items-center gap-1"><span class="inline-flex items-center justify-center w-4 h-4 rounded-full text-[10px] font-bold text-white ${color.dotClass}">${color.letter}</span><span class="${color.textClass}">${escapeHtml(label)}</span></span>`;
     }
 
     function refreshTeamNameUI() {
       const myName = getTeamLabel('my');
       const oppName = getTeamLabel('opponent');
+      const myNameWithSide = getTeamLabel('my', { withSide: true });
+      const oppNameWithSide = getTeamLabel('opponent', { withSide: true });
       document.querySelectorAll('[data-team-option]').forEach((option) => {
         option.textContent = option.dataset.teamOption === 'my' ? myName : oppName;
       });
       document.querySelectorAll('.team-select-btn').forEach((btn) => {
-        btn.textContent = btn.dataset.team === 'my' ? myName : oppName;
+        btn.textContent = btn.dataset.team === 'my' ? myNameWithSide : oppNameWithSide;
       });
       document.querySelectorAll('.penalty-team-btn').forEach((btn) => {
-        btn.textContent = btn.dataset.penaltyTeam === 'my' ? myName : oppName;
+        btn.textContent = btn.dataset.penaltyTeam === 'my' ? myNameWithSide : oppNameWithSide;
       });
-      const map = {
-        'attack-modal-my-title': myName,
-        'attack-modal-opponent-title': oppName,
+      const textMap = {
         'timeout-my-indicators-title': `Indicadores - ${myName}`,
         'timeout-opp-indicators-title': `Indicadores - ${oppName}`,
         'timeout-my-requests-title': `Banco de pedidos - ${myName}`,
         'timeout-opp-requests-title': `Banco de pedidos - ${oppName}`,
-        'live-my-team-title': myName,
-        'live-opponent-team-title': oppName,
         'attack-stats-title': `⚡ Estatísticas de Ataque - ${myName}`
       };
-      Object.entries(map).forEach(([id, text]) => {
+      Object.entries(textMap).forEach(([id, text]) => {
         const el = document.getElementById(id);
         if (el) el.textContent = text;
+      });
+      const htmlMap = {
+        'attack-modal-my-title': getTeamDisplayHTML('my', { withSide: true }),
+        'attack-modal-opponent-title': getTeamDisplayHTML('opponent', { withSide: true }),
+        'live-my-team-title': getTeamDisplayHTML('my', { withSide: true }),
+        'live-opponent-team-title': getTeamDisplayHTML('opponent', { withSide: true })
+      };
+      Object.entries(htmlMap).forEach(([id, html]) => {
+        const el = document.getElementById(id);
+        if (el) el.innerHTML = html;
       });
     }
 
@@ -2423,16 +2454,15 @@
       const el = document.getElementById('possession-indicator');
       if (!el) return;
       const team = AppState.lineup.possessionTeam || 'my';
-      el.textContent = getTeamLabel(team);
-      el.className = `text-lg font-bold ${team === 'my' ? 'text-blue-700' : 'text-red-700'}`;
+      el.innerHTML = getTeamDisplayHTML(team, { withSide: true });
+      el.className = 'text-lg font-bold';
     }
 
     function updateCourtSideDisplay() {
       const el = document.getElementById('court-sides-indicator');
       if (!el) return;
-      const myLabel = AppState.lineup.myCurrentSide === 'right' ? 'Direita' : 'Esquerda';
-      const oppLabel = AppState.lineup.opponentCurrentSide === 'right' ? 'Direita' : 'Esquerda';
-      el.textContent = `${getTeamLabel('my')}: ${myLabel} • ${getTeamLabel('opponent')}: ${oppLabel}`;
+      el.innerHTML = `${getTeamDisplayHTML('my', { withSide: true })} <span class="text-slate-400">•</span> ${getTeamDisplayHTML('opponent', { withSide: true })}`;
+      refreshTeamNameUI();
     }
 
     function setPossessionForPhase(phase) {
