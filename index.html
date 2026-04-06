@@ -2768,9 +2768,16 @@
       const offensiveEfficiency = formatPct(myGoals, myShots.length);
       const defensiveEfficiency = formatPct(myDefenses, opponentShots.length);
 
-      const conclusion = `Com base nas análises realizadas e nas ações implementadas durante a partida, conclui-se que a equipe apresentou evolução no processo tático-operacional, com maior organização das atividades e melhor controle das operações em quadra. Os indicadores consolidados apontam eficiência ofensiva de ${offensiveEfficiency} e eficiência defensiva de ${defensiveEfficiency}, reforçando a consistência técnica observada no contexto competitivo.`;
+      const recommendationActions = [
+        'a manutenção da padronização das operações ofensivas e defensivas',
+        'o monitoramento dos indicadores de desempenho por período e por atleta',
+        'a continuidade das melhorias táticas orientadas por dados',
+        'a capacitação da equipe para a sustentação das rotinas críticas'
+      ];
 
-      const recommendations = 'Recomenda-se manter a padronização das operações ofensivas e defensivas, monitorar os indicadores de desempenho por período e por atleta, dar continuidade às melhorias táticas orientadas por dados e capacitar a equipe para sustentação das rotinas críticas. Destaca-se que a manutenção disciplinada dessas práticas é essencial para consolidar os resultados alcançados e ampliar a previsibilidade de desempenho nas próximas partidas.';
+      const conclusion = `Considerando o estágio atual do processo competitivo, conclui-se que a equipe apresentou evolução tático-operacional, com maior organização das ações e melhor controle das operações em quadra. Os indicadores consolidados apontam eficiência ofensiva de ${offensiveEfficiency} e eficiência defensiva de ${defensiveEfficiency}, bem como consistência técnica ao longo da partida, cenário que tende a proporcionar maior previsibilidade de desempenho nas próximas disputas.`;
+
+      const recommendations = `Recomenda-se ${recommendationActions.join(', ')}, além da revisão periódica dos planos de jogo conforme os padrões observados. A manutenção disciplinada dessas práticas contribui para consolidar os resultados alcançados e tende a proporcionar ganhos progressivos de estabilidade competitiva.`;
 
       return { conclusion, recommendations };
     }
