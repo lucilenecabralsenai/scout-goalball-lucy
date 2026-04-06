@@ -298,7 +298,25 @@
      <div class="max-w-4xl mx-auto space-y-4"><div class="bg-white rounded-xl p-4 card-shadow border border-slate-200 space-y-3"><div class="flex flex-col md:flex-row md:items-center md:justify-between gap-2"><div><div class="text-xs uppercase tracking-wide text-slate-500">Placar atual</div><div id="match-score" class="text-2xl font-bold text-slate-800">0 - 0</div></div><div class="text-sm text-slate-500">Formação em quadra</div></div><div id="jogo-oncourt" class="grid grid-cols-1 md:grid-cols-3 gap-2"><div class="rounded-lg border border-slate-200 bg-slate-50 p-3"><div class="text-xs text-slate-500">Ala E</div><div class="font-semibold text-slate-800">#-</div></div><div class="rounded-lg border border-slate-200 bg-slate-50 p-3"><div class="text-xs text-slate-500">Pivô</div><div class="font-semibold text-slate-800">#-</div></div><div class="rounded-lg border border-slate-200 bg-slate-50 p-3"><div class="text-xs text-slate-500">Ala D</div><div class="font-semibold text-slate-800">#-</div></div></div></div><!-- Quick Actions -->
       <div class="grid grid-cols-2 gap-3"><button id="btn-attack" class="bg-gradient-to-br from-green-500 to-green-700 text-white p-4 rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transition-all"> ⚡ Registrar Ataque </button> <button id="btn-change-target" class="bg-gradient-to-br from-orange-500 to-orange-700 text-white p-4 rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transition-all"> 🎯 Mudança de Alvo </button>
       </div>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-3"><button id="btn-end-match" class="bg-gradient-to-br from-red-500 to-red-700 text-white p-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all"> 🏁 Encerrar Partida </button> <button id="btn-new-match" class="bg-gradient-to-br from-indigo-500 to-indigo-700 text-white p-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all"> 🆕 Nova Partida </button>
+      <div id="match-control-panel" class="bg-white rounded-xl p-4 card-shadow border border-slate-200 space-y-3">
+       <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div class="rounded-lg border border-slate-200 bg-slate-50 p-3">
+         <div class="text-xs uppercase tracking-wide text-slate-500">Fase atual</div>
+         <div id="match-phase-indicator" class="text-lg font-semibold text-slate-800">Pré-jogo</div>
+        </div>
+        <div class="rounded-lg border border-slate-200 bg-slate-50 p-3">
+         <div class="text-xs uppercase tracking-wide text-slate-500">Cronômetro bruto geral</div>
+         <div id="match-raw-timer" class="text-lg font-semibold text-slate-800">00:00:00</div>
+        </div>
+       </div>
+       <div id="match-aux-timer-box" class="hidden rounded-lg border border-amber-200 bg-amber-50 p-3">
+        <div id="match-aux-timer-label" class="text-xs uppercase tracking-wide text-amber-700">Intervalo</div>
+        <div id="match-aux-timer" class="text-lg font-semibold text-amber-800">05:00</div>
+       </div>
+       <div id="match-finish-reasons" class="hidden rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-800"></div>
+       <div id="match-control-buttons" class="grid grid-cols-1 md:grid-cols-2 gap-2"></div>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-3"><button id="btn-new-match" class="bg-gradient-to-br from-indigo-500 to-indigo-700 text-white p-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all"> 🆕 Nova Partida </button>
       </div>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-3"><button id="btn-quick-sub" class="bg-gradient-to-br from-amber-500 to-amber-700 text-white p-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all"> 🔄 Substituição </button> <button id="btn-timeout" class="bg-gradient-to-br from-blue-500 to-blue-700 text-white p-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all"> ⏱️ Timeout </button>
       </div><div class="bg-white rounded-xl p-3 card-shadow border border-slate-200">
@@ -465,6 +483,23 @@
            <span>Aproveitamento:</span><span id="opp-efficiency">0%</span>
           </div>
          </div>
+        </div>
+       </div>
+      </div>
+      <div id="penalties-modal" class="hidden fixed inset-0 modal-overlay z-50 flex items-center justify-center p-4">
+       <div class="bg-white rounded-2xl w-full max-w-lg">
+        <div class="border-b px-4 py-3 flex items-center justify-between">
+         <h3 class="text-lg font-semibold">🥅 Disputa de Pênaltis</h3><button id="close-penalties-modal" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100">✕</button>
+        </div>
+        <div class="p-4 space-y-3">
+         <p class="text-sm text-slate-600">Registre a disputa separadamente do fluxo de ataque normal.</p>
+         <div class="grid grid-cols-2 gap-2">
+          <button class="penalty-shootout-btn px-3 py-2 rounded-lg border border-slate-300" data-team="my" data-result="goal">⚽ Minha equipe converteu</button>
+          <button class="penalty-shootout-btn px-3 py-2 rounded-lg border border-slate-300" data-team="my" data-result="miss">❌ Minha equipe errou</button>
+          <button class="penalty-shootout-btn px-3 py-2 rounded-lg border border-slate-300" data-team="opponent" data-result="goal">⚽ Adversário converteu</button>
+          <button class="penalty-shootout-btn px-3 py-2 rounded-lg border border-slate-300" data-team="opponent" data-result="miss">❌ Adversário errou</button>
+         </div>
+         <div id="penalties-summary" class="rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700">Sem cobranças registradas.</div>
         </div>
        </div>
       </div>
@@ -1055,6 +1090,15 @@
         firstHalfPenaltyApplied: { my: false, opponent: false },
         pendingPenaltyShotTeam: null
       },
+      matchControl: {
+        phase: 'pre_game',
+        rawTimerStartedAt: null,
+        rawTimerStoppedAt: null,
+        halftimeStartedAt: null,
+        overtimeBreakStartedAt: null,
+        finishReasons: [],
+        penalties: []
+      },
       sync: {
         status: 'local',
         deviceId: null,
@@ -1123,6 +1167,19 @@
     };
     let teamEditorState = createEmptyTeamDraft();
     const TRAINING_MEASURE_TYPES = ['tempo', 'quantidade', 'nota', 'acertos', 'carga', 'observação'];
+    const MATCH_PHASES = ['pre_game', 'first_half', 'halftime', 'second_half', 'overtime_first_half', 'overtime_break', 'overtime_second_half', 'penalties', 'finished'];
+    const PHASE_TO_LEGACY_PERIOD = {
+      pre_game: '1T',
+      first_half: '1T',
+      halftime: '1T',
+      second_half: '2T',
+      overtime_first_half: 'PR',
+      overtime_break: 'PR',
+      overtime_second_half: 'PR',
+      penalties: 'PN',
+      finished: 'PN'
+    };
+    let matchRawTimerInterval = null;
     let trainingDraftState = null;
 
     function createEmptyAthleteDraft() {
@@ -1477,6 +1534,21 @@
       syncCourtSidesFromState({ persist: false });
     }
 
+    function normalizeMatchControlState() {
+      const incoming = AppState.matchControl || {};
+      const phase = MATCH_PHASES.includes(incoming.phase) ? incoming.phase : 'pre_game';
+      AppState.matchControl = {
+        phase,
+        rawTimerStartedAt: incoming.rawTimerStartedAt || null,
+        rawTimerStoppedAt: incoming.rawTimerStoppedAt || null,
+        halftimeStartedAt: incoming.halftimeStartedAt || null,
+        overtimeBreakStartedAt: incoming.overtimeBreakStartedAt || null,
+        finishReasons: Array.isArray(incoming.finishReasons) ? incoming.finishReasons : [],
+        penalties: Array.isArray(incoming.penalties) ? incoming.penalties : []
+      };
+      AppState.lineup.phase = PHASE_TO_LEGACY_PERIOD[AppState.matchControl.phase] || '1T';
+    }
+
     function migrateLegacyTeams() {
       if (AppState.teamRegistry.length > 0) return false;
       const migratedTeams = [];
@@ -1778,7 +1850,7 @@
         myTeam: AppState.config.myTeam || 'Minha Equipe',
         opponentTeam: AppState.config.opponentTeam || 'Adversário',
         score,
-        phase: AppState.lineup.phase,
+        phase: getLegacyPeriodFromMatchPhase(),
         statistics,
         config: AppState.config,
         teamRegistry: AppState.teamRegistry,
@@ -1786,6 +1858,7 @@
         trainingGroups: AppState.trainingGroups,
         trainings: AppState.trainings,
         lineup: AppState.lineup,
+        matchControl: AppState.matchControl,
         targetPlans: AppState.targetPlans,
         currentTargets: AppState.currentTargets,
         matchRules: AppState.matchRules,
@@ -1893,6 +1966,7 @@
         trainingGroups: AppState.trainingGroups,
         trainings: AppState.trainings,
         lineup: AppState.lineup,
+        matchControl: AppState.matchControl,
         targetPlans: AppState.targetPlans,
         currentTargets: AppState.currentTargets,
         matchRules: AppState.matchRules,
@@ -1955,6 +2029,8 @@
       rebuildGlobalAthleteRegistry();
       AppState.lineup = payload.lineup || AppState.lineup;
       normalizeLineupState();
+      AppState.matchControl = payload.matchControl || AppState.matchControl;
+      normalizeMatchControlState();
       AppState.targetPlans = payload.targetPlans || AppState.targetPlans;
       AppState.currentTargets = payload.currentTargets || AppState.currentTargets;
       AppState.matchRules = payload.matchRules || AppState.matchRules;
@@ -2037,6 +2113,8 @@
         rebuildGlobalAthleteRegistry();
         AppState.lineup = data.lineup || AppState.lineup;
         normalizeLineupState();
+        AppState.matchControl = data.matchControl || AppState.matchControl;
+        normalizeMatchControlState();
         AppState.targetPlans = data.targetPlans || AppState.targetPlans;
         AppState.currentTargets = data.currentTargets || AppState.currentTargets;
         AppState.matchRules = data.matchRules || AppState.matchRules;
@@ -2119,6 +2197,7 @@
         trainingGroups: activeData.trainingGroups || AppState.trainingGroups,
         trainings: activeData.trainings || AppState.trainings,
         lineup: activeData.lineup || AppState.lineup,
+        matchControl: activeData.matchControl || AppState.matchControl,
         targetPlans: activeData.targetPlans || AppState.targetPlans,
         currentTargets: activeData.currentTargets || AppState.currentTargets,
         matchRules: activeData.matchRules || AppState.matchRules,
@@ -2998,6 +3077,115 @@
       if (currentPhaseEl) currentPhaseEl.textContent = getPhaseLabel(AppState.lineup.phase);
     }
 
+    function setMatchPhase(phase, { persist = true } = {}) {
+      if (!MATCH_PHASES.includes(phase)) return;
+      AppState.matchControl.phase = phase;
+      AppState.lineup.phase = PHASE_TO_LEGACY_PERIOD[phase] || AppState.lineup.phase;
+      syncPhaseUiFromState();
+      if (persist) saveToLocalStorage();
+    }
+
+    function getLegacyPeriodFromMatchPhase() {
+      return PHASE_TO_LEGACY_PERIOD[AppState.matchControl.phase] || AppState.lineup.phase || '1T';
+    }
+
+    function getRawMatchElapsedMs() {
+      const { rawTimerStartedAt, rawTimerStoppedAt } = AppState.matchControl;
+      if (!rawTimerStartedAt) return 0;
+      const start = new Date(rawTimerStartedAt).getTime();
+      const end = rawTimerStoppedAt ? new Date(rawTimerStoppedAt).getTime() : Date.now();
+      return Math.max(0, end - start);
+    }
+
+    function formatDuration(totalMs, withHours = true) {
+      const totalSec = Math.max(0, Math.floor(totalMs / 1000));
+      const hours = Math.floor(totalSec / 3600);
+      const minutes = Math.floor((totalSec % 3600) / 60);
+      const seconds = totalSec % 60;
+      if (!withHours) return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+      return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+    }
+
+    function getAuxTimerState() {
+      if (AppState.matchControl.phase === 'halftime' && AppState.matchControl.halftimeStartedAt) {
+        const elapsed = Date.now() - new Date(AppState.matchControl.halftimeStartedAt).getTime();
+        return { label: 'Intervalo (5:00)', remainingMs: Math.max(0, (5 * 60 * 1000) - elapsed) };
+      }
+      if (AppState.matchControl.phase === 'overtime_break' && AppState.matchControl.overtimeBreakStartedAt) {
+        const elapsed = Date.now() - new Date(AppState.matchControl.overtimeBreakStartedAt).getTime();
+        return { label: 'Intervalo da prorrogação (5:00)', remainingMs: Math.max(0, (5 * 60 * 1000) - elapsed) };
+      }
+      return null;
+    }
+
+    function getFinishReasonsFromState() {
+      const reasons = [];
+      const score = getScoreForMatch(AppState.matchId);
+      const diff = Math.abs((score.myGoals || 0) - (score.oppGoals || 0));
+      if (diff >= 10) reasons.push('Regra de 10 gols de diferença atingida.');
+      if (['overtime_first_half', 'overtime_second_half'].includes(AppState.matchControl.phase)) {
+        const overtimeGoals = getCurrentMatchEvents().filter(e => e.type === 'event' && e.phase === 'PR' && e.result === 'gol').length;
+        if (overtimeGoals > 0) reasons.push('Gol de ouro na prorrogação.');
+      }
+      AppState.matchControl.finishReasons = reasons;
+      return reasons;
+    }
+
+    function startRawTimerIfNeeded() {
+      if (!AppState.matchControl.rawTimerStartedAt) {
+        AppState.matchControl.rawTimerStartedAt = new Date().toISOString();
+        AppState.matchControl.rawTimerStoppedAt = null;
+      }
+    }
+
+    function renderMatchControlPanel() {
+      const phaseEl = document.getElementById('match-phase-indicator');
+      const rawEl = document.getElementById('match-raw-timer');
+      const auxBox = document.getElementById('match-aux-timer-box');
+      const auxLabel = document.getElementById('match-aux-timer-label');
+      const auxTimer = document.getElementById('match-aux-timer');
+      const reasonsEl = document.getElementById('match-finish-reasons');
+      const buttonsEl = document.getElementById('match-control-buttons');
+      if (!phaseEl || !rawEl || !auxBox || !auxLabel || !auxTimer || !reasonsEl || !buttonsEl) return;
+
+      phaseEl.textContent = getPhaseLabel(AppState.matchControl.phase);
+      rawEl.textContent = formatDuration(getRawMatchElapsedMs(), true);
+
+      const aux = getAuxTimerState();
+      auxBox.classList.toggle('hidden', !aux);
+      if (aux) {
+        auxLabel.textContent = aux.label;
+        auxTimer.textContent = formatDuration(aux.remainingMs, false);
+      }
+
+      const reasons = getFinishReasonsFromState();
+      reasonsEl.classList.toggle('hidden', reasons.length === 0);
+      reasonsEl.innerHTML = reasons.length ? `<div class="font-semibold mb-1">Finalização disponível:</div>${reasons.map(r => `<div>• ${escapeHtml(r)}</div>`).join('')}` : '';
+
+      const phase = AppState.matchControl.phase;
+      const controls = [];
+      if (phase === 'pre_game') controls.push({ id: 'btn-start-first-half', text: '▶️ Iniciar 1º tempo' });
+      if (phase === 'first_half') controls.push({ id: 'btn-start-halftime', text: '⏸️ Intervalo' });
+      if (phase === 'halftime') controls.push({ id: 'btn-start-second-half', text: '▶️ Iniciar 2º tempo' });
+      if (phase === 'second_half') {
+        controls.push({ id: 'btn-start-overtime', text: '⏱️ Prorrogação' });
+        controls.push({ id: 'btn-open-penalties', text: '🥅 Pênaltis' });
+        controls.push({ id: 'btn-end-match', text: '🏁 Finalizar Partida' });
+      }
+      if (phase === 'overtime_first_half') controls.push({ id: 'btn-start-overtime-break', text: '⏸️ Intervalo da prorrogação' });
+      if (phase === 'overtime_break') controls.push({ id: 'btn-start-overtime-second', text: '▶️ Iniciar 2º tempo da prorrogação' });
+      if (phase === 'overtime_second_half') {
+        controls.push({ id: 'btn-open-penalties', text: '🥅 Pênaltis' });
+      }
+      if (phase === 'penalties') controls.push({ id: 'btn-open-penalties', text: '🥅 Abrir modal de pênaltis' });
+      if (phase !== 'finished' && phase !== 'pre_game' && (reasons.length > 0 || ['second_half', 'penalties', 'overtime_second_half'].includes(phase))) {
+        controls.push({ id: 'btn-end-match', text: '🏁 Finalizar Partida' });
+      }
+      buttonsEl.innerHTML = controls.length
+        ? controls.map(control => `<button id="${control.id}" class="bg-gradient-to-br from-slate-700 to-slate-900 text-white p-3 rounded-xl font-semibold shadow">${control.text}</button>`).join('')
+        : '<div class="text-sm text-slate-500">Sem ações disponíveis nesta fase.</div>';
+    }
+
     function resetCurrentMatchState() {
       AppState.lineup.left = null;
       AppState.lineup.center = null;
@@ -3006,6 +3194,15 @@
       AppState.lineup.opponentCenter = null;
       AppState.lineup.opponentRight = null;
       AppState.lineup.phase = '1T';
+      AppState.matchControl = {
+        phase: 'pre_game',
+        rawTimerStartedAt: null,
+        rawTimerStoppedAt: null,
+        halftimeStartedAt: null,
+        overtimeBreakStartedAt: null,
+        finishReasons: [],
+        penalties: []
+      };
       AppState.lineup.hasSideSwapOccurred = false;
       AppState.lineup.myInitialSide = normalizeCourtSide(AppState.lineup.myInitialSide || 'left');
       syncCourtSidesFromState({ persist: false });
@@ -3021,12 +3218,14 @@
       closeAttackModal();
       closeTargetChangeModal();
       closeQuickSubModal();
+      closePenaltiesModal();
       closeTimeoutActionModal();
       closeTimeoutReport();
       updateLineupSelectors();
       updateLineupDisplay();
       renderTargetPlan();
       syncPhaseUiFromState();
+      renderMatchControlPanel();
       updateCourtSideDisplay();
       updatePossessionDisplay();
     }
@@ -3481,6 +3680,117 @@
       renderRecentEvents();
       showToast('🏁 Partida encerrada e salva!');
       enqueueCloudSync('end-match');
+    }
+
+    function handleMatchControlAction(actionId) {
+      if (!hasActiveMatch() && actionId !== 'btn-start-first-half') {
+        showToast('⚠️ Não existe partida ativa.');
+        return;
+      }
+      if (actionId === 'btn-start-first-half') {
+        if (!ensureActiveMatch('iniciar 1º tempo')) return;
+        startRawTimerIfNeeded();
+        AppState.matchControl.halftimeStartedAt = null;
+        AppState.matchControl.overtimeBreakStartedAt = null;
+        setMatchPhase('first_half', { persist: false });
+        saveToLocalStorage();
+        updateAllStats();
+        showToast('▶️ 1º tempo iniciado.');
+        return;
+      }
+      if (actionId === 'btn-start-halftime') {
+        setMatchPhase('halftime', { persist: false });
+        AppState.matchControl.halftimeStartedAt = new Date().toISOString();
+        saveToLocalStorage();
+        updateAllStats();
+        return;
+      }
+      if (actionId === 'btn-start-second-half') {
+        setMatchPhase('second_half', { persist: false });
+        AppState.matchControl.halftimeStartedAt = null;
+        ensureFirstHalfRequestRule('2T');
+        setPossessionForPhase('2T');
+        saveToLocalStorage();
+        updateAllStats();
+        return;
+      }
+      if (actionId === 'btn-start-overtime') {
+        setMatchPhase('overtime_first_half', { persist: false });
+        setPossessionForPhase('PR');
+        saveToLocalStorage();
+        updateAllStats();
+        return;
+      }
+      if (actionId === 'btn-start-overtime-break') {
+        setMatchPhase('overtime_break', { persist: false });
+        AppState.matchControl.overtimeBreakStartedAt = new Date().toISOString();
+        saveToLocalStorage();
+        updateAllStats();
+        return;
+      }
+      if (actionId === 'btn-start-overtime-second') {
+        setMatchPhase('overtime_second_half', { persist: false });
+        AppState.matchControl.overtimeBreakStartedAt = null;
+        saveToLocalStorage();
+        updateAllStats();
+        return;
+      }
+      if (actionId === 'btn-open-penalties') {
+        setMatchPhase('penalties', { persist: false });
+        setPossessionForPhase('PN');
+        saveToLocalStorage();
+        openPenaltiesModal();
+        updateAllStats();
+        return;
+      }
+      if (actionId === 'btn-end-match') {
+        const reasons = getFinishReasonsFromState();
+        const reasonText = reasons.length ? `\n\nMotivo(s):\n- ${reasons.join('\n- ')}` : '';
+        if (!confirm(`Deseja finalizar a partida atual?${reasonText}`)) return;
+        AppState.matchControl.rawTimerStoppedAt = new Date().toISOString();
+        setMatchPhase('finished', { persist: false });
+        endMatch();
+      }
+    }
+
+    function getPenaltyShootoutSummary() {
+      const penalties = AppState.matchControl.penalties || [];
+      const myGoals = penalties.filter(item => item.team === 'my' && item.result === 'goal').length;
+      const oppGoals = penalties.filter(item => item.team === 'opponent' && item.result === 'goal').length;
+      return { myGoals, oppGoals, total: penalties.length };
+    }
+
+    function renderPenaltyShootoutSummary() {
+      const el = document.getElementById('penalties-summary');
+      if (!el) return;
+      const summary = getPenaltyShootoutSummary();
+      if (!summary.total) {
+        el.textContent = 'Sem cobranças registradas.';
+        return;
+      }
+      el.innerHTML = `Cobranças: <strong>${summary.total}</strong> • Minha equipe: <strong>${summary.myGoals}</strong> • Adversário: <strong>${summary.oppGoals}</strong>`;
+    }
+
+    function openPenaltiesModal() {
+      renderPenaltyShootoutSummary();
+      document.getElementById('penalties-modal').classList.remove('hidden');
+    }
+
+    function closePenaltiesModal() {
+      document.getElementById('penalties-modal').classList.add('hidden');
+    }
+
+    function registerPenaltyShootout(team, result) {
+      AppState.matchControl.penalties.push({
+        team,
+        result,
+        timestamp: new Date().toISOString(),
+        phase: 'PN'
+      });
+      saveToLocalStorage();
+      renderPenaltyShootoutSummary();
+      updateAllStats();
+      showToast('✅ Pênalti registrado na disputa.');
     }
     
     // =====================================================
@@ -4112,7 +4422,7 @@
         type: 'substitution',
         matchId: AppState.matchId,
         timestamp: new Date().toISOString(),
-        phase: AppState.lineup.phase,
+        phase: getLegacyPeriodFromMatchPhase(),
         subOut: subOutIdx,
         subIn: subInIdx,
         position,
@@ -4177,7 +4487,7 @@
         type: 'substitution',
         matchId: AppState.matchId,
         timestamp: new Date().toISOString(),
-        phase: AppState.lineup.phase,
+        phase: getLegacyPeriodFromMatchPhase(),
         subOut: subOutIdx,
         subIn: subInIdx,
         position: position,
@@ -4472,7 +4782,7 @@
       const pAthlete = attackState.penaltyAthlete === '' ? null : pAthletes[attackState.penaltyAthlete];
 
       const event = {
-        type:'event', matchId:AppState.matchId, timestamp:new Date().toISOString(), phase:AppState.lineup.phase,
+        type:'event', matchId:AppState.matchId, timestamp:new Date().toISOString(), phase:getLegacyPeriodFromMatchPhase(),
         team: attackState.team, athleteNumber: athlete?.number || '', athleteName: athlete?.name || '',
         ballType: (noAttackPenalty||quickResult||attackState.result==='gol-penalti') ? '' : normalizeBallType(attackState.ballType),
         target: (noAttackPenalty||quickResult||attackState.result==='gol-penalti') ? '' : attackState.target,
@@ -4510,7 +4820,22 @@
 
 
     function getPhaseLabel(phase) {
-      return phase === '1T' ? '1º Tempo' : phase === '2T' ? '2º Tempo' : phase === 'PR' ? 'Prorrogação' : phase === 'PN' ? 'Penalidades' : (phase || '-');
+      const labels = {
+        '1T': '1º Tempo',
+        '2T': '2º Tempo',
+        PR: 'Prorrogação',
+        PN: 'Penalidades',
+        pre_game: 'Pré-jogo',
+        first_half: '1º Tempo',
+        halftime: 'Intervalo',
+        second_half: '2º Tempo',
+        overtime_first_half: '1º tempo da prorrogação',
+        overtime_break: 'Intervalo da prorrogação',
+        overtime_second_half: '2º tempo da prorrogação',
+        penalties: 'Pênaltis',
+        finished: 'Encerrada'
+      };
+      return labels[phase] || (phase || '-');
     }
 
     function toPercent(value, total) {
@@ -4592,7 +4917,7 @@
         type: 'timeout',
         matchId: AppState.matchId,
         timestamp: new Date().toISOString(),
-        phase: AppState.lineup.phase,
+        phase: getLegacyPeriodFromMatchPhase(),
         team,
         athleteNumber: '',
         athleteName: '',
@@ -4749,7 +5074,7 @@
         type: 'target_change',
         matchId: AppState.matchId,
         timestamp: new Date().toISOString(),
-        phase: AppState.lineup.phase,
+        phase: getLegacyPeriodFromMatchPhase(),
         team: 'my',
         athleteNumber: athlete?.number || '',
         athleteName: athlete?.name || '',
@@ -5208,6 +5533,7 @@
       renderGameOnCourtSummary();
       renderAttackModalQuickInfo();
       renderLiveGameReading(matchEvents);
+      renderMatchControlPanel();
     }
     
     // =====================================================
@@ -6545,13 +6871,10 @@ function renderHeatmap(optionsOrFilter) {
         if (!ensureActiveMatch('registrar mudança de alvo')) return;
         openTargetChangeModal();
       });
-      document.getElementById('btn-end-match').addEventListener('click', () => {
-        if (!hasActiveMatch()) {
-          showToast('⚠️ Não existe partida ativa para encerrar.');
-          return;
-        }
-        if (!confirm('Deseja encerrar a partida atual?')) return;
-        endMatch();
+      document.getElementById('match-control-buttons').addEventListener('click', (e) => {
+        const btn = e.target.closest('button[id]');
+        if (!btn) return;
+        handleMatchControlAction(btn.id);
       });
       document.getElementById('btn-new-match').addEventListener('click', () => {
         if (!confirm('Deseja iniciar nova partida agora?')) return;
@@ -6573,6 +6896,10 @@ function renderHeatmap(optionsOrFilter) {
       document.getElementById('confirm-timeout').addEventListener('click', confirmTimeoutAction);
       document.getElementById('close-attack-modal').addEventListener('click', closeAttackModal);
       document.getElementById('close-target-modal').addEventListener('click', closeTargetChangeModal);
+      document.getElementById('close-penalties-modal').addEventListener('click', closePenaltiesModal);
+      document.querySelectorAll('.penalty-shootout-btn').forEach((btn) => {
+        btn.addEventListener('click', () => registerPenaltyShootout(btn.dataset.team, btn.dataset.result));
+      });
      
       // Team selection in attack modal
       document.querySelectorAll('.team-select-btn').forEach(btn => {
@@ -7390,6 +7717,7 @@ populateHeatmapAthletes();
         trainingGroups: AppState.trainingGroups,
         trainings: AppState.trainings,
         lineup: AppState.lineup,
+        matchControl: AppState.matchControl,
         targetPlans: AppState.targetPlans,
         currentTargets: AppState.currentTargets,
         matchRules: AppState.matchRules,
@@ -7425,6 +7753,8 @@ populateHeatmapAthletes();
           rebuildGlobalAthleteRegistry();
           AppState.lineup = parsed.lineup || AppState.lineup;
           normalizeLineupState();
+          AppState.matchControl = parsed.matchControl || AppState.matchControl;
+          normalizeMatchControlState();
           AppState.targetPlans = parsed.targetPlans || AppState.targetPlans;
           AppState.currentTargets = parsed.currentTargets || AppState.currentTargets;
           AppState.matchRules = parsed.matchRules || AppState.matchRules;
@@ -7463,6 +7793,7 @@ populateHeatmapAthletes();
     async function init() {
       loadFromLocalStorage();
       normalizeLineupState();
+      normalizeMatchControlState();
       migrateLegacyTeams();
       AppState.athleteRegistry = normalizeAthleteList(AppState.athleteRegistry);
       AppState.trainingGroups = normalizeTrainingGroups(AppState.trainingGroups);
@@ -7487,6 +7818,12 @@ populateHeatmapAthletes();
       });
       updatePossessionDisplay();
       updateCourtSideDisplay();
+      renderMatchControlPanel();
+      if (!matchRawTimerInterval) {
+        matchRawTimerInterval = setInterval(() => {
+          if (!document.hidden) renderMatchControlPanel();
+        }, 1000);
+      }
       initializeEventListeners();
       initTacticalBoard();
       await initDataSdk();
