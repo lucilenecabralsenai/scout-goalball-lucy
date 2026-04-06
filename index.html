@@ -2759,6 +2759,22 @@
       }).join('');
     }
 
+    function buildRecommendationsAndConclusionSection(events = []) {
+      const attackEvents = events.filter(event => isShotEvent(event));
+      const myShots = attackEvents.filter(event => event.team === 'my');
+      const myGoals = myShots.filter(event => event.result === 'gol').length;
+      const opponentShots = attackEvents.filter(event => event.team === 'opponent');
+      const myDefenses = opponentShots.filter(event => event.result === 'defendida').length;
+      const offensiveEfficiency = formatPct(myGoals, myShots.length);
+      const defensiveEfficiency = formatPct(myDefenses, opponentShots.length);
+
+      const conclusion = `Com base nas análises realizadas e nas ações implementadas durante a partida, conclui-se que a equipe apresentou evolução no processo tático-operacional, com maior organização das atividades e melhor controle das operações em quadra. Os indicadores consolidados apontam eficiência ofensiva de ${offensiveEfficiency} e eficiência defensiva de ${defensiveEfficiency}, reforçando a consistência técnica observada no contexto competitivo.`;
+
+      const recommendations = 'Recomenda-se manter a padronização das operações ofensivas e defensivas, monitorar os indicadores de desempenho por período e por atleta, dar continuidade às melhorias táticas orientadas por dados e capacitar a equipe para sustentação das rotinas críticas. Destaca-se que a manutenção disciplinada dessas práticas é essencial para consolidar os resultados alcançados e ampliar a previsibilidade de desempenho nas próximas partidas.';
+
+      return { conclusion, recommendations };
+    }
+
     function buildPdfReportDocument() {
       const period = getActiveReportPeriod();
       updateReportStats(period);
@@ -2811,6 +2827,7 @@
       const topEfficiency = [...athleteList]
         .filter(a => a.shots >= 5)
         .sort((a, b) => (b.goals / b.shots) - (a.goals / a.shots))[0];
+      const recommendationsSection = buildRecommendationsAndConclusionSection(events);
 
       const oppZoneCounts = {};
       const oppBallTypeCounts = {};
@@ -2961,6 +2978,18 @@
         <thead><tr><th>Horário</th><th>Fase</th><th>Equipe</th><th>Atleta</th><th>Tipo bola</th><th>Alvo</th><th>Sistema</th><th>Resultado</th></tr></thead>
         <tbody>${latestRows}</tbody>
       </table>
+    </section>
+
+    <section class="section">
+      <h2 class="section-title">12. Recomendações e conclusões</h2>
+      <div class="card">
+        <h3>1) Conclusão geral da consultoria</h3>
+        <p>${escapeHtml(recommendationsSection.conclusion)}</p>
+      </div>
+      <div class="card" style="margin-top:8px;">
+        <h3>2) Recomendações técnicas para continuidade</h3>
+        <p>${escapeHtml(recommendationsSection.recommendations)}</p>
+      </div>
     </section>
   </div>
 </body>
