@@ -452,6 +452,39 @@
          </div>
         </div>
        </div>
+      </div><!-- Halftime Tactical Report Modal -->
+      <div id="halftime-report-modal" class="hidden fixed inset-0 modal-overlay z-50 flex items-center justify-center p-3">
+       <div class="bg-white rounded-2xl w-full max-w-5xl max-h-[95vh] overflow-y-auto">
+        <div class="sticky top-0 bg-white border-b px-4 py-3 flex items-center justify-between z-10">
+         <div>
+          <h3 class="text-lg font-semibold">⏸️ Relatório Tático do Intervalo</h3>
+          <p id="halftime-report-subtitle" class="text-sm text-slate-600">Resumo estratégico do 1º tempo</p>
+         </div>
+         <button id="close-halftime-report" class="px-4 py-2 rounded-lg bg-red-600 text-white font-semibold hover:bg-red-700">FECHAR</button>
+        </div>
+        <div class="p-4 md:p-5 space-y-4">
+         <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div class="rounded-lg border border-slate-200 bg-slate-50 p-3"><div class="text-xs text-slate-600">Placar</div><div id="halftime-score" class="text-base font-bold">Minha equipe 0 x 0 Adversário</div></div>
+          <div class="rounded-lg border border-slate-200 bg-slate-50 p-3"><div class="text-xs text-slate-600">Resumo geral</div><div id="halftime-overview" class="text-sm text-slate-700 space-y-1"></div></div>
+         </div>
+         <div class="rounded-lg border p-3">
+          <h4 class="font-semibold text-sm mb-2">Últimos lances</h4>
+          <div id="halftime-last-events" class="space-y-2 text-sm"></div>
+         </div>
+         <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div class="rounded-lg border border-blue-200 bg-blue-50 p-3"><h4 class="font-semibold text-sm mb-2">Zonas mais usadas</h4><div id="halftime-zones" class="text-sm text-slate-700 space-y-1"></div></div>
+          <div class="rounded-lg border border-rose-200 bg-rose-50 p-3"><h4 class="font-semibold text-sm mb-2">Áreas sensíveis da minha defesa</h4><div id="halftime-defense-alerts" class="text-sm text-slate-700 space-y-1"></div></div>
+         </div>
+         <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div class="rounded-lg border border-emerald-200 bg-emerald-50 p-3"><h4 class="font-semibold text-sm mb-2">Áreas boas para atacar</h4><div id="halftime-offense-opportunities" class="text-sm text-slate-700 space-y-1"></div></div>
+          <div class="rounded-lg border border-violet-200 bg-violet-50 p-3"><h4 class="font-semibold text-sm mb-2">Tipo de bola mais eficiente</h4><div id="halftime-balltype-efficiency" class="text-sm text-slate-700 space-y-1"></div></div>
+         </div>
+         <div class="rounded-lg border border-amber-200 bg-amber-50 p-3">
+          <h4 class="font-semibold text-sm mb-2">Sugestões rápidas</h4>
+          <div id="halftime-suggestions" class="text-sm text-slate-700 space-y-1"></div>
+         </div>
+        </div>
+       </div>
       </div><!-- Live Stats -->
       <div class="bg-white rounded-xl p-4 card-shadow">
        <h3 class="text-lg font-semibold text-slate-800 mb-3">📊 Estatísticas em Tempo Real</h3>
@@ -3159,6 +3192,8 @@
       }
 
       const reasons = getFinishReasonsFromState();
+      const score = getScoreForMatch(AppState.matchId);
+      const tenGoalRuleReached = Math.abs((score.myGoals || 0) - (score.oppGoals || 0)) >= 10;
       reasonsEl.classList.toggle('hidden', reasons.length === 0);
       reasonsEl.innerHTML = reasons.length ? `<div class="font-semibold mb-1">Finalização disponível:</div>${reasons.map(r => `<div>• ${escapeHtml(r)}</div>`).join('')}` : '';
 
@@ -3170,19 +3205,23 @@
       if (phase === 'second_half') {
         controls.push({ id: 'btn-start-overtime', text: '⏱️ Prorrogação' });
         controls.push({ id: 'btn-open-penalties', text: '🥅 Pênaltis' });
-        controls.push({ id: 'btn-end-match', text: '🏁 Finalizar Partida' });
       }
       if (phase === 'overtime_first_half') controls.push({ id: 'btn-start-overtime-break', text: '⏸️ Intervalo da prorrogação' });
       if (phase === 'overtime_break') controls.push({ id: 'btn-start-overtime-second', text: '▶️ Iniciar 2º tempo da prorrogação' });
-      if (phase === 'overtime_second_half') {
-        controls.push({ id: 'btn-open-penalties', text: '🥅 Pênaltis' });
-      }
+      if (phase === 'overtime_second_half') controls.push({ id: 'btn-open-penalties', text: '🥅 Pênaltis' });
       if (phase === 'penalties') controls.push({ id: 'btn-open-penalties', text: '🥅 Abrir modal de pênaltis' });
-      if (phase !== 'finished' && phase !== 'pre_game' && (reasons.length > 0 || ['second_half', 'penalties', 'overtime_second_half'].includes(phase))) {
-        controls.push({ id: 'btn-end-match', text: '🏁 Finalizar Partida' });
+      const canShowFinishByPhase = ['second_half', 'overtime_first_half', 'overtime_break', 'overtime_second_half', 'penalties'].includes(phase);
+      if (phase !== 'finished' && phase !== 'pre_game' && (tenGoalRuleReached || canShowFinishByPhase)) {
+        controls.push({ id: 'btn-end-match', text: '🏁 Finalizar Partida', emphasis: tenGoalRuleReached });
       }
-      buttonsEl.innerHTML = controls.length
-        ? controls.map(control => `<button id="${control.id}" class="bg-gradient-to-br from-slate-700 to-slate-900 text-white p-3 rounded-xl font-semibold shadow">${control.text}</button>`).join('')
+      const uniqueControls = controls.filter((control, idx, arr) => idx === arr.findIndex(item => item.id === control.id));
+      buttonsEl.innerHTML = uniqueControls.length
+        ? uniqueControls.map((control) => {
+          const buttonClasses = control.emphasis
+            ? 'bg-gradient-to-br from-amber-500 to-red-600 ring-2 ring-amber-300 text-white p-3 rounded-xl font-semibold shadow'
+            : 'bg-gradient-to-br from-slate-700 to-slate-900 text-white p-3 rounded-xl font-semibold shadow';
+          return `<button id="${control.id}" class="${buttonClasses}">${control.text}</button>`;
+        }).join('')
         : '<div class="text-sm text-slate-500">Sem ações disponíveis nesta fase.</div>';
     }
 
@@ -3221,6 +3260,7 @@
       closePenaltiesModal();
       closeTimeoutActionModal();
       closeTimeoutReport();
+      closeHalftimeReport();
       updateLineupSelectors();
       updateLineupDisplay();
       renderTargetPlan();
@@ -3703,6 +3743,7 @@
         AppState.matchControl.halftimeStartedAt = new Date().toISOString();
         saveToLocalStorage();
         updateAllStats();
+        openHalftimeReport({ phaseLabel: 'Intervalo' });
         return;
       }
       if (actionId === 'btn-start-second-half') {
@@ -3726,6 +3767,7 @@
         AppState.matchControl.overtimeBreakStartedAt = new Date().toISOString();
         saveToLocalStorage();
         updateAllStats();
+        openHalftimeReport({ phaseLabel: 'Intervalo da prorrogação' });
         return;
       }
       if (actionId === 'btn-start-overtime-second') {
@@ -4717,7 +4759,7 @@
 
     function applyAttackSmartDefaults() {
       attackState.ballType = attackSmartDefaults.ballType || '';
-      attackState.gameSituation = attackSmartDefaults.gameSituation || 'Livre';
+      attackState.gameSituation = 'Livre';
       document.querySelectorAll('.ball-type-btn').forEach((btn) => {
         btn.classList.toggle('active', normalizeBallType(btn.dataset.type) === attackState.ballType);
       });
@@ -4729,9 +4771,6 @@
     function saveAttackSmartDefaultsFromState() {
       if (attackState.ballType) {
         attackSmartDefaults.ballType = normalizeBallType(attackState.ballType);
-      }
-      if (attackState.gameSituation) {
-        attackSmartDefaults.gameSituation = normalizeGameSituation(attackState.gameSituation);
       }
     }
 
@@ -5025,6 +5064,105 @@
 
     function closeTimeoutReport() {
       document.getElementById('timeout-report-modal').classList.add('hidden');
+    }
+
+    function getTopTargetByVolume(events) {
+      const totals = {};
+      events.forEach((event) => {
+        const target = normalizeTarget(event.target);
+        if (!target) return;
+        totals[target] = (totals[target] || 0) + 1;
+      });
+      return Object.entries(totals).sort((a, b) => b[1] - a[1])[0] || null;
+    }
+
+    function formatIntervalShotLine(event) {
+      const athlete = formatAthleteDisplay({ number: event.athleteNumber, name: event.athleteName }) || getTeamLabel(event.team);
+      const target = normalizeTarget(event.target) || '-';
+      const result = RESULT_LABELS[event.result] || event.result || '-';
+      return `${athlete} → alvo ${target} → ${result}`;
+    }
+
+    function renderWithFallback(list, fallback = 'dados insuficientes') {
+      return list.length
+        ? list.map((item) => `<div>• ${escapeHtml(item)}</div>`).join('')
+        : `<div>${escapeHtml(fallback)}</div>`;
+    }
+
+    function openHalftimeReport({ phaseLabel = 'Intervalo' } = {}) {
+      const attackEvents = getCurrentMatchEvents().filter((event) => event.type === 'event');
+      const shotEvents = attackEvents.filter(isShotEvent);
+      const myShots = shotEvents.filter((event) => event.team === 'my');
+      const oppShots = shotEvents.filter((event) => event.team === 'opponent');
+      const score = getScoreForMatch(AppState.matchId);
+      const mySummary = summarizeTeamReading(shotEvents, 'my');
+      const oppSummary = summarizeTeamReading(shotEvents, 'opponent');
+      const myGoals = myShots.filter((event) => event.result === 'gol').length;
+      const oppGoals = oppShots.filter((event) => event.result === 'gol').length;
+
+      document.getElementById('halftime-report-subtitle').textContent = `${phaseLabel} • leitura tática automática`;
+      document.getElementById('halftime-score').textContent = `${getTeamLabel('my')}: ${score.myGoals} | ${getTeamLabel('opponent')}: ${score.oppGoals}`;
+      document.getElementById('halftime-overview').innerHTML = [
+        `Ataques ${getTeamLabel('my')}: ${myShots.length}`,
+        `Ataques ${getTeamLabel('opponent')}: ${oppShots.length}`,
+        `Total de gols: ${myGoals + oppGoals}`,
+        `Aproveitamento ${getTeamLabel('my')}: ${toPercent(myGoals, myShots.length)}`,
+        `Aproveitamento ${getTeamLabel('opponent')}: ${toPercent(oppGoals, oppShots.length)}`
+      ].map((line) => `<div>${escapeHtml(line)}</div>`).join('');
+
+      const lastEvents = shotEvents.slice(-5).reverse();
+      document.getElementById('halftime-last-events').innerHTML = lastEvents.length
+        ? lastEvents.map((event) => `<div class="p-2 rounded border ${event.team === 'my' ? 'bg-blue-50 border-blue-100' : 'bg-rose-50 border-rose-100'}">${escapeHtml(formatIntervalShotLine(event))}</div>`).join('')
+        : '<p class="text-slate-500">dados insuficientes</p>';
+
+      const topMyTarget = getTopTargetByVolume(myShots);
+      const topOppTarget = getTopTargetByVolume(oppShots);
+      document.getElementById('halftime-zones').innerHTML = renderWithFallback([
+        topMyTarget ? `Zona principal ${getTeamLabel('my')}: alvo ${topMyTarget[0]} (${topMyTarget[1]} ataques)` : '',
+        topOppTarget ? `Zona principal ${getTeamLabel('opponent')}: alvo ${topOppTarget[0]} (${topOppTarget[1]} ataques)` : ''
+      ].filter(Boolean));
+
+      const defensiveInsights = [];
+      if (topOppTarget) defensiveInsights.push(`Minha defesa está sendo mais pressionada no alvo ${topOppTarget[0]}.`);
+      if (oppSummary.topLaneEntry && oppSummary.topLaneEntry[1] > 0) defensiveInsights.push(`Corredor ${oppSummary.topLaneEntry[0].toLowerCase()} mais explorado (${oppSummary.topLaneEntry[1]} ataques).`);
+      if (oppSummary.topTargetEntry && oppSummary.topTargetEntry[1] >= 3) defensiveInsights.push(`Maior volume recebido na zona ${oppSummary.topTargetEntry[0]}.`);
+      document.getElementById('halftime-defense-alerts').innerHTML = renderWithFallback(defensiveInsights);
+
+      const offenseInsights = [];
+      if (mySummary.bestZoneEfficiency) {
+        const [zone, stats] = mySummary.bestZoneEfficiency;
+        offenseInsights.push(`Melhor desempenho ofensivo no alvo ${zone} (${toPercent(stats.goals, stats.attacks)}).`);
+      }
+      if (oppSummary.topLaneEntry && oppSummary.topLaneEntry[1] > 0) offenseInsights.push(`Adversário cede mais no corredor ${oppSummary.topLaneEntry[0].toLowerCase()}.`);
+      if (mySummary.bestZoneEfficiency && ['2', '2/3', '3'].includes(mySummary.bestZoneEfficiency[0])) offenseInsights.push('Zona 2/3 com melhor aproveitamento.');
+      document.getElementById('halftime-offense-opportunities').innerHTML = renderWithFallback(offenseInsights);
+
+      const ballTypeStats = {};
+      myShots.forEach((event) => {
+        const type = normalizeBallType(event.ballType);
+        if (!type) return;
+        if (!ballTypeStats[type]) ballTypeStats[type] = { attacks: 0, goals: 0 };
+        ballTypeStats[type].attacks += 1;
+        if (event.result === 'gol') ballTypeStats[type].goals += 1;
+      });
+      const bestBallType = Object.entries(ballTypeStats)
+        .filter(([, stats]) => stats.attacks >= 2)
+        .sort((a, b) => (b[1].goals / b[1].attacks) - (a[1].goals / a[1].attacks))[0] || null;
+      const lowBallType = Object.entries(ballTypeStats)
+        .filter(([, stats]) => stats.attacks >= 2)
+        .sort((a, b) => (a[1].goals / a[1].attacks) - (b[1].goals / b[1].attacks))[0] || null;
+      const ballInsights = [];
+      if (bestBallType) ballInsights.push(`${BALL_TYPE_LABELS[bestBallType[0]] || bestBallType[0]} com melhor aproveitamento (${toPercent(bestBallType[1].goals, bestBallType[1].attacks)}).`);
+      if (lowBallType && lowBallType[0] !== bestBallType?.[0]) ballInsights.push(`${BALL_TYPE_LABELS[lowBallType[0]] || lowBallType[0]} com baixo sucesso (${toPercent(lowBallType[1].goals, lowBallType[1].attacks)}).`);
+      document.getElementById('halftime-balltype-efficiency').innerHTML = renderWithFallback(ballInsights);
+
+      const suggestions = buildDecisionSuggestions(mySummary, oppSummary).slice(0, 4);
+      document.getElementById('halftime-suggestions').innerHTML = renderWithFallback(suggestions);
+      document.getElementById('halftime-report-modal').classList.remove('hidden');
+    }
+
+    function closeHalftimeReport() {
+      document.getElementById('halftime-report-modal').classList.add('hidden');
     }
 
     function openTargetChangeModal() {
@@ -6889,6 +7027,7 @@ function renderHeatmap(optionsOrFilter) {
         openTimeoutActionModal();
       });
       document.getElementById('close-timeout-report').addEventListener('click', closeTimeoutReport);
+      document.getElementById('close-halftime-report').addEventListener('click', closeHalftimeReport);
       document.getElementById('close-quick-sub-modal').addEventListener('click', closeQuickSubModal);
       document.getElementById('quick-sub-team').addEventListener('change', updateQuickSubSelectors);
       document.getElementById('save-quick-sub').addEventListener('click', saveQuickSubstitution);
