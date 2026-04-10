@@ -140,7 +140,7 @@
 </div>
 <!-- Navigation -->
    <nav class="bg-white border-b border-slate-200 px-2 py-2 flex-shrink-0 overflow-x-auto">
-    <div class="flex gap-1 min-w-max"><button class="tab-btn active px-4 py-2 rounded-lg text-sm font-medium transition-all" data-tab="config">⚙️ Config</button> <button class="tab-btn px-4 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 transition-all" data-tab="escalacao">👥 Escalação</button> <button class="tab-btn px-4 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 transition-all" data-tab="jogo">🎮 Jogo</button> <button class="tab-btn px-4 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 transition-all" data-tab="historico">📋 Histórico</button> <button class="tab-btn px-4 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 transition-all" data-tab="relatorio">📊 Relatório</button> <button class="tab-btn px-4 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 transition-all" data-tab="analise">📈 Análise</button> <button class="tab-btn px-4 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 transition-all" data-tab="treinos">🏋️ Treinos</button> <button class="tab-btn px-4 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 transition-all" data-tab="prancheta">🧠 Prancheta</button>
+    <div class="flex gap-1 min-w-max"><button class="tab-btn active px-4 py-2 rounded-lg text-sm font-medium transition-all" data-tab="config">⚙️ Config</button> <button class="tab-btn px-4 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 transition-all" data-tab="escalacao">👥 Escalação</button> <button class="tab-btn px-4 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 transition-all" data-tab="jogo">🎮 Jogo</button> <button class="tab-btn px-4 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 transition-all" data-tab="historico">📋 Histórico</button> <button class="tab-btn px-4 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 transition-all" data-tab="relatorio">📊 Relatório</button> <button class="tab-btn px-4 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 transition-all" data-tab="analise">📈 Análise</button> <button class="tab-btn px-4 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 transition-all" data-tab="treinos">🏋️ Treinos</button> <button class="tab-btn px-4 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 transition-all" data-tab="prancheta">🧠 Prancheta</button> <button class="tab-btn px-4 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 transition-all" data-tab="competicoes">🏆 Competições</button>
     </div>
    </nav><!-- Main Content -->
    <main class="flex-1 overflow-auto p-4"><!-- Config Tab -->
@@ -155,9 +155,15 @@
         </div>
         <div><label class="block text-sm font-medium text-slate-600 mb-1">Data</label> <input type="date" id="config-date" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500">
         </div>
+        <div><label class="block text-sm font-medium text-slate-600 mb-1">Competição vinculada (opcional)</label> <select id="config-competition-link" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500"><option value="">Sem vínculo</option></select>
+        </div>
+        <div><label class="block text-sm font-medium text-slate-600 mb-1">Jogo do cronograma (opcional)</label> <select id="config-schedule-link" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500"><option value="">Sem vínculo</option></select>
+        </div>
+        <div><label class="block text-sm font-medium text-slate-600 mb-1">Tipo de registro</label> <select id="config-match-record-type" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500"><option value="">Não definido</option><option value="Meu jogo">Meu jogo</option><option value="Observação">Observação</option><option value="Análise adversário">Análise adversário</option></select>
+        </div>
         <div><label class="block text-sm font-medium text-slate-600 mb-1">Lado inicial da Minha Equipe</label> <select id="config-my-initial-side" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500"><option value="left">Lado esquerdo</option><option value="right">Lado direito</option></select>
         </div>
-       </div>
+      </div>
       </div>
       <div class="bg-white rounded-xl p-5 card-shadow">
        <h2 class="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2"><span class="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">🟢</span> Minha Equipe</h2>
@@ -223,6 +229,30 @@
         </div>
        </div>
       </div><button id="save-config" class="w-full btn-primary text-white py-3 rounded-xl font-semibold transition-all hover:shadow-lg"> 💾 Salvar Configuração </button>
+     </div>
+    </section><!-- Competições Tab -->
+    <section id="tab-competicoes" class="tab-content hidden">
+     <div class="max-w-6xl mx-auto space-y-4">
+      <div class="bg-white rounded-xl p-5 card-shadow">
+       <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+        <h2 class="text-lg font-semibold text-slate-800">🏆 Competições</h2>
+        <button id="competition-new-btn" class="px-4 py-2 rounded-lg btn-primary text-white text-sm">+ Nova competição</button>
+       </div>
+       <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <div class="md:col-span-2"><input id="competition-form-name" class="w-full px-3 py-2 border border-slate-300 rounded-lg" placeholder="Nome da competição"></div>
+        <div><input id="competition-form-location" class="w-full px-3 py-2 border border-slate-300 rounded-lg" placeholder="Local"></div>
+        <div><input id="competition-form-city" class="w-full px-3 py-2 border border-slate-300 rounded-lg" placeholder="Cidade/UF"></div>
+        <div><input id="competition-form-hotel" class="w-full px-3 py-2 border border-slate-300 rounded-lg" placeholder="Hotel (opcional)"></div>
+        <div><input id="competition-form-start" type="date" class="w-full px-3 py-2 border border-slate-300 rounded-lg"></div>
+        <div><input id="competition-form-end" type="date" class="w-full px-3 py-2 border border-slate-300 rounded-lg"></div>
+        <div class="md:col-span-3"><textarea id="competition-form-notes" rows="2" class="w-full px-3 py-2 border border-slate-300 rounded-lg" placeholder="Observações gerais"></textarea></div>
+       </div>
+       <div class="flex gap-2 mt-3">
+        <button id="competition-save-btn" class="px-4 py-2 rounded-lg btn-success text-white text-sm">💾 Salvar competição</button>
+        <button id="competition-delete-btn" class="px-4 py-2 rounded-lg btn-danger text-white text-sm hidden">🗑️ Excluir competição</button>
+       </div>
+      </div>
+      <div id="competitions-list" class="space-y-3"></div>
      </div>
     </section><!-- Escalação Tab -->
     <section id="tab-escalacao" class="tab-content hidden">
@@ -1090,12 +1120,16 @@
         showOpponent: false,
         selectedMyTeamId: '',
         selectedOpponentTeamId: '',
-        selectedTrainingGroupId: ''
+        selectedTrainingGroupId: '',
+        linkedCompetitionId: '',
+        linkedScheduleGameId: '',
+        matchRecordType: ''
       },
       teamRegistry: [],
       athleteRegistry: [],
       trainingGroups: [],
       trainings: [],
+      competitions: [],
       lineup: {
         left: null,
         center: null,
@@ -1295,6 +1329,59 @@
       return Array.isArray(list)
         ? list.map(normalizeTeam).filter(team => team.name || team.athletes.some(a => a.name || a.number))
         : [];
+    }
+
+    function normalizeCompetitionCategory(value) {
+      const normalized = String(value || '').trim().toLowerCase();
+      return normalized === 'masculino' || normalized === 'feminino' ? normalized : '';
+    }
+
+    function normalizeCompetitionTeam(team = {}) {
+      return {
+        id: String(team.id || `comp-team-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`),
+        name: String(team.name || '').trim(),
+        cityState: String(team.cityState || '').trim(),
+        coach: String(team.coach || '').trim(),
+        category: normalizeCompetitionCategory(team.category),
+        athletes: normalizeAthleteList(team.athletes || []),
+        notes: String(team.notes || '').trim()
+      };
+    }
+
+    function normalizeCompetitionGame(game = {}) {
+      return {
+        id: String(game.id || `comp-game-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`),
+        gameNumber: String(game.gameNumber || '').trim(),
+        date: String(game.date || '').slice(0, 10),
+        time: String(game.time || '').slice(0, 5),
+        teamA: String(game.teamA || '').trim(),
+        teamB: String(game.teamB || '').trim(),
+        phase: String(game.phase || '').trim(),
+        category: normalizeCompetitionCategory(game.category),
+        scoreA: String(game.scoreA ?? '').trim(),
+        scoreB: String(game.scoreB ?? '').trim()
+      };
+    }
+
+    function normalizeCompetition(item = {}) {
+      return {
+        id: String(item.id || `competition-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`),
+        name: String(item.name || '').trim(),
+        location: String(item.location || '').trim(),
+        cityState: String(item.cityState || '').trim(),
+        hotel: String(item.hotel || '').trim(),
+        startDate: String(item.startDate || '').slice(0, 10),
+        endDate: String(item.endDate || '').slice(0, 10),
+        notes: String(item.notes || '').trim(),
+        teams: Array.isArray(item.teams) ? item.teams.map(normalizeCompetitionTeam).filter((team) => team.name) : [],
+        schedule: Array.isArray(item.schedule) ? item.schedule.map(normalizeCompetitionGame) : [],
+        createdAt: item.createdAt || new Date().toISOString(),
+        updatedAt: item.updatedAt || new Date().toISOString()
+      };
+    }
+
+    function normalizeCompetitions(list) {
+      return Array.isArray(list) ? list.map(normalizeCompetition).filter((competition) => competition.name) : [];
     }
 
     function createEmptyTrainingActivity() {
@@ -1902,6 +1989,9 @@
         status: statusOverride || (events.length > 0 ? 'live' : 'draft'),
         info: {
           competition: AppState.config.competition || '',
+          linkedCompetitionId: AppState.config.linkedCompetitionId || '',
+          linkedScheduleGameId: AppState.config.linkedScheduleGameId || '',
+          matchRecordType: AppState.config.matchRecordType || '',
           location: AppState.config.location || '',
           date: AppState.config.date || '',
           notes: AppState.config.notes || '',
@@ -1913,6 +2003,9 @@
           statistics
         },
         competition: AppState.config.competition || '',
+        linkedCompetitionId: AppState.config.linkedCompetitionId || '',
+        linkedScheduleGameId: AppState.config.linkedScheduleGameId || '',
+        matchRecordType: AppState.config.matchRecordType || '',
         location: AppState.config.location || '',
         date: AppState.config.date || '',
         notes: AppState.config.notes || '',
@@ -1926,6 +2019,7 @@
         athleteRegistry: AppState.athleteRegistry,
         trainingGroups: AppState.trainingGroups,
         trainings: AppState.trainings,
+        competitions: AppState.competitions,
         lineup: AppState.lineup,
         matchControl: AppState.matchControl,
         targetPlans: AppState.targetPlans,
@@ -2034,6 +2128,7 @@
         athleteRegistry: AppState.athleteRegistry,
         trainingGroups: AppState.trainingGroups,
         trainings: AppState.trainings,
+        competitions: AppState.competitions,
         lineup: AppState.lineup,
         matchControl: AppState.matchControl,
         targetPlans: AppState.targetPlans,
@@ -2093,6 +2188,7 @@
       AppState.athleteRegistry = normalizeAthleteList(payload.athleteRegistry || AppState.athleteRegistry);
       AppState.trainingGroups = normalizeTrainingGroups(payload.trainingGroups || AppState.trainingGroups);
       AppState.trainings = normalizeTrainings(payload.trainings || AppState.trainings);
+      AppState.competitions = normalizeCompetitions(payload.competitions || AppState.competitions);
       ensureTrainingGroupsState();
       migrateLegacyTeams();
       rebuildGlobalAthleteRegistry();
@@ -2122,12 +2218,14 @@
       loadConfigToForm();
       renderSavedTeamSelectors();
       renderTeamManagement();
+      renderCompetitions();
       updateLineupSelectors();
       updateLineupDisplay();
       renderSavedTeamSelectors();
       renderTeamManagement();
       renderTargetPlan();
       renderTrainingModule();
+      renderCompetitionSelectors();
     }
 
     function updateUiAfterStateSync() {
@@ -2138,6 +2236,7 @@
       renderHistory();
       renderRecentEvents();
       renderTrainingModule();
+      renderCompetitions();
     }
 
     function resolveConflictByUpdatedAt(remoteMatch, localCache) {
@@ -2177,6 +2276,7 @@
         AppState.athleteRegistry = normalizeAthleteList(data.athleteRegistry || AppState.athleteRegistry);
         AppState.trainingGroups = normalizeTrainingGroups(data.trainingGroups || AppState.trainingGroups);
         AppState.trainings = normalizeTrainings(data.trainings || AppState.trainings);
+        AppState.competitions = normalizeCompetitions(data.competitions || AppState.competitions);
         ensureTrainingGroupsState();
         migrateLegacyTeams();
         rebuildGlobalAthleteRegistry();
@@ -2233,6 +2333,9 @@
           archived.push({
             id: matchDoc.id,
             competition: matchData.competition || '',
+            linkedCompetitionId: matchData.linkedCompetitionId || '',
+            linkedScheduleGameId: matchData.linkedScheduleGameId || '',
+            matchRecordType: matchData.matchRecordType || '',
             date: matchData.date || '',
             location: matchData.location || '',
             notes: matchData.notes || '',
@@ -2265,6 +2368,7 @@
         athleteRegistry: activeData.athleteRegistry || AppState.athleteRegistry,
         trainingGroups: activeData.trainingGroups || AppState.trainingGroups,
         trainings: activeData.trainings || AppState.trainings,
+        competitions: activeData.competitions || AppState.competitions,
         lineup: activeData.lineup || AppState.lineup,
         matchControl: activeData.matchControl || AppState.matchControl,
         targetPlans: activeData.targetPlans || AppState.targetPlans,
@@ -2305,6 +2409,9 @@
           .map((match) => ({
             id: match.id,
             competition: match.competition || '',
+            linkedCompetitionId: match.linkedCompetitionId || '',
+            linkedScheduleGameId: match.linkedScheduleGameId || '',
+            matchRecordType: match.matchRecordType || '',
             date: match.date || '',
             location: match.location || '',
             notes: match.notes || '',
@@ -3320,6 +3427,9 @@
           {
             id: AppState.matchId,
             competition: AppState.config.competition || '',
+            linkedCompetitionId: AppState.config.linkedCompetitionId || '',
+            linkedScheduleGameId: AppState.config.linkedScheduleGameId || '',
+            matchRecordType: AppState.config.matchRecordType || '',
             date: AppState.config.date || '',
             location: AppState.config.location || '',
             myTeam: AppState.config.myTeam || 'Minha Equipe',
@@ -3386,6 +3496,9 @@
       return {
         id: AppState.matchId,
         competition: AppState.config.competition || '',
+        linkedCompetitionId: AppState.config.linkedCompetitionId || '',
+        linkedScheduleGameId: AppState.config.linkedScheduleGameId || '',
+        matchRecordType: AppState.config.matchRecordType || '',
         date: AppState.config.date || '',
         location: AppState.config.location || '',
         myTeam: AppState.config.myTeam || 'Minha Equipe',
@@ -3529,6 +3642,9 @@
         return {
           id: matchId,
           competition: data.competition || '',
+          linkedCompetitionId: data.linkedCompetitionId || '',
+          linkedScheduleGameId: data.linkedScheduleGameId || '',
+          matchRecordType: data.matchRecordType || '',
           date: data.date || '',
           location: data.location || '',
           myTeam: data.myTeam || 'Minha Equipe',
@@ -3546,6 +3662,9 @@
 
     function applyMatchMetadataToCurrentState(metadata = {}) {
       AppState.config.competition = metadata.competition || '';
+      AppState.config.linkedCompetitionId = metadata.linkedCompetitionId || '';
+      AppState.config.linkedScheduleGameId = metadata.linkedScheduleGameId || '';
+      AppState.config.matchRecordType = metadata.matchRecordType || '';
       AppState.config.date = metadata.date || '';
       AppState.config.location = metadata.location || '';
       AppState.config.myTeam = metadata.myTeam || 'Minha Equipe';
@@ -3712,6 +3831,9 @@
       const matchSummary = {
         id: AppState.matchId,
         competition: AppState.config.competition || '',
+        linkedCompetitionId: AppState.config.linkedCompetitionId || '',
+        linkedScheduleGameId: AppState.config.linkedScheduleGameId || '',
+        matchRecordType: AppState.config.matchRecordType || '',
         date: AppState.config.date || '',
         location: AppState.config.location || '',
         myTeam: AppState.config.myTeam || 'Minha Equipe',
@@ -4196,6 +4318,7 @@
       document.getElementById('config-my-initial-side').value = normalizeCourtSide(AppState.lineup.myInitialSide || 'left');
       document.getElementById('config-my-team').value = AppState.config.myTeam || '';
       document.getElementById('config-opponent-team').value = AppState.config.opponentTeam || '';
+      document.getElementById('config-match-record-type').value = AppState.config.matchRecordType || '';
       document.getElementById('opponent-toggle').checked = AppState.config.showOpponent;
       
       if (AppState.config.showOpponent) {
@@ -4205,7 +4328,22 @@
       }
 
       renderSavedTeamSelectors();
+      renderCompetitionSelectors();
       renderAthleteInputs();
+    }
+
+    function renderCompetitionSelectors() {
+      const competitionSelect = document.getElementById('config-competition-link');
+      const gameSelect = document.getElementById('config-schedule-link');
+      if (!competitionSelect || !gameSelect) return;
+      competitionSelect.innerHTML = '<option value="">Sem vínculo</option>' + AppState.competitions.map((competition) => `<option value="${competition.id}">${escapeHtml(competition.name)}</option>`).join('');
+      competitionSelect.value = AppState.config.linkedCompetitionId || '';
+      const selectedCompetition = AppState.competitions.find((competition) => competition.id === AppState.config.linkedCompetitionId);
+      gameSelect.innerHTML = '<option value="">Sem vínculo</option>' + (selectedCompetition?.schedule || []).map((game) => {
+        const label = `${game.gameNumber || '-'} • ${game.date || '-'} ${game.time || ''} • ${game.teamA || '?'} x ${game.teamB || '?'}`;
+        return `<option value="${game.id}">${escapeHtml(label)}</option>`;
+      }).join('');
+      gameSelect.value = AppState.config.linkedScheduleGameId || '';
     }
     
     function saveConfig() {
@@ -4216,6 +4354,9 @@
       syncCourtSidesFromState({ persist: false });
       AppState.config.myTeam = document.getElementById('config-my-team').value;
       AppState.config.opponentTeam = document.getElementById('config-opponent-team').value;
+      AppState.config.linkedCompetitionId = document.getElementById('config-competition-link').value || '';
+      AppState.config.linkedScheduleGameId = document.getElementById('config-schedule-link').value || '';
+      AppState.config.matchRecordType = document.getElementById('config-match-record-type').value || '';
       
       // Save my athletes
       const myNames = document.querySelectorAll('.my-athlete-name');
@@ -4261,6 +4402,7 @@
       updateCourtSideDisplay();
       renderTargetPlan();
       renderTrainingModule();
+      renderCompetitionSelectors();
       saveToLocalStorage();
       showToast('✅ Configuração salva com sucesso!');
     }
@@ -6776,6 +6918,81 @@ function renderHeatmap(optionsOrFilter) {
       showToast('✅ Treino salvo com sucesso.');
     }
 
+    function competitionCategoryChip(category) {
+      if (category === 'masculino') return 'bg-blue-100 text-blue-700 border-blue-200';
+      if (category === 'feminino') return 'bg-pink-100 text-pink-700 border-pink-200';
+      return 'bg-slate-100 text-slate-600 border-slate-200';
+    }
+
+    function getCompetitionLinkedScouts(competitionId) {
+      return getSavedMatchesForManager().filter((match) => match.linkedCompetitionId === competitionId);
+    }
+
+    function resetCompetitionForm() {
+      ['competition-form-name', 'competition-form-location', 'competition-form-city', 'competition-form-hotel', 'competition-form-start', 'competition-form-end', 'competition-form-notes']
+        .forEach((id) => { document.getElementById(id).value = ''; });
+      const saveBtn = document.getElementById('competition-save-btn');
+      saveBtn.dataset.editingId = '';
+      document.getElementById('competition-delete-btn').classList.add('hidden');
+    }
+
+    function renderCompetitions() {
+      const list = document.getElementById('competitions-list');
+      if (!list) return;
+      if (!AppState.competitions.length) {
+        list.innerHTML = '<div class="bg-white rounded-xl p-4 text-sm text-slate-500">Nenhuma competição cadastrada.</div>';
+        return;
+      }
+      list.innerHTML = AppState.competitions.map((competition) => {
+        const linkedScouts = getCompetitionLinkedScouts(competition.id);
+        const teams = (competition.teams || []).map((team) => `
+          <details class="border border-slate-200 rounded-lg p-2">
+            <summary class="cursor-pointer list-none flex items-center justify-between gap-2"><span class="font-medium text-sm">${escapeHtml(team.name)}</span><span class="text-xs text-slate-500">${escapeHtml(team.cityState || '-')}</span></summary>
+            <div class="mt-2 text-xs text-slate-600">
+              <div class="mb-1">Treinador: ${escapeHtml(team.coach || '-')}</div>
+              <div>${team.athletes.length ? team.athletes.map((athlete) => `<span class="inline-block mr-1 mb-1 px-2 py-0.5 rounded-full bg-slate-100 border border-slate-200">${escapeHtml(formatAthleteDisplay(athlete))}</span>`).join('') : 'Sem atletas cadastrados'}</div>
+            </div>
+          </details>
+        `).join('') || '<p class="text-xs text-slate-400">Sem equipes cadastradas.</p>';
+        const schedule = (competition.schedule || []).map((game) => `
+          <tr class="border-b border-slate-100">
+            <td class="py-1">${escapeHtml(game.gameNumber || '-')}</td>
+            <td class="py-1">${escapeHtml(game.date || '-')} ${escapeHtml(game.time || '')}</td>
+            <td class="py-1">${escapeHtml(game.teamA || '?')} x ${escapeHtml(game.teamB || '?')}</td>
+            <td class="py-1">${escapeHtml(game.phase || '-')}</td>
+            <td class="py-1"><span class="px-2 py-0.5 rounded-full border text-[11px] ${competitionCategoryChip(game.category)}">${escapeHtml(game.category || '-')}</span></td>
+            <td class="py-1">${escapeHtml(game.scoreA || '-')} x ${escapeHtml(game.scoreB || '-')}</td>
+            <td class="py-1"><button class="comp-edit-result text-xs underline text-blue-700" data-id="${competition.id}" data-game-id="${game.id}">resultado</button></td>
+          </tr>
+        `).join('') || '<tr><td colspan="7" class="py-2 text-slate-400">Sem jogos no cronograma.</td></tr>';
+        return `
+          <div class="bg-white rounded-xl p-4 card-shadow space-y-3">
+            <div class="flex flex-wrap items-start justify-between gap-2">
+              <div>
+                <h3 class="font-semibold text-slate-800">${escapeHtml(competition.name)}</h3>
+                <p class="text-sm text-slate-500">${escapeHtml(competition.location || '-')} • ${escapeHtml(competition.cityState || '-')} • ${escapeHtml(competition.startDate || '-')} a ${escapeHtml(competition.endDate || '-')}</p>
+              </div>
+              <div class="flex gap-2">
+                <button class="comp-edit px-2 py-1 text-xs rounded border border-slate-300" data-id="${competition.id}">Editar</button>
+                <button class="comp-add-team px-2 py-1 text-xs rounded border border-slate-300" data-id="${competition.id}">+ Equipe</button>
+                <button class="comp-add-game px-2 py-1 text-xs rounded border border-slate-300" data-id="${competition.id}">+ Jogo</button>
+              </div>
+            </div>
+            <div class="grid md:grid-cols-2 gap-3">
+              <div><h4 class="text-xs font-semibold text-slate-600 mb-1">Equipes (${competition.teams.length})</h4><div class="space-y-2">${teams}</div></div>
+              <div><h4 class="text-xs font-semibold text-slate-600 mb-1">Scouts vinculados (${linkedScouts.length})</h4><div class="text-xs text-slate-600 space-y-1">${linkedScouts.map((match) => `<div>• ${escapeHtml(formatMatchLabel(match))} ${match.matchRecordType ? `(${escapeHtml(match.matchRecordType)})` : ''}</div>`).join('') || 'Nenhum scout vinculado.'}</div></div>
+            </div>
+            <div class="overflow-auto">
+              <table class="w-full text-xs">
+                <thead><tr class="text-left text-slate-500"><th>#</th><th>Data/Hora</th><th>Jogo</th><th>Fase</th><th>Categoria</th><th>Placar</th><th></th></tr></thead>
+                <tbody>${schedule}</tbody>
+              </table>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
     // =====================================================
     // EVENT LISTENERS
     // =====================================================
@@ -6856,6 +7073,14 @@ function renderHeatmap(optionsOrFilter) {
       });
       
       document.getElementById('save-config').addEventListener('click', saveConfig);
+      document.getElementById('config-competition-link').addEventListener('change', (e) => {
+        AppState.config.linkedCompetitionId = e.target.value || '';
+        AppState.config.linkedScheduleGameId = '';
+        renderCompetitionSelectors();
+      });
+      document.getElementById('config-schedule-link').addEventListener('change', (e) => {
+        AppState.config.linkedScheduleGameId = e.target.value || '';
+      });
       document.addEventListener('input', (e) => {
         if (e.target.closest('.my-athlete-name, .my-athlete-number, .opp-athlete-name, .opp-athlete-number')) {
           updateConfigAthleteValidationHighlights();
@@ -6966,6 +7191,114 @@ function renderHeatmap(optionsOrFilter) {
       });
       document.getElementById('training-analysis-activity').addEventListener('change', renderTrainingAnalysis);
       document.getElementById('training-athlete-compare').addEventListener('change', renderTrainingAnalysis);
+
+      document.getElementById('competition-new-btn').addEventListener('click', resetCompetitionForm);
+      document.getElementById('competition-save-btn').addEventListener('click', () => {
+        const saveBtn = document.getElementById('competition-save-btn');
+        const editingId = saveBtn.dataset.editingId || '';
+        const previous = AppState.competitions.find((competition) => competition.id === editingId);
+        const competition = normalizeCompetition({
+          id: editingId,
+          name: document.getElementById('competition-form-name').value,
+          location: document.getElementById('competition-form-location').value,
+          cityState: document.getElementById('competition-form-city').value,
+          hotel: document.getElementById('competition-form-hotel').value,
+          startDate: document.getElementById('competition-form-start').value,
+          endDate: document.getElementById('competition-form-end').value,
+          notes: document.getElementById('competition-form-notes').value,
+          teams: previous?.teams || [],
+          schedule: previous?.schedule || [],
+          createdAt: previous?.createdAt
+        });
+        if (!competition.name) {
+          showToast('⚠️ Informe o nome da competição.');
+          return;
+        }
+        if (previous) AppState.competitions = AppState.competitions.map((item) => item.id === competition.id ? competition : item);
+        else AppState.competitions.unshift(competition);
+        resetCompetitionForm();
+        renderCompetitions();
+        renderCompetitionSelectors();
+        saveToLocalStorage();
+      });
+      document.getElementById('competition-delete-btn').addEventListener('click', () => {
+        const id = document.getElementById('competition-save-btn').dataset.editingId || '';
+        if (!id) return;
+        AppState.competitions = AppState.competitions.filter((competition) => competition.id !== id);
+        if (AppState.config.linkedCompetitionId === id) {
+          AppState.config.linkedCompetitionId = '';
+          AppState.config.linkedScheduleGameId = '';
+        }
+        resetCompetitionForm();
+        renderCompetitions();
+        renderCompetitionSelectors();
+        saveToLocalStorage();
+      });
+      document.getElementById('competitions-list').addEventListener('click', (e) => {
+        const editBtn = e.target.closest('.comp-edit');
+        const addTeamBtn = e.target.closest('.comp-add-team');
+        const addGameBtn = e.target.closest('.comp-add-game');
+        const resultBtn = e.target.closest('.comp-edit-result');
+        if (editBtn) {
+          const competition = AppState.competitions.find((item) => item.id === editBtn.dataset.id);
+          if (!competition) return;
+          document.getElementById('competition-form-name').value = competition.name || '';
+          document.getElementById('competition-form-location').value = competition.location || '';
+          document.getElementById('competition-form-city').value = competition.cityState || '';
+          document.getElementById('competition-form-hotel').value = competition.hotel || '';
+          document.getElementById('competition-form-start').value = competition.startDate || '';
+          document.getElementById('competition-form-end').value = competition.endDate || '';
+          document.getElementById('competition-form-notes').value = competition.notes || '';
+          document.getElementById('competition-save-btn').dataset.editingId = competition.id;
+          document.getElementById('competition-delete-btn').classList.remove('hidden');
+          return;
+        }
+        if (addTeamBtn) {
+          const competition = AppState.competitions.find((item) => item.id === addTeamBtn.dataset.id);
+          if (!competition) return;
+          const name = prompt('Nome da equipe:');
+          if (!name) return;
+          const cityState = prompt('Cidade/UF:') || '';
+          const coach = prompt('Treinador (consulta):') || '';
+          const category = normalizeCompetitionCategory(prompt('Categoria: masculino ou feminino') || '');
+          const athletesRaw = prompt('Atletas (separados por vírgula):') || '';
+          const athletes = athletesRaw.split(',').map((entry, index) => normalizeAthlete({ id: `a-${index}`, name: entry.trim() })).filter((athlete) => athlete.name);
+          competition.teams.push(normalizeCompetitionTeam({ name, cityState, coach, category, athletes }));
+          competition.updatedAt = new Date().toISOString();
+          renderCompetitions();
+          saveToLocalStorage();
+          return;
+        }
+        if (addGameBtn) {
+          const competition = AppState.competitions.find((item) => item.id === addGameBtn.dataset.id);
+          if (!competition) return;
+          const game = normalizeCompetitionGame({
+            gameNumber: prompt('Número do jogo:') || '',
+            date: prompt('Data (AAAA-MM-DD):') || '',
+            time: prompt('Horário (HH:MM):') || '',
+            teamA: prompt('Equipe A:') || '',
+            teamB: prompt('Equipe B:') || '',
+            phase: prompt('Chave/Fase:') || '',
+            category: prompt('Categoria: masculino ou feminino') || ''
+          });
+          competition.schedule.push(game);
+          competition.updatedAt = new Date().toISOString();
+          renderCompetitions();
+          renderCompetitionSelectors();
+          saveToLocalStorage();
+          return;
+        }
+        if (resultBtn) {
+          const competition = AppState.competitions.find((item) => item.id === resultBtn.dataset.id);
+          const game = competition?.schedule.find((item) => item.id === resultBtn.dataset.gameId);
+          if (!game) return;
+          game.scoreA = prompt('Placar equipe A:', game.scoreA || '') || '';
+          game.scoreB = prompt('Placar equipe B:', game.scoreB || '') || '';
+          competition.updatedAt = new Date().toISOString();
+          renderCompetitions();
+          saveToLocalStorage();
+        }
+      });
       
       // Escalação tab
       document.querySelectorAll('.phase-btn').forEach(btn => {
@@ -7926,6 +8259,7 @@ populateHeatmapAthletes();
         athleteRegistry: AppState.athleteRegistry,
         trainingGroups: AppState.trainingGroups,
         trainings: AppState.trainings,
+        competitions: AppState.competitions,
         lineup: AppState.lineup,
         matchControl: AppState.matchControl,
         targetPlans: AppState.targetPlans,
@@ -7958,6 +8292,7 @@ populateHeatmapAthletes();
           AppState.athleteRegistry = normalizeAthleteList(parsed.athleteRegistry || AppState.athleteRegistry);
           AppState.trainingGroups = normalizeTrainingGroups(parsed.trainingGroups || AppState.trainingGroups);
           AppState.trainings = normalizeTrainings(parsed.trainings || AppState.trainings);
+          AppState.competitions = normalizeCompetitions(parsed.competitions || AppState.competitions);
           ensureTrainingGroupsState();
           migrateLegacyTeams();
           rebuildGlobalAthleteRegistry();
@@ -7978,8 +8313,10 @@ populateHeatmapAthletes();
           updateLineupDisplay();
           renderSavedTeamSelectors();
           renderTeamManagement();
+          renderCompetitions();
           renderTargetPlan();
           renderTrainingModule();
+          renderCompetitionSelectors();
           renderHistoryMatchSelector();
           renderReportMatchSelector();
           renderHistory();
@@ -8008,6 +8345,7 @@ populateHeatmapAthletes();
       AppState.athleteRegistry = normalizeAthleteList(AppState.athleteRegistry);
       AppState.trainingGroups = normalizeTrainingGroups(AppState.trainingGroups);
       AppState.trainings = normalizeTrainings(AppState.trainings);
+      AppState.competitions = normalizeCompetitions(AppState.competitions);
       ensureTrainingGroupsState();
       rebuildGlobalAthleteRegistry();
       trainingDraftState = createEmptyTrainingDraft();
@@ -8015,11 +8353,13 @@ populateHeatmapAthletes();
       renderAthleteInputs();
       renderSavedTeamSelectors();
       renderTeamManagement();
+      renderCompetitions();
       renderTrainingModule();
       ensureOpponentLineupDefaults();
       updateLineupSelectors();
       updateLineupDisplay();
       renderTargetPlan();
+      renderCompetitionSelectors();
       renderHistoryMatchSelector();
       renderReportMatchSelector();
       ['1T','2T','PR','PN'].forEach(phase => {
