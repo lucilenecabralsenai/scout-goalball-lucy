@@ -1386,7 +1386,8 @@
         phase: String(game.phase || '').trim(),
         category: normalizeCompetitionCategory(game.category),
         scoreA: String(game.scoreA ?? '').trim(),
-        scoreB: String(game.scoreB ?? '').trim()
+        scoreB: String(game.scoreB ?? '').trim(),
+        source: String(game.source || 'imported').trim() || 'imported'
       };
     }
 
@@ -7071,6 +7072,15 @@ function renderHeatmap(optionsOrFilter) {
         });
     }
 
+
+
+    function formatCompetitionDateTime(game = {}) {
+      const date = String(game.date || '').trim();
+      const time = String(game.time || '').trim();
+      if (!date && !time) return '-';
+      return [date, time].filter(Boolean).join(' ');
+    }
+
     function collectCompetitionTeamsFromStructure(groups = [], schedule = []) {
       const collected = [];
       const seen = new Set();
@@ -7146,8 +7156,8 @@ function renderHeatmap(optionsOrFilter) {
           }
         });
       }
-      const scheduleRaw = Array.isArray(source.schedule || source.games || source.cronograma)
-        ? (source.schedule || source.games || source.cronograma)
+      const scheduleRaw = Array.isArray(source.schedule)
+        ? source.schedule
         : [];
       const teamsRaw = Array.isArray(source.teams) ? source.teams : [];
       const teams = teamsRaw
@@ -7197,6 +7207,11 @@ function renderHeatmap(optionsOrFilter) {
       const foundByName = AppState.competitions.find((competition) => normalizeNameKey(competition.name) === normalizeNameKey(payload.metadata.name));
       const previous = foundById || foundByName || null;
 
+      const importedSchedule = sortCompetitionSchedule(payload.schedule).map((game) => normalizeCompetitionGame({ ...game, source: 'imported' }));
+      const previousSchedule = Array.isArray(previous?.schedule) ? previous.schedule.map(normalizeCompetitionGame) : [];
+      const removedAutomaticGames = previousSchedule.filter((game) => game.source !== 'imported').length;
+      const replacedImportedGames = previousSchedule.filter((game) => game.source === 'imported').length;
+
       const competition = normalizeCompetition({
         id: previous?.id,
         name: payload.metadata.name,
@@ -7208,7 +7223,7 @@ function renderHeatmap(optionsOrFilter) {
         notes: payload.providedFields.notes ? payload.metadata.notes : (previous?.notes || ''),
         teams: mergeCompetitionTeams(previous?.teams || [], payload.teams),
         groups: mergeCompetitionGroups(previous?.groups || [], payload.groups),
-        schedule: sortCompetitionSchedule(payload.schedule),
+        schedule: importedSchedule,
         createdAt: previous?.createdAt
       });
 
@@ -7243,7 +7258,10 @@ function renderHeatmap(optionsOrFilter) {
         createdTeamNames,
         reusedTeamNames,
         failedTeams,
-        totalImportedTeams: competition.teams.length
+        totalImportedTeams: competition.teams.length,
+        totalImportedGames: competition.schedule.length,
+        removedAutomaticGames,
+        replacedImportedGames
       };
     }
 
@@ -7281,7 +7299,7 @@ function renderHeatmap(optionsOrFilter) {
         const schedule = sortCompetitionSchedule(competition.schedule || []).map((game) => `
           <tr class="border-b border-slate-100">
             <td class="py-1">${escapeHtml(game.gameNumber || '-')}</td>
-            <td class="py-1">${escapeHtml(game.date || '-')} ${escapeHtml(game.time || '')}</td>
+            <td class="py-1">${escapeHtml(formatCompetitionDateTime(game))}</td>
             <td class="py-1">${escapeHtml(game.teamA || '?')} x ${escapeHtml(game.teamB || '?')}</td>
             <td class="py-1">${escapeHtml(game.phase || '-')}</td>
             <td class="py-1"><span class="px-2 py-0.5 rounded-full border text-[11px] ${competitionCategoryChip(game.category)}">${escapeHtml(game.category || '-')}</span></td>
@@ -7573,6 +7591,9 @@ function renderHeatmap(optionsOrFilter) {
             createdTeams,
             reusedTeams,
             totalImportedTeams,
+            totalImportedGames,
+            removedAutomaticGames,
+            replacedImportedGames,
             failedTeams
           } = importCompetitionFromJson(rawText);
           document.getElementById('competition-form-name').value = competition.name || '';
@@ -7590,7 +7611,7 @@ function renderHeatmap(optionsOrFilter) {
           renderCompetitionSelectors();
           saveToLocalStorage();
           const failedCount = Array.isArray(failedTeams) ? failedTeams.length : 0;
-          showToast(`✅ Importação concluída: ${competition.name}. Total: ${totalImportedTeams}; criadas: ${createdTeams}; reaproveitadas: ${reusedTeams}; falhas: ${failedCount}.`);
+          showToast(`✅ Importação concluída: ${competition.name}. Equipes: ${totalImportedTeams} (criadas: ${createdTeams}; reaproveitadas: ${reusedTeams}); jogos importados: ${totalImportedGames}; jogos antigos removidos: ${removedAutomaticGames + replacedImportedGames}; falhas: ${failedCount}.`);
         } catch (error) {
           console.error('Importação de competição falhou:', error);
           showToast(`⚠️ Falha na importação: ${error.message || 'JSON inválido.'}`);
@@ -7635,6 +7656,7 @@ function renderHeatmap(optionsOrFilter) {
           const competition = AppState.competitions.find((item) => item.id === addGameBtn.dataset.id);
           if (!competition) return;
           const game = normalizeCompetitionGame({
+            source: 'manual',
             gameNumber: prompt('Número do jogo:') || '',
             date: prompt('Data (AAAA-MM-DD):') || '',
             time: prompt('Horário (HH:MM):') || '',
