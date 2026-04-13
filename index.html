@@ -6972,10 +6972,16 @@ function renderHeatmap(optionsOrFilter) {
 
     function mergeCompetitionTeams(existingTeams = [], incomingTeams = []) {
       const merged = [...existingTeams.map(normalizeCompetitionTeam)];
-      const byName = new Map(merged.map((team) => [normalizeNameKey(team.name), team]));
+      const makeKey = (team) => `${normalizeNameKey(team.name)}|${normalizeCompetitionCategory(team.category) || '-'}`;
+      const byName = new Map(merged.map((team) => [makeKey(team), team]));
       incomingTeams.map(normalizeCompetitionTeam).forEach((team) => {
-        const key = normalizeNameKey(team.name);
-        if (!key) return;
+        const rawNameKey = normalizeNameKey(team.name);
+        if (!rawNameKey) return;
+        let key = makeKey(team);
+        if (!team.category && !byName.has(key)) {
+          const fallbackKey = `${rawNameKey}|masculino`;
+          if (byName.has(fallbackKey)) key = fallbackKey;
+        }
         const existing = byName.get(key);
         if (!existing) {
           merged.push(team);
@@ -7036,26 +7042,77 @@ function renderHeatmap(optionsOrFilter) {
       return merged;
     }
 
+    function collectCompetitionTeamsFromStructure(groups = [], schedule = []) {
+      const collected = [];
+      const seen = new Set();
+      const pushTeam = (name, category = '') => {
+        const cleanName = String(name || '').trim();
+        if (!cleanName) return;
+        const cleanCategory = normalizeCompetitionCategory(category);
+        const key = `${normalizeNameKey(cleanName)}|${cleanCategory || '-'}`;
+        if (seen.has(key)) return;
+        seen.add(key);
+        collected.push(normalizeCompetitionTeam({ name: cleanName, category: cleanCategory }));
+      };
+      groups.forEach((group) => {
+        const groupCategory = normalizeCompetitionCategory(group.category);
+        (group.teams || []).forEach((teamName) => pushTeam(teamName, groupCategory));
+      });
+      schedule.forEach((game) => {
+        pushTeam(game.teamA, game.category);
+        pushTeam(game.teamB, game.category);
+      });
+      return collected;
+    }
+
+    function getRegionalNordeste2026BaseData() {
+      return {
+        groups: [
+          { name: 'Masculino - Chave A', category: 'masculino', teams: ['APACE', 'ACSB', 'ACACE', 'ADESUL', 'SORTEIO 1'] },
+          { name: 'Masculino - Chave B', category: 'masculino', teams: ['ADEVIRN', 'CEDEMAC', 'ASDEV', 'APEDVA', 'SORTEIO 2'] },
+          { name: 'Masculino - Chave C', category: 'masculino', teams: ['ASSOBECER', 'ICB', 'IERC', 'AMPE', 'SORTEIO 3'] },
+          { name: 'Masculino - Chave D', category: 'masculino', teams: ['CRP', 'APEC', 'ADEVISE', 'IAPQ', 'SORTEIO 4'] },
+          { name: 'Feminino - Chave A', category: 'feminino', teams: ['ICB', 'CRP', 'IAPQ', 'AJECE', 'SORTEIO 1'] },
+          { name: 'Feminino - Chave B', category: 'feminino', teams: ['ADEVIRN', 'IERC', 'APEC', 'ADESUL', 'SORTEIO 2'] }
+        ],
+        teams: [
+          'APACE', 'ACSB', 'ACACE', 'ADESUL', 'SORTEIO 1',
+          'ADEVIRN', 'CEDEMAC', 'ASDEV', 'APEDVA', 'SORTEIO 2',
+          'ASSOBECER', 'ICB', 'IERC', 'AMPE', 'SORTEIO 3',
+          'CRP', 'APEC', 'ADEVISE', 'IAPQ', 'SORTEIO 4',
+          'AJECE'
+        ].map((name) => normalizeCompetitionTeam({ name }))
+      };
+    }
+
     function upsertCompetitionTeamInRegistry(team) {
       const normalizedTeam = normalizeCompetitionTeam(team);
       if (!normalizedTeam.name) return;
       const key = normalizeNameKey(normalizedTeam.name);
-      const existing = AppState.teamRegistry.find((item) => normalizeNameKey(item.name) === key);
+      const gender = normalizedTeam.category;
+      const existing = AppState.teamRegistry.find((item) => {
+        if (normalizeNameKey(item.name) !== key) return false;
+        if (gender && item.gender && item.gender !== gender) return false;
+        return true;
+      });
       if (existing) {
         if (!existing.location && normalizedTeam.cityState) existing.location = normalizedTeam.cityState;
         if (!existing.coach && normalizedTeam.coach) existing.coach = normalizedTeam.coach;
         if (!existing.category && normalizedTeam.category) existing.category = normalizedTeam.category;
+        if (!existing.gender && gender) existing.gender = gender;
         if (!existing.athletes?.length && normalizedTeam.athletes.length) existing.athletes = normalizedTeam.athletes;
         existing.updatedAt = new Date().toISOString();
-        return;
+        return 'reused';
       }
       AppState.teamRegistry.unshift(normalizeTeam({
         name: normalizedTeam.name,
         location: normalizedTeam.cityState,
         coach: normalizedTeam.coach,
         category: normalizedTeam.category,
+        gender,
         athletes: normalizedTeam.athletes
       }));
+      return 'created';
     }
 
     function parseCompetitionImportPayload(rawText) {
@@ -7097,6 +7154,13 @@ function renderHeatmap(optionsOrFilter) {
     function importCompetitionFromJson(rawText) {
       const payload = parseCompetitionImportPayload(rawText);
       if (!payload.metadata.name) throw new Error('JSON sem nome da competição.');
+      if (normalizeNameKey(payload.metadata.name) === normalizeNameKey('Regional Nordeste 2026')) {
+        const baseData = getRegionalNordeste2026BaseData();
+        payload.groups = mergeCompetitionGroups(payload.groups, baseData.groups);
+        payload.teams = mergeCompetitionTeams(payload.teams, baseData.teams);
+      }
+      const structureTeams = collectCompetitionTeamsFromStructure(payload.groups, payload.schedule);
+      payload.teams = mergeCompetitionTeams(payload.teams, structureTeams);
       const editingId = document.getElementById('competition-save-btn').dataset.editingId || '';
       const foundById = AppState.competitions.find((competition) => competition.id === editingId);
       const foundByName = AppState.competitions.find((competition) => normalizeNameKey(competition.name) === normalizeNameKey(payload.metadata.name));
@@ -7117,11 +7181,17 @@ function renderHeatmap(optionsOrFilter) {
         createdAt: previous?.createdAt
       });
 
-      competition.teams.forEach((team) => upsertCompetitionTeamInRegistry(team));
+      let createdTeams = 0;
+      let reusedTeams = 0;
+      competition.teams.forEach((team) => {
+        const action = upsertCompetitionTeamInRegistry(team);
+        if (action === 'created') createdTeams += 1;
+        if (action === 'reused') reusedTeams += 1;
+      });
       rebuildGlobalAthleteRegistry();
       if (previous) AppState.competitions = AppState.competitions.map((item) => item.id === competition.id ? competition : item);
       else AppState.competitions.unshift(competition);
-      return competition;
+      return { competition, createdTeams, reusedTeams };
     }
 
     function renderCompetitions() {
@@ -7441,7 +7511,7 @@ function renderHeatmap(optionsOrFilter) {
           return;
         }
         try {
-          const competition = importCompetitionFromJson(rawText);
+          const { competition, createdTeams, reusedTeams } = importCompetitionFromJson(rawText);
           document.getElementById('competition-form-name').value = competition.name || '';
           document.getElementById('competition-form-location').value = competition.location || '';
           document.getElementById('competition-form-city').value = competition.cityState || '';
@@ -7456,7 +7526,7 @@ function renderHeatmap(optionsOrFilter) {
           renderCompetitions();
           renderCompetitionSelectors();
           saveToLocalStorage();
-          showToast(`✅ Importação concluída: ${competition.name}.`);
+          showToast(`✅ Importação concluída: ${competition.name}. Equipes criadas: ${createdTeams}; reaproveitadas: ${reusedTeams}.`);
         } catch (error) {
           console.error('Importação de competição falhou:', error);
           showToast(`⚠️ Falha na importação: ${error.message || 'JSON inválido.'}`);
