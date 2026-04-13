@@ -4369,7 +4369,7 @@
       competitionSelect.innerHTML = '<option value="">Sem vínculo</option>' + AppState.competitions.map((competition) => `<option value="${competition.id}">${escapeHtml(competition.name)}</option>`).join('');
       competitionSelect.value = AppState.config.linkedCompetitionId || '';
       const selectedCompetition = AppState.competitions.find((competition) => competition.id === AppState.config.linkedCompetitionId);
-      gameSelect.innerHTML = '<option value="">Sem vínculo</option>' + (selectedCompetition?.schedule || []).map((game) => {
+      gameSelect.innerHTML = '<option value="">Sem vínculo</option>' + sortCompetitionSchedule(selectedCompetition?.schedule || []).map((game) => {
         const label = `${game.gameNumber || '-'} • ${game.date || '-'} ${game.time || ''} • ${game.teamA || '?'} x ${game.teamB || '?'}`;
         return `<option value="${game.id}">${escapeHtml(label)}</option>`;
       }).join('');
@@ -7042,6 +7042,35 @@ function renderHeatmap(optionsOrFilter) {
       return merged;
     }
 
+    function getCompetitionGameSortMetrics(game = {}) {
+      const date = String(game.date || '').trim();
+      const time = String(game.time || '').trim();
+      const gameNumberValue = String(game.gameNumber || '').trim();
+      const dateRank = /^\d{4}-\d{2}-\d{2}$/.test(date) ? date : '9999-12-31';
+      const timeRank = /^\d{2}:\d{2}$/.test(time) ? time : '99:99';
+      const numericGameNumber = Number.parseInt(gameNumberValue, 10);
+      const gameNumberRank = Number.isNaN(numericGameNumber) ? Number.MAX_SAFE_INTEGER : numericGameNumber;
+      return {
+        dateRank,
+        timeRank,
+        gameNumberRank,
+        gameNumberTextRank: gameNumberValue.toLocaleLowerCase('pt-BR')
+      };
+    }
+
+    function sortCompetitionSchedule(schedule = []) {
+      return [...schedule]
+        .map(normalizeCompetitionGame)
+        .sort((a, b) => {
+          const metricA = getCompetitionGameSortMetrics(a);
+          const metricB = getCompetitionGameSortMetrics(b);
+          if (metricA.dateRank !== metricB.dateRank) return metricA.dateRank.localeCompare(metricB.dateRank);
+          if (metricA.timeRank !== metricB.timeRank) return metricA.timeRank.localeCompare(metricB.timeRank);
+          if (metricA.gameNumberRank !== metricB.gameNumberRank) return metricA.gameNumberRank - metricB.gameNumberRank;
+          return metricA.gameNumberTextRank.localeCompare(metricB.gameNumberTextRank, 'pt-BR');
+        });
+    }
+
     function collectCompetitionTeamsFromStructure(groups = [], schedule = []) {
       const collected = [];
       const seen = new Set();
@@ -7063,42 +7092,6 @@ function renderHeatmap(optionsOrFilter) {
         pushTeam(game.teamB, game.category);
       });
       return collected;
-    }
-
-    function getRegionalNordeste2026BaseData() {
-      const groups = [
-        { name: 'Masculino - Chave A', category: 'masculino', teams: ['APACE', 'ACSB', 'ACACE', 'ADESUL', 'SORTEIO 1'] },
-        { name: 'Masculino - Chave B', category: 'masculino', teams: ['ADEVIRN', 'CEDEMAC', 'ASDEV', 'APEDVA', 'SORTEIO 2'] },
-        { name: 'Masculino - Chave C', category: 'masculino', teams: ['ASSOBECER', 'ICB', 'IERC', 'AMPE', 'SORTEIO 3'] },
-        { name: 'Masculino - Chave D', category: 'masculino', teams: ['CRP', 'APEC', 'ADEVISE', 'IAPQ', 'SORTEIO 4'] },
-        { name: 'Feminino - Chave A', category: 'feminino', teams: ['ICB', 'CRP', 'IAPQ', 'AJECE', 'SORTEIO 1'] },
-        { name: 'Feminino - Chave B', category: 'feminino', teams: ['ADEVIRN', 'IERC', 'APEC', 'ADESUL', 'SORTEIO 2'] }
-      ];
-      const schedule = [];
-      let gameNumber = 1;
-      groups.forEach((group) => {
-        const teams = Array.isArray(group.teams) ? group.teams : [];
-        for (let i = 0; i < teams.length; i += 1) {
-          for (let j = i + 1; j < teams.length; j += 1) {
-            schedule.push(normalizeCompetitionGame({
-              gameNumber: String(gameNumber),
-              date: '',
-              time: '',
-              teamA: teams[i],
-              teamB: teams[j],
-              phase: group.name,
-              category: group.category
-            }));
-            gameNumber += 1;
-          }
-        }
-      });
-      const teams = collectCompetitionTeamsFromStructure(groups, schedule);
-      return {
-        groups,
-        teams,
-        schedule
-      };
     }
 
     function upsertCompetitionTeamInRegistry(team) {
@@ -7197,12 +7190,6 @@ function renderHeatmap(optionsOrFilter) {
         ? parseCompetitionImportPayload(data)
         : parseCompetitionImportPayload(JSON.stringify(data || {}));
       if (!payload.metadata.name) throw new Error('JSON sem nome da competição.');
-      if (normalizeNameKey(payload.metadata.name) === normalizeNameKey('Regional Nordeste 2026')) {
-        const baseData = getRegionalNordeste2026BaseData();
-        payload.groups = mergeCompetitionGroups(payload.groups, baseData.groups);
-        payload.teams = mergeCompetitionTeams(payload.teams, baseData.teams);
-        payload.schedule = mergeCompetitionSchedule(baseData.schedule, payload.schedule);
-      }
       const structureTeams = collectCompetitionTeamsFromStructure(payload.groups, payload.schedule);
       payload.teams = mergeCompetitionTeams(payload.teams, structureTeams);
       const editingId = document.getElementById('competition-save-btn').dataset.editingId || '';
@@ -7221,7 +7208,7 @@ function renderHeatmap(optionsOrFilter) {
         notes: payload.providedFields.notes ? payload.metadata.notes : (previous?.notes || ''),
         teams: mergeCompetitionTeams(previous?.teams || [], payload.teams),
         groups: mergeCompetitionGroups(previous?.groups || [], payload.groups),
-        schedule: mergeCompetitionSchedule(previous?.schedule || [], payload.schedule),
+        schedule: sortCompetitionSchedule(payload.schedule),
         createdAt: previous?.createdAt
       });
 
@@ -7291,7 +7278,7 @@ function renderHeatmap(optionsOrFilter) {
             </div>
           </details>
         `).join('') || '<p class="text-xs text-slate-400">Sem chaves cadastradas.</p>';
-        const schedule = (competition.schedule || []).map((game) => `
+        const schedule = sortCompetitionSchedule(competition.schedule || []).map((game) => `
           <tr class="border-b border-slate-100">
             <td class="py-1">${escapeHtml(game.gameNumber || '-')}</td>
             <td class="py-1">${escapeHtml(game.date || '-')} ${escapeHtml(game.time || '')}</td>
