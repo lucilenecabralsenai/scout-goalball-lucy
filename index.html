@@ -2154,6 +2154,10 @@
 
     function enqueueCloudSync(reason = '') {
       if (suppressCloudSync || !AppState.auth.user || !firestoreDb) return;
+      if (!AppState.matchId) {
+        updateSyncStatus(navigator.onLine ? 'synced' : 'offline');
+        return;
+      }
       if (syncDebounceTimer) clearTimeout(syncDebounceTimer);
       syncDebounceTimer = setTimeout(async () => {
         try {
@@ -2565,6 +2569,9 @@
           subscribeToUserMatches(user);
           subscribeToCurrentMatch();
           enqueueCloudSync('auth-state');
+          if (!AppState.matchId) {
+            updateSyncStatus(navigator.onLine ? 'synced' : 'offline');
+          }
         } catch (error) {
           console.error('[SYNC] Falha ao inicializar Firebase, usando fallback local', error);
           const localCache = readStateFromCache(user.uid);
@@ -7245,17 +7252,37 @@ function renderHeatmap(optionsOrFilter) {
           endDate: Object.prototype.hasOwnProperty.call(source, 'endDate'),
           notes: Object.prototype.hasOwnProperty.call(source, 'notes')
         },
+        requiredSections: {
+          hasTeamsField: Object.prototype.hasOwnProperty.call(source, 'teams'),
+          hasGroupsField: Object.prototype.hasOwnProperty.call(source, 'groups')
+            || Object.prototype.hasOwnProperty.call(source, 'chaves')
+            || Object.prototype.hasOwnProperty.call(source, 'keys'),
+          hasScheduleField: Object.prototype.hasOwnProperty.call(source, 'schedule')
+        },
         teams: mergeCompetitionTeams(teams, filterRealCompetitionTeams([...teamsFromGroups, ...teamsFromSchedule])),
         groups,
         schedule: scheduleRaw.map(normalizeCompetitionGame)
       };
     }
 
+    function validateCompetitionImportPayload(payload) {
+      if (!payload?.metadata?.name) {
+        throw new Error('JSON sem nome da competição.');
+      }
+      const missing = [];
+      if (!payload.requiredSections?.hasTeamsField || !Array.isArray(payload.teams) || payload.teams.length === 0) missing.push('teams');
+      if (!payload.requiredSections?.hasGroupsField || !Array.isArray(payload.groups) || payload.groups.length === 0) missing.push('groups');
+      if (!payload.requiredSections?.hasScheduleField || !Array.isArray(payload.schedule) || payload.schedule.length === 0) missing.push('schedule');
+      if (missing.length) {
+        throw new Error(`JSON incompleto para importação em lote. Inclua ${missing.join(', ')} com dados válidos.`);
+      }
+    }
+
     function importCompetition(data) {
       const payload = typeof data === 'string'
         ? parseCompetitionImportPayload(data)
         : parseCompetitionImportPayload(JSON.stringify(data || {}));
-      if (!payload.metadata.name) throw new Error('JSON sem nome da competição.');
+      validateCompetitionImportPayload(payload);
       const structureTeams = collectCompetitionTeamsFromStructure(payload.groups, payload.schedule);
       payload.teams = mergeCompetitionTeams(payload.teams, structureTeams);
       const editingId = document.getElementById('competition-save-btn').dataset.editingId || '';
@@ -8019,26 +8046,27 @@ function renderHeatmap(optionsOrFilter) {
         return;
       }
       list.innerHTML = AppState.competitions.map((competition) => {
-        const cacheSnapshot = readStateFromCache();
-        const cacheCompetition = cacheSnapshot?.competitions?.find((item) => item.id === competition.id);
-        console.debug('[Competições][Estado/cache]', {
-          competitionId: competition.id,
-          competitionName: competition.name,
-          inMemoryUpdatedAt: competition.updatedAt || '',
-          cacheUpdatedAt: cacheCompetition?.updatedAt || '',
-          inMemoryScheduleGames: Array.isArray(competition.schedule) ? competition.schedule.length : 0,
-          cacheScheduleGames: Array.isArray(cacheCompetition?.schedule) ? cacheCompetition.schedule.length : 0
-        });
-        const linkedScouts = getCompetitionLinkedScouts(competition.id);
-        const standings = buildCompetitionStandings(competition);
-        const maleGroups = [...standings.masculino.byGroup.entries()];
-        const femaleGroups = [...standings.feminino.byGroup.entries()];
-        const maleSerieBProjection = buildMaleSerieBProjection(standings.masculino.overall);
-        const femaleStrategy = buildFemaleStrategicSummary(femaleGroups.map(([name, rows]) => ({ name, rows })));
-        const femaleCrossings = buildFemaleCrossings(standings.feminino.byGroup);
-        const placeholders = collectCompetitionPlaceholders(competition);
+        try {
+          const cacheSnapshot = readStateFromCache();
+          const cacheCompetition = cacheSnapshot?.competitions?.find((item) => item.id === competition.id);
+          console.debug('[Competições][Estado/cache]', {
+            competitionId: competition.id,
+            competitionName: competition.name,
+            inMemoryUpdatedAt: competition.updatedAt || '',
+            cacheUpdatedAt: cacheCompetition?.updatedAt || '',
+            inMemoryScheduleGames: Array.isArray(competition.schedule) ? competition.schedule.length : 0,
+            cacheScheduleGames: Array.isArray(cacheCompetition?.schedule) ? cacheCompetition.schedule.length : 0
+          });
+          const linkedScouts = getCompetitionLinkedScouts(competition.id);
+          const standings = buildCompetitionStandings(competition);
+          const maleGroups = [...standings.masculino.byGroup.entries()];
+          const femaleGroups = [...standings.feminino.byGroup.entries()];
+          const maleSerieBProjection = buildMaleSerieBProjection(standings.masculino.overall);
+          const femaleStrategy = buildFemaleStrategicSummary(femaleGroups.map(([name, rows]) => ({ name, rows })));
+          const femaleCrossings = buildFemaleCrossings(standings.feminino.byGroup);
+          const placeholders = collectCompetitionPlaceholders(competition);
 
-        const groups = (competition.groups || []).map((group) => `
+          const groups = (competition.groups || []).map((group) => `
           <details class="border border-slate-200 rounded-lg p-2">
             <summary class="cursor-pointer list-none flex items-center justify-between gap-2"><span class="font-medium text-sm">${escapeHtml(group.name)}</span><span class="text-xs text-slate-500">${escapeHtml(group.category || '-')}</span></summary>
             <div class="mt-2 text-xs text-slate-600">
@@ -8048,7 +8076,7 @@ function renderHeatmap(optionsOrFilter) {
           </details>
         `).join('') || '<p class="text-xs text-slate-400">Sem chaves cadastradas.</p>';
 
-        const schedule = sortCompetitionSchedule(competition.schedule || []).map((game) => `
+          const schedule = sortCompetitionSchedule(competition.schedule || []).map((game) => `
           <tr class="border-b border-slate-100">
             <td class="py-1">${escapeHtml(game.gameNumber || '-')}</td>
             <td class="py-1">${escapeHtml(formatCompetitionDateTime(game))}</td>
@@ -8060,7 +8088,7 @@ function renderHeatmap(optionsOrFilter) {
           </tr>
         `).join('') || '<tr><td colspan="7" class="py-2 text-slate-400">Sem jogos no cronograma.</td></tr>';
 
-        const maleGroupTables = maleGroups.map(([groupName, rows]) => `
+          const maleGroupTables = maleGroups.map(([groupName, rows]) => `
           <div class="overflow-auto border border-slate-200 rounded-lg p-2 bg-white">
             <h5 class="text-xs font-semibold text-slate-700 mb-2">${escapeHtml(groupName)}</h5>
             <table class="w-full text-xs">
@@ -8080,7 +8108,7 @@ function renderHeatmap(optionsOrFilter) {
           </div>
         `).join('') || '<p class="text-xs text-slate-400">Sem grupos femininos para classificar.</p>';
 
-        return `
+          return `
           <div class="bg-white rounded-xl p-4 card-shadow space-y-3">
             <div class="flex flex-wrap items-start justify-between gap-2">
               <div>
@@ -8165,7 +8193,16 @@ function renderHeatmap(optionsOrFilter) {
               </div>
             </div>
           </div>
-        `;
+          `;
+        } catch (error) {
+          console.error('[Competições] Falha ao renderizar competição', { competitionId: competition?.id, error });
+          return `
+            <div class="bg-white rounded-xl p-4 border border-red-200">
+              <h3 class="font-semibold text-red-700">${escapeHtml(competition?.name || 'Competição')}</h3>
+              <p class="text-sm text-red-600 mt-1">Não foi possível renderizar esta competição. Verifique os dados importados e tente importar novamente com teams, groups e schedule completos.</p>
+            </div>
+          `;
+        }
       }).join('');
     }
 
