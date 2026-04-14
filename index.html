@@ -1352,6 +1352,25 @@
       return normalized === 'masculino' || normalized === 'feminino' ? normalized : '';
     }
 
+    function normalizeTeamReferenceKey(value = '') {
+      return String(value || '')
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .trim()
+        .toUpperCase();
+    }
+
+    function isTemporaryCompetitionSlot(value = '') {
+      const normalized = normalizeTeamReferenceKey(value);
+      if (!normalized) return false;
+      if (/^SORTEIO\b/.test(normalized)) return true;
+      if (/^VENC\./.test(normalized)) return true;
+      if (/^PERD\./.test(normalized)) return true;
+      if (/\bCHAVE\b/.test(normalized)) return true;
+      if (/^\d+$/.test(normalized)) return true;
+      return false;
+    }
+
     function normalizeCompetitionTeam(team = {}) {
       return {
         id: String(team.id || `comp-team-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`),
@@ -1401,7 +1420,9 @@
         startDate: String(item.startDate || '').slice(0, 10),
         endDate: String(item.endDate || '').slice(0, 10),
         notes: String(item.notes || '').trim(),
-        teams: Array.isArray(item.teams) ? item.teams.map(normalizeCompetitionTeam).filter((team) => team.name) : [],
+        teams: Array.isArray(item.teams)
+          ? item.teams.map(normalizeCompetitionTeam).filter((team) => team.name && !isTemporaryCompetitionSlot(team.name))
+          : [],
         groups: Array.isArray(item.groups || item.chaves || item.keys)
           ? (item.groups || item.chaves || item.keys).map(normalizeCompetitionGroup).filter((group) => group.name)
           : [],
@@ -2216,6 +2237,7 @@
       AppState.config = { ...AppState.config, ...(payload.config || {}) };
       normalizeConfigAthletes();
       AppState.teamRegistry = normalizeTeamRegistry(payload.teamRegistry || AppState.teamRegistry);
+      purgeTemporaryCompetitionSlotsFromRegistry();
       AppState.athleteRegistry = normalizeAthleteList(payload.athleteRegistry || AppState.athleteRegistry);
       AppState.trainingGroups = normalizeTrainingGroups(payload.trainingGroups || AppState.trainingGroups);
       AppState.trainings = normalizeTrainings(payload.trainings || AppState.trainings);
@@ -2304,6 +2326,7 @@
         AppState.config = { ...AppState.config, ...(data.config || {}) };
         normalizeConfigAthletes();
         AppState.teamRegistry = normalizeTeamRegistry(data.teamRegistry || AppState.teamRegistry);
+        purgeTemporaryCompetitionSlotsFromRegistry();
         AppState.athleteRegistry = normalizeAthleteList(data.athleteRegistry || AppState.athleteRegistry);
         AppState.trainingGroups = normalizeTrainingGroups(data.trainingGroups || AppState.trainingGroups);
         AppState.trainings = normalizeTrainings(data.trainings || AppState.trainings);
@@ -7087,6 +7110,7 @@ function renderHeatmap(optionsOrFilter) {
       const pushTeam = (name, category = '') => {
         const cleanName = String(name || '').trim();
         if (!cleanName) return;
+        if (isTemporaryCompetitionSlot(cleanName)) return;
         const cleanCategory = normalizeCompetitionCategory(category);
         const key = `${normalizeNameKey(cleanName)}|${cleanCategory || '-'}`;
         if (seen.has(key)) return;
@@ -7104,9 +7128,26 @@ function renderHeatmap(optionsOrFilter) {
       return collected;
     }
 
+    function filterRealCompetitionTeams(teams = []) {
+      return (Array.isArray(teams) ? teams : [])
+        .map(normalizeCompetitionTeam)
+        .filter((team) => team.name && !isTemporaryCompetitionSlot(team.name));
+    }
+
+    function purgeTemporaryCompetitionSlotsFromRegistry() {
+      const removed = [];
+      AppState.teamRegistry = normalizeTeamRegistry(AppState.teamRegistry).filter((team) => {
+        const shouldRemove = isTemporaryCompetitionSlot(team.name);
+        if (shouldRemove) removed.push(team.name);
+        return !shouldRemove;
+      });
+      return [...new Set(removed)];
+    }
+
     function upsertCompetitionTeamInRegistry(team) {
       const normalizedTeam = normalizeCompetitionTeam(team);
       if (!normalizedTeam.name) return;
+      if (isTemporaryCompetitionSlot(normalizedTeam.name)) return;
       const key = normalizeNameKey(normalizedTeam.name);
       const gender = normalizedTeam.category;
       const existing = AppState.teamRegistry.find((item) => {
@@ -7160,15 +7201,14 @@ function renderHeatmap(optionsOrFilter) {
         ? source.schedule
         : [];
       const teamsRaw = Array.isArray(source.teams) ? source.teams : [];
-      const teams = teamsRaw
+      const teams = filterRealCompetitionTeams(teamsRaw
         .map((team) => (typeof team === 'string' ? { name: team } : team))
-        .map(normalizeCompetitionTeam)
-        .filter((team) => team.name);
+      );
       const groups = groupsRaw.map(normalizeCompetitionGroup).filter((group) => group.name);
-      const teamsFromGroups = groups.flatMap((group) => (group.teams || []).map((name) => normalizeCompetitionTeam({ name, category: group.category })));
+      const teamsFromGroups = filterRealCompetitionTeams(groups.flatMap((group) => (group.teams || []).map((name) => ({ name, category: group.category }))));
       const teamsFromSchedule = scheduleRaw.flatMap((game) => {
         const category = normalizeCompetitionCategory(game?.category);
-        return [normalizeCompetitionTeam({ name: game?.teamA, category }), normalizeCompetitionTeam({ name: game?.teamB, category })];
+        return [{ name: game?.teamA, category }, { name: game?.teamB, category }];
       });
 
       return {
@@ -7189,7 +7229,7 @@ function renderHeatmap(optionsOrFilter) {
           endDate: Object.prototype.hasOwnProperty.call(source, 'endDate'),
           notes: Object.prototype.hasOwnProperty.call(source, 'notes')
         },
-        teams: mergeCompetitionTeams(teams, [...teamsFromGroups, ...teamsFromSchedule]),
+        teams: mergeCompetitionTeams(teams, filterRealCompetitionTeams([...teamsFromGroups, ...teamsFromSchedule])),
         groups,
         schedule: scheduleRaw.map(normalizeCompetitionGame)
       };
@@ -7211,6 +7251,7 @@ function renderHeatmap(optionsOrFilter) {
       const previousSchedule = Array.isArray(previous?.schedule) ? previous.schedule.map(normalizeCompetitionGame) : [];
       const removedAutomaticGames = previousSchedule.filter((game) => game.source !== 'imported').length;
       const replacedImportedGames = previousSchedule.filter((game) => game.source === 'imported').length;
+      const removedTemporaryTeams = purgeTemporaryCompetitionSlotsFromRegistry();
 
       const competition = normalizeCompetition({
         id: previous?.id,
@@ -7221,7 +7262,7 @@ function renderHeatmap(optionsOrFilter) {
         startDate: payload.providedFields.startDate ? payload.metadata.startDate : (previous?.startDate || ''),
         endDate: payload.providedFields.endDate ? payload.metadata.endDate : (previous?.endDate || ''),
         notes: payload.providedFields.notes ? payload.metadata.notes : (previous?.notes || ''),
-        teams: mergeCompetitionTeams(previous?.teams || [], payload.teams),
+        teams: mergeCompetitionTeams(filterRealCompetitionTeams(previous?.teams || []), payload.teams),
         groups: mergeCompetitionGroups(previous?.groups || [], payload.groups),
         schedule: importedSchedule,
         createdAt: previous?.createdAt
@@ -7261,7 +7302,8 @@ function renderHeatmap(optionsOrFilter) {
         totalImportedTeams: competition.teams.length,
         totalImportedGames: competition.schedule.length,
         removedAutomaticGames,
-        replacedImportedGames
+        replacedImportedGames,
+        removedTemporaryTeams
       };
     }
 
@@ -7594,7 +7636,8 @@ function renderHeatmap(optionsOrFilter) {
             totalImportedGames,
             removedAutomaticGames,
             replacedImportedGames,
-            failedTeams
+            failedTeams,
+            removedTemporaryTeams
           } = importCompetitionFromJson(rawText);
           document.getElementById('competition-form-name').value = competition.name || '';
           document.getElementById('competition-form-location').value = competition.location || '';
@@ -7611,7 +7654,8 @@ function renderHeatmap(optionsOrFilter) {
           renderCompetitionSelectors();
           saveToLocalStorage();
           const failedCount = Array.isArray(failedTeams) ? failedTeams.length : 0;
-          showToast(`✅ Importação concluída: ${competition.name}. Equipes: ${totalImportedTeams} (criadas: ${createdTeams}; reaproveitadas: ${reusedTeams}); jogos importados: ${totalImportedGames}; jogos antigos removidos: ${removedAutomaticGames + replacedImportedGames}; falhas: ${failedCount}.`);
+          const removedSlotsCount = Array.isArray(removedTemporaryTeams) ? removedTemporaryTeams.length : 0;
+          showToast(`✅ Importação concluída: ${competition.name}. Equipes: ${totalImportedTeams} (criadas: ${createdTeams}; reaproveitadas: ${reusedTeams}); jogos importados: ${totalImportedGames}; jogos antigos removidos: ${removedAutomaticGames + replacedImportedGames}; marcadores removidos do cadastro: ${removedSlotsCount}; falhas: ${failedCount}.`);
         } catch (error) {
           console.error('Importação de competição falhou:', error);
           showToast(`⚠️ Falha na importação: ${error.message || 'JSON inválido.'}`);
