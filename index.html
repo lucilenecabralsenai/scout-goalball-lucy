@@ -1348,8 +1348,17 @@
     }
 
     function normalizeCompetitionCategory(value) {
-      const normalized = String(value || '').trim().toLowerCase();
-      return normalized === 'masculino' || normalized === 'feminino' ? normalized : '';
+      const normalized = String(value || '')
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .trim()
+        .toLowerCase();
+      if (!normalized) return '';
+      if (normalized === 'masculino' || normalized === 'masculina' || normalized === 'm') return 'masculino';
+      if (normalized === 'feminino' || normalized === 'feminina' || normalized === 'f') return 'feminino';
+      if (normalized.includes('masc')) return 'masculino';
+      if (normalized.includes('fem')) return 'feminino';
+      return '';
     }
 
     function normalizeTeamReferenceKey(value = '') {
@@ -7343,16 +7352,40 @@ function renderHeatmap(optionsOrFilter) {
       };
       const headToHead = new Map();
       const teams = new Map();
+      const teamCategoriesByName = new Map();
+      const diagnostics = {
+        totalGamesInSchedule: Array.isArray(competition?.schedule) ? competition.schedule.length : 0,
+        gamesWithValidScore: 0,
+        gamesUsedInStandings: 0,
+        ignoredGames: []
+      };
+
+      const registerTeamCategory = (teamEntry) => {
+        if (!teamEntry?.name) return;
+        const nameKey = normalizeNameKey(teamEntry.name);
+        if (!nameKey || !teamEntry.category) return;
+        if (!teamCategoriesByName.has(nameKey)) teamCategoriesByName.set(nameKey, new Set());
+        teamCategoriesByName.get(nameKey).add(teamEntry.category);
+      };
+
+      const getUniqueKnownCategoryForTeam = (teamName) => {
+        const categories = teamCategoriesByName.get(normalizeNameKey(teamName));
+        if (!categories || categories.size !== 1) return '';
+        return [...categories][0];
+      };
 
       const ensureTeam = (teamName, category = '', groupName = '') => {
         const cleanName = String(teamName || '').trim();
         if (!cleanName || isTemporaryCompetitionSlot(cleanName)) return null;
-        const key = `${normalizeNameKey(cleanName)}|${normalizeCompetitionCategory(category) || ''}`;
+        const explicitCategory = normalizeCompetitionCategory(category);
+        const inferredCategory = getUniqueKnownCategoryForTeam(cleanName);
+        const resolvedCategory = explicitCategory || inferredCategory || '';
+        const key = `${normalizeNameKey(cleanName)}|${resolvedCategory}`;
         if (!teams.has(key)) {
           teams.set(key, {
             key,
             name: cleanName,
-            category: normalizeCompetitionCategory(category),
+            category: resolvedCategory,
             groupName: String(groupName || '').trim(),
             games: 0,
             wins: 0,
@@ -7364,9 +7397,13 @@ function renderHeatmap(optionsOrFilter) {
             quotient: 0,
             points: 0
           });
+          registerTeamCategory(teams.get(key));
         }
         const entry = teams.get(key);
-        if (!entry.category && category) entry.category = normalizeCompetitionCategory(category);
+        if (!entry.category && explicitCategory) {
+          entry.category = explicitCategory;
+          registerTeamCategory(entry);
+        }
         if (!entry.groupName && groupName) entry.groupName = String(groupName || '').trim();
         return entry;
       };
@@ -7378,15 +7415,52 @@ function renderHeatmap(optionsOrFilter) {
       (competition.teams || []).forEach((team) => ensureTeam(team.name, team.category, ''));
 
       sortCompetitionSchedule(competition.schedule || []).forEach((game) => {
-        const category = normalizeCompetitionCategory(game.category) || normalizeCompetitionCategory(getCompetitionGroupByName(competition, game.phase)?.category);
-        const groupName = getCompetitionGroupByName(competition, game.phase)?.name || '';
-        const teamA = ensureTeam(game.teamA, category, groupName);
-        const teamB = ensureTeam(game.teamB, category, groupName);
-        if (!teamA || !teamB) return;
-
+        const group = getCompetitionGroupByName(competition, game.phase);
+        const categoryFromGame = normalizeCompetitionCategory(game.category);
+        const categoryFromGroup = normalizeCompetitionCategory(group?.category);
+        const categoryFromTeamA = getUniqueKnownCategoryForTeam(game.teamA);
+        const categoryFromTeamB = getUniqueKnownCategoryForTeam(game.teamB);
+        const categoryFromTeams = categoryFromTeamA && categoryFromTeamA === categoryFromTeamB ? categoryFromTeamA : '';
+        const category = categoryFromGame || categoryFromGroup || categoryFromTeams;
+        const groupName = group?.name || '';
         const scoreA = parseCompetitionScore(game.scoreA);
         const scoreB = parseCompetitionScore(game.scoreB);
         if (scoreA === null || scoreB === null) return;
+        diagnostics.gamesWithValidScore += 1;
+
+        const teamA = ensureTeam(game.teamA, category, groupName);
+        const teamB = ensureTeam(game.teamB, category, groupName);
+        if (!teamA || !teamB) {
+          diagnostics.ignoredGames.push({
+            gameId: game.id,
+            teams: `${game.teamA || '(sem equipe A)'} x ${game.teamB || '(sem equipe B)'}`,
+            reason: 'equipe inválida, ausente ou marcador temporário',
+            scoreA,
+            scoreB
+          });
+          return;
+        }
+        if (!teamA.category || !teamB.category) {
+          diagnostics.ignoredGames.push({
+            gameId: game.id,
+            teams: `${teamA.name} x ${teamB.name}`,
+            reason: `categoria indefinida (jogo="${game.category || ''}", fase="${game.phase || ''}")`,
+            scoreA,
+            scoreB
+          });
+          return;
+        }
+        if (teamA.category !== teamB.category) {
+          diagnostics.ignoredGames.push({
+            gameId: game.id,
+            teams: `${teamA.name} (${teamA.category}) x ${teamB.name} (${teamB.category})`,
+            reason: 'categorias divergentes entre as equipes',
+            scoreA,
+            scoreB
+          });
+          return;
+        }
+        diagnostics.gamesUsedInStandings += 1;
 
         teamA.games += 1;
         teamB.games += 1;
@@ -7426,6 +7500,14 @@ function renderHeatmap(optionsOrFilter) {
           h2h[teamA.key].points += 1;
           h2h[teamB.key].points += 1;
         }
+      });
+
+      console.debug('[Competições] Diagnóstico de classificação', {
+        competition: competition?.name || '',
+        totalGamesInSchedule: diagnostics.totalGamesInSchedule,
+        gamesWithValidScore: diagnostics.gamesWithValidScore,
+        gamesUsedInStandings: diagnostics.gamesUsedInStandings,
+        ignoredGames: diagnostics.ignoredGames
       });
 
       const compareTeams = (a, b) => {
