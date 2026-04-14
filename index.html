@@ -7317,6 +7317,19 @@ function renderHeatmap(optionsOrFilter) {
       return Number.parseInt(clean, 10);
     }
 
+    function resetCompetitionResults(competition) {
+      if (!competition || !Array.isArray(competition.schedule)) return 0;
+      let clearedGames = 0;
+      competition.schedule.forEach((game) => {
+        const hadScore = String(game.scoreA ?? '').trim() !== '' || String(game.scoreB ?? '').trim() !== '';
+        game.scoreA = '';
+        game.scoreB = '';
+        if (hadScore) clearedGames += 1;
+      });
+      competition.updatedAt = new Date().toISOString();
+      return clearedGames;
+    }
+
     function getCompetitionGroupByName(competition, phaseName) {
       const key = normalizeNameKey(phaseName);
       if (!key) return null;
@@ -7694,6 +7707,7 @@ function renderHeatmap(optionsOrFilter) {
                 <button class="comp-edit px-2 py-1 text-xs rounded border border-slate-300" data-id="${competition.id}">Editar</button>
                 <button class="comp-add-team px-2 py-1 text-xs rounded border border-slate-300" data-id="${competition.id}">+ Equipe</button>
                 <button class="comp-add-game px-2 py-1 text-xs rounded border border-slate-300" data-id="${competition.id}">+ Jogo</button>
+                <button class="comp-reset-results px-2 py-1 text-xs rounded border border-red-300 text-red-700" data-id="${competition.id}">Resetar resultados</button>
               </div>
             </div>
             <div class="grid md:grid-cols-2 gap-3">
@@ -8037,6 +8051,7 @@ function renderHeatmap(optionsOrFilter) {
         const editBtn = e.target.closest('.comp-edit');
         const addTeamBtn = e.target.closest('.comp-add-team');
         const addGameBtn = e.target.closest('.comp-add-game');
+        const resetResultsBtn = e.target.closest('.comp-reset-results');
         const resultBtn = e.target.closest('.comp-edit-result');
         if (editBtn) {
           const competition = AppState.competitions.find((item) => item.id === editBtn.dataset.id);
@@ -8086,6 +8101,17 @@ function renderHeatmap(optionsOrFilter) {
           renderCompetitions();
           renderCompetitionSelectors();
           saveToLocalStorage();
+          return;
+        }
+        if (resetResultsBtn) {
+          const competition = AppState.competitions.find((item) => item.id === resetResultsBtn.dataset.id);
+          if (!competition) return;
+          const confirmed = window.confirm('Tem certeza que deseja apagar todos os placares desta competição?');
+          if (!confirmed) return;
+          const clearedGames = resetCompetitionResults(competition);
+          renderCompetitions();
+          saveToLocalStorage();
+          showToast(`✅ Resultados resetados. ${clearedGames} jogo(s) tiveram placares removidos.`);
           return;
         }
         if (resultBtn) {
