@@ -1369,6 +1369,13 @@
         .toUpperCase();
     }
 
+    const SERIE_B_MALE_PROJECTION_EXCLUDED = new Set(['APACE', 'ADEVIRN', 'FUNAD']);
+
+    function isExcludedFromSerieBMaleProjection(teamName = '') {
+      const normalized = normalizeTeamReferenceKey(teamName);
+      return normalized ? SERIE_B_MALE_PROJECTION_EXCLUDED.has(normalized) : false;
+    }
+
     function isTemporaryCompetitionSlot(value = '') {
       const normalized = normalizeTeamReferenceKey(value);
       if (!normalized) return false;
@@ -7704,6 +7711,182 @@ function renderHeatmap(optionsOrFilter) {
       return messages.slice(0, 8);
     }
 
+    function buildMaleSerieBProjection(maleOverall = []) {
+      const excludedTeams = maleOverall.filter((team) => isExcludedFromSerieBMaleProjection(team.name));
+      const projectedRows = maleOverall
+        .filter((team) => !isExcludedFromSerieBMaleProjection(team.name))
+        .map((team, index) => ({ ...team, projectionRank: index + 1 }));
+      const messages = projectedRows.length
+        ? buildMasculineStrategicSummary(projectedRows.map((team) => ({ ...team, rank: team.projectionRank })))
+        : ['Sem equipes elegíveis para projeção da vaga da Série B masculina.'];
+      return {
+        rows: projectedRows,
+        messages,
+        excludedTeams
+      };
+    }
+
+    function collectCompetitionPlaceholders(competition) {
+      const placeholders = new Map();
+      const ensure = (name, category = '', source = '') => {
+        const cleanName = String(name || '').trim();
+        if (!cleanName || !isTemporaryCompetitionSlot(cleanName)) return;
+        const key = normalizeNameKey(cleanName);
+        if (!placeholders.has(key)) {
+          placeholders.set(key, {
+            name: cleanName,
+            category: normalizeCompetitionCategory(category),
+            appearances: { schedule: 0, groups: 0 },
+            sourceHints: []
+          });
+        }
+        const entry = placeholders.get(key);
+        if (!entry.category) entry.category = normalizeCompetitionCategory(category);
+        if (source === 'schedule') entry.appearances.schedule += 1;
+        if (source === 'groups') entry.appearances.groups += 1;
+      };
+
+      (competition?.groups || []).forEach((group) => {
+        const groupCategory = normalizeCompetitionCategory(group.category);
+        (group.teams || []).forEach((teamName) => ensure(teamName, groupCategory, 'groups'));
+      });
+      (competition?.schedule || []).forEach((game) => {
+        const gameCategory = normalizeCompetitionCategory(game.category);
+        ensure(game.teamA, gameCategory, 'schedule');
+        ensure(game.teamB, gameCategory, 'schedule');
+      });
+
+      return [...placeholders.values()].sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
+    }
+
+    function parseAthletesFromPrompt(rawValue = '') {
+      return String(rawValue || '')
+        .split(/[,\n;]/)
+        .map((entry) => {
+          const [namePart, numberPart] = entry.split('#');
+          return normalizeAthlete({
+            name: String(namePart || '').trim(),
+            number: String(numberPart || '').trim()
+          });
+        })
+        .filter((athlete) => athlete.name || athlete.number);
+    }
+
+    function pickTeamForPlaceholder(competition, placeholder) {
+      const fromCompetition = (competition.teams || []).map(normalizeCompetitionTeam);
+      const fromRegistry = normalizeTeamRegistry(AppState.teamRegistry).map((team) => normalizeCompetitionTeam({
+        name: team.name,
+        cityState: team.location,
+        coach: team.coach,
+        category: team.gender || team.category,
+        athletes: team.athletes
+      }));
+      const options = mergeCompetitionTeams(fromCompetition, fromRegistry)
+        .filter((team) => team.name && !isTemporaryCompetitionSlot(team.name));
+
+      const optionLines = options
+        .slice(0, 25)
+        .map((team, index) => `${index + 1}) ${team.name}${team.category ? ` (${team.category})` : ''}`)
+        .join('\n');
+      const choice = prompt(
+        `Substituir "${placeholder.name}" por equipe existente ou nova.\nDigite o número da equipe existente ou N para nova equipe.\n\n${optionLines || '(Sem equipes cadastradas)'}`,
+        options.length ? '1' : 'N'
+      );
+      if (choice === null) return null;
+      const trimmedChoice = String(choice).trim().toUpperCase();
+      if (trimmedChoice === 'N') {
+        const name = prompt(`Nome real para substituir ${placeholder.name}:`) || '';
+        if (!name.trim()) return null;
+        const cityState = prompt('Cidade/UF:') || '';
+        const coach = prompt('Treinador:') || '';
+        const categoryPrompt = prompt('Categoria (masculino ou feminino):', placeholder.category || 'masculino') || '';
+        const athletesRaw = prompt('Atletas (Nome#Nº, separados por vírgula):') || '';
+        return normalizeCompetitionTeam({
+          name,
+          cityState,
+          coach,
+          category: categoryPrompt,
+          athletes: parseAthletesFromPrompt(athletesRaw)
+        });
+      }
+      const selectedIndex = Number.parseInt(trimmedChoice, 10) - 1;
+      if (Number.isNaN(selectedIndex) || selectedIndex < 0 || selectedIndex >= options.length) {
+        showToast('⚠️ Opção inválida para substituição do sorteio.');
+        return null;
+      }
+      return normalizeCompetitionTeam(options[selectedIndex]);
+    }
+
+    function replacePlaceholderInCompetition(competition, placeholderName, replacementTeam) {
+      const placeholderKey = normalizeNameKey(placeholderName);
+      const replacementName = String(replacementTeam?.name || '').trim();
+      if (!placeholderKey || !replacementName) return { scheduleUpdates: 0, groupUpdates: 0, matchUpdates: 0 };
+      let scheduleUpdates = 0;
+      let groupUpdates = 0;
+      let matchUpdates = 0;
+
+      (competition.schedule || []).forEach((game) => {
+        if (normalizeNameKey(game.teamA) === placeholderKey) {
+          game.teamA = replacementName;
+          scheduleUpdates += 1;
+        }
+        if (normalizeNameKey(game.teamB) === placeholderKey) {
+          game.teamB = replacementName;
+          scheduleUpdates += 1;
+        }
+        if (!game.category && replacementTeam.category) game.category = replacementTeam.category;
+      });
+
+      (competition.groups || []).forEach((group) => {
+        group.teams = (group.teams || []).map((teamName) => {
+          if (normalizeNameKey(teamName) !== placeholderKey) return teamName;
+          groupUpdates += 1;
+          return replacementName;
+        });
+        if (!group.category && replacementTeam.category) group.category = replacementTeam.category;
+      });
+
+      competition.teams = mergeCompetitionTeams(
+        filterRealCompetitionTeams((competition.teams || []).filter((team) => normalizeNameKey(team.name) !== placeholderKey)),
+        [replacementTeam]
+      );
+      upsertCompetitionTeamInRegistry(replacementTeam);
+      rebuildGlobalAthleteRegistry();
+
+      if (AppState.config.linkedCompetitionId === competition.id) {
+        if (normalizeNameKey(AppState.config.myTeam) === placeholderKey) {
+          AppState.config.myTeam = replacementName;
+          matchUpdates += 1;
+        }
+        if (normalizeNameKey(AppState.config.opponentTeam) === placeholderKey) {
+          AppState.config.opponentTeam = replacementName;
+          matchUpdates += 1;
+        }
+      }
+
+      AppState.archivedMatches = (AppState.archivedMatches || []).map((match) => {
+        if (match.linkedCompetitionId !== competition.id) return match;
+        let changed = false;
+        const nextMatch = { ...match };
+        if (normalizeNameKey(nextMatch.myTeam) === placeholderKey) {
+          nextMatch.myTeam = replacementName;
+          changed = true;
+        }
+        if (normalizeNameKey(nextMatch.opponentTeam) === placeholderKey) {
+          nextMatch.opponentTeam = replacementName;
+          changed = true;
+        }
+        if (changed) {
+          nextMatch.updatedAt = Date.now();
+          matchUpdates += 1;
+        }
+        return nextMatch;
+      });
+
+      competition.updatedAt = new Date().toISOString();
+      return { scheduleUpdates, groupUpdates, matchUpdates };
+    }
+
     function buildFemaleStrategicSummary(femaleGroups) {
       const messages = [];
       femaleGroups.forEach(({ name, rows }) => {
@@ -7761,9 +7944,10 @@ function renderHeatmap(optionsOrFilter) {
         const standings = buildCompetitionStandings(competition);
         const maleGroups = [...standings.masculino.byGroup.entries()];
         const femaleGroups = [...standings.feminino.byGroup.entries()];
-        const maleStrategy = buildMasculineStrategicSummary(standings.masculino.overall);
+        const maleSerieBProjection = buildMaleSerieBProjection(standings.masculino.overall);
         const femaleStrategy = buildFemaleStrategicSummary(femaleGroups.map(([name, rows]) => ({ name, rows })));
         const femaleCrossings = buildFemaleCrossings(standings.feminino.byGroup);
+        const placeholders = collectCompetitionPlaceholders(competition);
 
         const teams = (competition.teams || []).map((team) => `
           <details class="border border-slate-200 rounded-lg p-2">
@@ -7828,7 +8012,16 @@ function renderHeatmap(optionsOrFilter) {
                 <button class="comp-edit px-2 py-1 text-xs rounded border border-slate-300" data-id="${competition.id}">Editar</button>
                 <button class="comp-add-team px-2 py-1 text-xs rounded border border-slate-300" data-id="${competition.id}">+ Equipe</button>
                 <button class="comp-add-game px-2 py-1 text-xs rounded border border-slate-300" data-id="${competition.id}">+ Jogo</button>
+                <button class="comp-resolve-placeholders px-2 py-1 text-xs rounded border border-indigo-300 text-indigo-700" data-id="${competition.id}">Resolver sorteios</button>
                 <button class="comp-reset-results px-2 py-1 text-xs rounded border border-red-300 text-red-700" data-id="${competition.id}">Resetar resultados</button>
+              </div>
+            </div>
+            <div class="bg-indigo-50 border border-indigo-200 rounded-lg p-2">
+              <h4 class="text-xs font-semibold text-indigo-800 mb-2">🎲 Placeholders de sorteio</h4>
+              <div class="flex flex-wrap gap-2">
+                ${placeholders.length
+                  ? placeholders.map((placeholder) => `<button class="comp-resolve-placeholder px-2 py-1 text-xs rounded border border-indigo-300 bg-white text-indigo-700" data-id="${competition.id}" data-placeholder="${escapeAttribute(placeholder.name)}">${escapeHtml(placeholder.name)} (${placeholder.appearances.schedule} jogo(s), ${placeholder.appearances.groups} chave(s))</button>`).join('')
+                  : '<span class="text-xs text-indigo-700">Nenhum placeholder pendente.</span>'}
               </div>
             </div>
             <div class="grid md:grid-cols-2 gap-3">
@@ -7854,11 +8047,20 @@ function renderHeatmap(optionsOrFilter) {
                   <div class="mt-2 text-[11px] text-slate-600"><span class="inline-block px-2 py-0.5 rounded bg-emerald-100 mr-2">Top 4 (fora do sorteio)</span><span class="inline-block px-2 py-0.5 rounded bg-amber-100">5º ao 8º (zona de sorteio)</span></div>
                 </div>
               </div>
+              <div class="space-y-2 overflow-auto border border-slate-200 rounded-lg p-2 bg-white">
+                <h5 class="text-xs font-semibold text-blue-700 mb-2">B.1) Projeção vaga Série B (masculino)</h5>
+                <p class="text-[11px] text-slate-600 mb-2">Regra ativa: APACE, ADEVIRN e FUNAD entram na tabela oficial, mas ficam fora apenas desta projeção.</p>
+                <table class="w-full text-xs">
+                  <thead><tr class="text-left text-slate-500"><th>#</th><th>Equipe</th><th>J</th><th>V</th><th>E</th><th>D</th><th>GP</th><th>GC</th><th>SG</th><th>Q</th><th>PTS</th><th>Chave</th></tr></thead>
+                  <tbody>${buildStandingsTableRows(maleSerieBProjection.rows, 'maleOverall')}</tbody>
+                </table>
+                <div class="mt-2 text-[11px] text-slate-600">${maleSerieBProjection.excludedTeams.length ? `Excluídas da projeção: ${escapeHtml(maleSerieBProjection.excludedTeams.map((team) => team.name).join(', '))}.` : 'Nenhuma equipe excluída da projeção no momento.'}</div>
+              </div>
               <div class="space-y-2"><h5 class="text-xs font-semibold text-pink-700">C) Tabelas femininas por grupo</h5>${femaleGroupTables}</div>
               <div class="grid lg:grid-cols-2 gap-3">
                 <div class="bg-white rounded-lg border border-slate-200 p-3">
                   <h5 class="text-xs font-semibold text-blue-700 mb-2">D) Resumo estratégico masculino</h5>
-                  <ul class="text-xs text-slate-700 space-y-1">${maleStrategy.map((item) => `<li>• ${escapeHtml(item)}</li>`).join('')}</ul>
+                  <ul class="text-xs text-slate-700 space-y-1">${maleSerieBProjection.messages.map((item) => `<li>• ${escapeHtml(item)}</li>`).join('')}</ul>
                 </div>
                 <div class="bg-white rounded-lg border border-slate-200 p-3">
                   <h5 class="text-xs font-semibold text-pink-700 mb-2">E) Resumo estratégico feminino</h5>
@@ -8167,8 +8369,44 @@ function renderHeatmap(optionsOrFilter) {
         const editBtn = e.target.closest('.comp-edit');
         const addTeamBtn = e.target.closest('.comp-add-team');
         const addGameBtn = e.target.closest('.comp-add-game');
+        const resolveAllPlaceholdersBtn = e.target.closest('.comp-resolve-placeholders');
+        const resolvePlaceholderBtn = e.target.closest('.comp-resolve-placeholder');
         const resetResultsBtn = e.target.closest('.comp-reset-results');
         const resultBtn = e.target.closest('.comp-edit-result');
+        if (resolveAllPlaceholdersBtn || resolvePlaceholderBtn) {
+          const competitionId = resolveAllPlaceholdersBtn?.dataset.id || resolvePlaceholderBtn?.dataset.id || '';
+          const competition = AppState.competitions.find((item) => item.id === competitionId);
+          if (!competition) return;
+          const placeholders = collectCompetitionPlaceholders(competition);
+          if (!placeholders.length) {
+            showToast('ℹ️ Não há placeholders pendentes nesta competição.');
+            return;
+          }
+          const selectedPlaceholder = resolvePlaceholderBtn
+            ? placeholders.find((item) => normalizeNameKey(item.name) === normalizeNameKey(resolvePlaceholderBtn.dataset.placeholder))
+            : null;
+          const queue = selectedPlaceholder ? [selectedPlaceholder] : placeholders;
+          let resolvedCount = 0;
+          let scheduleUpdates = 0;
+          let groupUpdates = 0;
+          let matchUpdates = 0;
+          for (const placeholder of queue) {
+            const replacementTeam = pickTeamForPlaceholder(competition, placeholder);
+            if (!replacementTeam?.name) continue;
+            const result = replacePlaceholderInCompetition(competition, placeholder.name, replacementTeam);
+            resolvedCount += 1;
+            scheduleUpdates += result.scheduleUpdates;
+            groupUpdates += result.groupUpdates;
+            matchUpdates += result.matchUpdates;
+          }
+          if (!resolvedCount) return;
+          renderCompetitions();
+          renderCompetitionSelectors();
+          renderConfig();
+          saveToLocalStorage();
+          showToast(`✅ Sorteios resolvidos: ${resolvedCount}. Cronograma atualizado: ${scheduleUpdates}; chaves atualizadas: ${groupUpdates}; referências atualizadas: ${matchUpdates}.`);
+          return;
+        }
         if (editBtn) {
           const competition = AppState.competitions.find((item) => item.id === editBtn.dataset.id);
           if (!competition) return;
