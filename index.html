@@ -7311,6 +7311,250 @@ function renderHeatmap(optionsOrFilter) {
       return importCompetition(rawText);
     }
 
+    function parseCompetitionScore(value) {
+      const clean = String(value ?? '').trim();
+      if (!/^\d+$/.test(clean)) return null;
+      return Number.parseInt(clean, 10);
+    }
+
+    function getCompetitionGroupByName(competition, phaseName) {
+      const key = normalizeNameKey(phaseName);
+      if (!key) return null;
+      return (competition.groups || []).find((group) => normalizeNameKey(group.name) === key) || null;
+    }
+
+    function buildCompetitionStandings(competition) {
+      const standingsByCategory = {
+        masculino: { byGroup: new Map(), overall: [] },
+        feminino: { byGroup: new Map(), overall: [] }
+      };
+      const headToHead = new Map();
+      const teams = new Map();
+
+      const ensureTeam = (teamName, category = '', groupName = '') => {
+        const cleanName = String(teamName || '').trim();
+        if (!cleanName || isTemporaryCompetitionSlot(cleanName)) return null;
+        const key = `${normalizeNameKey(cleanName)}|${normalizeCompetitionCategory(category) || ''}`;
+        if (!teams.has(key)) {
+          teams.set(key, {
+            key,
+            name: cleanName,
+            category: normalizeCompetitionCategory(category),
+            groupName: String(groupName || '').trim(),
+            games: 0,
+            wins: 0,
+            draws: 0,
+            losses: 0,
+            goalsFor: 0,
+            goalsAgainst: 0,
+            goalDiff: 0,
+            quotient: 0,
+            points: 0
+          });
+        }
+        const entry = teams.get(key);
+        if (!entry.category && category) entry.category = normalizeCompetitionCategory(category);
+        if (!entry.groupName && groupName) entry.groupName = String(groupName || '').trim();
+        return entry;
+      };
+
+      (competition.groups || []).forEach((group) => {
+        const category = normalizeCompetitionCategory(group.category);
+        (group.teams || []).forEach((teamName) => ensureTeam(teamName, category, group.name));
+      });
+      (competition.teams || []).forEach((team) => ensureTeam(team.name, team.category, ''));
+
+      sortCompetitionSchedule(competition.schedule || []).forEach((game) => {
+        const category = normalizeCompetitionCategory(game.category) || normalizeCompetitionCategory(getCompetitionGroupByName(competition, game.phase)?.category);
+        const groupName = getCompetitionGroupByName(competition, game.phase)?.name || '';
+        const teamA = ensureTeam(game.teamA, category, groupName);
+        const teamB = ensureTeam(game.teamB, category, groupName);
+        if (!teamA || !teamB) return;
+
+        const scoreA = parseCompetitionScore(game.scoreA);
+        const scoreB = parseCompetitionScore(game.scoreB);
+        if (scoreA === null || scoreB === null) return;
+
+        teamA.games += 1;
+        teamB.games += 1;
+        teamA.goalsFor += scoreA;
+        teamA.goalsAgainst += scoreB;
+        teamB.goalsFor += scoreB;
+        teamB.goalsAgainst += scoreA;
+
+        const h2hKey = [teamA.key, teamB.key].sort().join('__');
+        if (!headToHead.has(h2hKey)) {
+          headToHead.set(h2hKey, {
+            [teamA.key]: { points: 0, goalDiff: 0, goalsFor: 0 },
+            [teamB.key]: { points: 0, goalDiff: 0, goalsFor: 0 }
+          });
+        }
+        const h2h = headToHead.get(h2hKey);
+        h2h[teamA.key].goalDiff += (scoreA - scoreB);
+        h2h[teamA.key].goalsFor += scoreA;
+        h2h[teamB.key].goalDiff += (scoreB - scoreA);
+        h2h[teamB.key].goalsFor += scoreB;
+
+        if (scoreA > scoreB) {
+          teamA.wins += 1;
+          teamB.losses += 1;
+          teamA.points += 3;
+          h2h[teamA.key].points += 3;
+        } else if (scoreB > scoreA) {
+          teamB.wins += 1;
+          teamA.losses += 1;
+          teamB.points += 3;
+          h2h[teamB.key].points += 3;
+        } else {
+          teamA.draws += 1;
+          teamB.draws += 1;
+          teamA.points += 1;
+          teamB.points += 1;
+          h2h[teamA.key].points += 1;
+          h2h[teamB.key].points += 1;
+        }
+      });
+
+      const compareTeams = (a, b) => {
+        if (b.points !== a.points) return b.points - a.points;
+        if (b.wins !== a.wins) return b.wins - a.wins;
+        if (b.goalDiff !== a.goalDiff) return b.goalDiff - a.goalDiff;
+        if (b.quotient !== a.quotient) return b.quotient - a.quotient;
+        const h2hKey = [a.key, b.key].sort().join('__');
+        const h2h = headToHead.get(h2hKey);
+        if (h2h && h2h[a.key] && h2h[b.key]) {
+          if (h2h[b.key].points !== h2h[a.key].points) return h2h[b.key].points - h2h[a.key].points;
+          if (h2h[b.key].goalDiff !== h2h[a.key].goalDiff) return h2h[b.key].goalDiff - h2h[a.key].goalDiff;
+          if (h2h[b.key].goalsFor !== h2h[a.key].goalsFor) return h2h[b.key].goalsFor - h2h[a.key].goalsFor;
+        }
+        return a.name.localeCompare(b.name, 'pt-BR');
+      };
+
+      const allTeams = [...teams.values()].map((team) => {
+        const quotient = team.goalsAgainst === 0 ? (team.goalsFor > 0 ? Number.POSITIVE_INFINITY : 0) : (team.goalsFor / team.goalsAgainst);
+        return {
+          ...team,
+          goalDiff: team.goalsFor - team.goalsAgainst,
+          quotient
+        };
+      });
+
+      allTeams.forEach((team) => {
+        if (!team.category || !standingsByCategory[team.category]) return;
+        if (team.groupName) {
+          if (!standingsByCategory[team.category].byGroup.has(team.groupName)) standingsByCategory[team.category].byGroup.set(team.groupName, []);
+          standingsByCategory[team.category].byGroup.get(team.groupName).push(team);
+        }
+        standingsByCategory[team.category].overall.push(team);
+      });
+
+      ['masculino', 'feminino'].forEach((category) => {
+        standingsByCategory[category].overall.sort(compareTeams);
+        standingsByCategory[category].overall.forEach((team, index) => { team.rank = index + 1; });
+        standingsByCategory[category].byGroup.forEach((groupTeams, groupName) => {
+          groupTeams.sort(compareTeams);
+          groupTeams.forEach((team, index) => { team.groupRank = index + 1; });
+          standingsByCategory[category].byGroup.set(groupName, groupTeams);
+        });
+      });
+
+      return standingsByCategory;
+    }
+
+    function formatQuotient(value) {
+      if (!Number.isFinite(value)) return '∞';
+      return value.toFixed(2);
+    }
+
+    function buildStandingsTableRows(rows, zone = 'default') {
+      if (!rows.length) return '<tr><td colspan="12" class="py-2 text-slate-400">Sem dados suficientes.</td></tr>';
+      return rows.map((team, index) => {
+        let style = '';
+        if (zone === 'maleOverall') {
+          if (index < 4) style = 'bg-emerald-50';
+          else if (index < 8) style = 'bg-amber-50';
+          else style = 'bg-slate-50';
+        }
+        if (zone === 'femaleGroup') {
+          style = index < 2 ? 'bg-emerald-50' : 'bg-slate-50';
+        }
+        return `<tr class="border-b border-slate-100 ${style}">
+          <td class="py-1">${index + 1}</td>
+          <td class="py-1 font-medium">${escapeHtml(team.name)}</td>
+          <td class="py-1">${team.games}</td>
+          <td class="py-1">${team.wins}</td>
+          <td class="py-1">${team.draws}</td>
+          <td class="py-1">${team.losses}</td>
+          <td class="py-1">${team.goalsFor}</td>
+          <td class="py-1">${team.goalsAgainst}</td>
+          <td class="py-1">${team.goalDiff}</td>
+          <td class="py-1">${formatQuotient(team.quotient)}</td>
+          <td class="py-1 font-semibold">${team.points}</td>
+          <td class="py-1 text-[11px] text-slate-500">${team.groupName ? escapeHtml(team.groupName) : '-'}</td>
+        </tr>`;
+      }).join('');
+    }
+
+    function buildMasculineStrategicSummary(maleOverall = []) {
+      if (!maleOverall.length) return ['Classificação masculina parcial: aguarde placares para gerar estratégias.'];
+      const messages = [];
+      maleOverall.slice(0, 4).forEach((team) => {
+        messages.push(`${team.name} está atualmente no Top 4 e fora da zona de sorteio.`);
+      });
+      maleOverall.slice(4, 8).forEach((team) => {
+        messages.push(`${team.name} está na zona de sorteio (5º ao 8º) e segue classificada no momento.`);
+      });
+      if (maleOverall[3] && maleOverall[4]) {
+        const diff = maleOverall[3].points - maleOverall[4].points;
+        if (diff <= 3) {
+          messages.push(`Disputa aberta pela 4ª colocação: ${maleOverall[3].name} e ${maleOverall[4].name} estão separadas por ${diff} ponto(s).`);
+        }
+        if (maleOverall[3].points === maleOverall[4].points) {
+          messages.push('Saldo e quociente podem decidir a permanência no Top 4 masculino.');
+        }
+      }
+      if (maleOverall[7] && maleOverall[8]) {
+        const diff = maleOverall[7].points - maleOverall[8].points;
+        if (diff <= 3) messages.push(`Linha de corte do Top 8 apertada entre ${maleOverall[7].name} e ${maleOverall[8].name}.`);
+      }
+      return messages.slice(0, 8);
+    }
+
+    function buildFemaleStrategicSummary(femaleGroups) {
+      const messages = [];
+      femaleGroups.forEach(({ name, rows }) => {
+        if (!rows.length) return;
+        const first = rows[0];
+        const second = rows[1];
+        const third = rows[2];
+        if (first) messages.push(`${first.name} lidera ${name} no momento.`);
+        if (second) messages.push(`${second.name} está classificada para a semifinal em ${name}.`);
+        if (third && second) {
+          const diff = second.points - third.points;
+          if (diff <= 3) messages.push(`${third.name} segue brigando por vaga na semifinal em ${name}.`);
+        }
+      });
+      return messages.length ? messages : ['Classificação feminina parcial: aguarde placares para projetar semifinal.'];
+    }
+
+    function buildFemaleCrossings(femaleGroupMap) {
+      const groups = [...femaleGroupMap.entries()].map(([name, rows]) => ({ name, rows }));
+      const groupA = groups.find((group) => /chave\s*a/i.test(group.name)) || groups[0] || { name: 'Chave A', rows: [] };
+      const groupB = groups.find((group) => /chave\s*b/i.test(group.name)) || groups[1] || { name: 'Chave B', rows: [] };
+      const a1 = groupA.rows[0]?.name || 'A definir';
+      const a2 = groupA.rows[1]?.name || 'A definir';
+      const b1 = groupB.rows[0]?.name || 'A definir';
+      const b2 = groupB.rows[1]?.name || 'A definir';
+      return {
+        matches: [
+          `1º ${groupA.name} (${a1}) x 2º ${groupB.name} (${b2})`,
+          `2º ${groupA.name} (${a2}) x 1º ${groupB.name} (${b1})`
+        ],
+        groupA,
+        groupB
+      };
+    }
+
     function renderCompetitions() {
       const list = document.getElementById('competitions-list');
       if (!list) return;
@@ -7320,6 +7564,13 @@ function renderHeatmap(optionsOrFilter) {
       }
       list.innerHTML = AppState.competitions.map((competition) => {
         const linkedScouts = getCompetitionLinkedScouts(competition.id);
+        const standings = buildCompetitionStandings(competition);
+        const maleGroups = [...standings.masculino.byGroup.entries()];
+        const femaleGroups = [...standings.feminino.byGroup.entries()];
+        const maleStrategy = buildMasculineStrategicSummary(standings.masculino.overall);
+        const femaleStrategy = buildFemaleStrategicSummary(femaleGroups.map(([name, rows]) => ({ name, rows })));
+        const femaleCrossings = buildFemaleCrossings(standings.feminino.byGroup);
+
         const teams = (competition.teams || []).map((team) => `
           <details class="border border-slate-200 rounded-lg p-2">
             <summary class="cursor-pointer list-none flex items-center justify-between gap-2"><span class="font-medium text-sm">${escapeHtml(team.name)}</span><span class="text-xs text-slate-500">${escapeHtml(team.cityState || '-')}</span></summary>
@@ -7329,6 +7580,7 @@ function renderHeatmap(optionsOrFilter) {
             </div>
           </details>
         `).join('') || '<p class="text-xs text-slate-400">Sem equipes cadastradas.</p>';
+
         const groups = (competition.groups || []).map((group) => `
           <details class="border border-slate-200 rounded-lg p-2">
             <summary class="cursor-pointer list-none flex items-center justify-between gap-2"><span class="font-medium text-sm">${escapeHtml(group.name)}</span><span class="text-xs text-slate-500">${escapeHtml(group.category || '-')}</span></summary>
@@ -7338,6 +7590,7 @@ function renderHeatmap(optionsOrFilter) {
             </div>
           </details>
         `).join('') || '<p class="text-xs text-slate-400">Sem chaves cadastradas.</p>';
+
         const schedule = sortCompetitionSchedule(competition.schedule || []).map((game) => `
           <tr class="border-b border-slate-100">
             <td class="py-1">${escapeHtml(game.gameNumber || '-')}</td>
@@ -7349,6 +7602,27 @@ function renderHeatmap(optionsOrFilter) {
             <td class="py-1"><button class="comp-edit-result text-xs underline text-blue-700" data-id="${competition.id}" data-game-id="${game.id}">resultado</button></td>
           </tr>
         `).join('') || '<tr><td colspan="7" class="py-2 text-slate-400">Sem jogos no cronograma.</td></tr>';
+
+        const maleGroupTables = maleGroups.map(([groupName, rows]) => `
+          <div class="overflow-auto border border-slate-200 rounded-lg p-2 bg-white">
+            <h5 class="text-xs font-semibold text-slate-700 mb-2">${escapeHtml(groupName)}</h5>
+            <table class="w-full text-xs">
+              <thead><tr class="text-left text-slate-500"><th>#</th><th>Equipe</th><th>J</th><th>V</th><th>E</th><th>D</th><th>GP</th><th>GC</th><th>SG</th><th>Q</th><th>PTS</th><th>Chave</th></tr></thead>
+              <tbody>${buildStandingsTableRows(rows)}</tbody>
+            </table>
+          </div>
+        `).join('') || '<p class="text-xs text-slate-400">Sem grupos masculinos para classificar.</p>';
+
+        const femaleGroupTables = femaleGroups.map(([groupName, rows]) => `
+          <div class="overflow-auto border border-slate-200 rounded-lg p-2 bg-white">
+            <h5 class="text-xs font-semibold text-slate-700 mb-2">${escapeHtml(groupName)}</h5>
+            <table class="w-full text-xs">
+              <thead><tr class="text-left text-slate-500"><th>#</th><th>Equipe</th><th>J</th><th>V</th><th>E</th><th>D</th><th>GP</th><th>GC</th><th>SG</th><th>Q</th><th>PTS</th><th>Chave</th></tr></thead>
+              <tbody>${buildStandingsTableRows(rows, 'femaleGroup')}</tbody>
+            </table>
+          </div>
+        `).join('') || '<p class="text-xs text-slate-400">Sem grupos femininos para classificar.</p>';
+
         return `
           <div class="bg-white rounded-xl p-4 card-shadow space-y-3">
             <div class="flex flex-wrap items-start justify-between gap-2">
@@ -7372,6 +7646,39 @@ function renderHeatmap(optionsOrFilter) {
                 <thead><tr class="text-left text-slate-500"><th>#</th><th>Data/Hora</th><th>Jogo</th><th>Fase</th><th>Categoria</th><th>Placar</th><th></th></tr></thead>
                 <tbody>${schedule}</tbody>
               </table>
+            </div>
+            <div class="bg-slate-50 rounded-xl p-3 border border-slate-200 space-y-3">
+              <h4 class="font-semibold text-slate-700 text-sm">📊 Classificação e estratégia</h4>
+              <div class="grid lg:grid-cols-2 gap-3">
+                <div class="space-y-2"><h5 class="text-xs font-semibold text-blue-700">A) Tabela masculina por grupo</h5>${maleGroupTables}</div>
+                <div class="space-y-2 overflow-auto border border-slate-200 rounded-lg p-2 bg-white"><h5 class="text-xs font-semibold text-blue-700 mb-2">B) Ranking geral masculino</h5>
+                  <table class="w-full text-xs">
+                    <thead><tr class="text-left text-slate-500"><th>#</th><th>Equipe</th><th>J</th><th>V</th><th>E</th><th>D</th><th>GP</th><th>GC</th><th>SG</th><th>Q</th><th>PTS</th><th>Chave</th></tr></thead>
+                    <tbody>${buildStandingsTableRows(standings.masculino.overall, 'maleOverall')}</tbody>
+                  </table>
+                  <div class="mt-2 text-[11px] text-slate-600"><span class="inline-block px-2 py-0.5 rounded bg-emerald-100 mr-2">Top 4 (fora do sorteio)</span><span class="inline-block px-2 py-0.5 rounded bg-amber-100">5º ao 8º (zona de sorteio)</span></div>
+                </div>
+              </div>
+              <div class="space-y-2"><h5 class="text-xs font-semibold text-pink-700">C) Tabelas femininas por grupo</h5>${femaleGroupTables}</div>
+              <div class="grid lg:grid-cols-2 gap-3">
+                <div class="bg-white rounded-lg border border-slate-200 p-3">
+                  <h5 class="text-xs font-semibold text-blue-700 mb-2">D) Resumo estratégico masculino</h5>
+                  <ul class="text-xs text-slate-700 space-y-1">${maleStrategy.map((item) => `<li>• ${escapeHtml(item)}</li>`).join('')}</ul>
+                </div>
+                <div class="bg-white rounded-lg border border-slate-200 p-3">
+                  <h5 class="text-xs font-semibold text-pink-700 mb-2">E) Resumo estratégico feminino</h5>
+                  <ul class="text-xs text-slate-700 space-y-1">${femaleStrategy.map((item) => `<li>• ${escapeHtml(item)}</li>`).join('')}</ul>
+                </div>
+              </div>
+              <div class="bg-white rounded-lg border border-slate-200 p-3">
+                <h5 class="text-xs font-semibold text-slate-700 mb-2">F) Cruzamentos prováveis</h5>
+                <div class="text-xs text-slate-700 space-y-1">
+                  <div><strong>Masculino:</strong> foco no Top 4 geral para ficar fora da zona de sorteio; do 5º ao 8º entram na zona de sorteio.</div>
+                  <div><strong>Feminino:</strong></div>
+                  <div>• ${escapeHtml(femaleCrossings.matches[0])}</div>
+                  <div>• ${escapeHtml(femaleCrossings.matches[1])}</div>
+                </div>
+              </div>
             </div>
           </div>
         `;
