@@ -7555,6 +7555,65 @@ function renderHeatmap(optionsOrFilter) {
       };
     }
 
+    const SERIE_B_2026_INELIGIBLE_TEAMS = ['APACE', 'ADEVIRN', 'FUNAD'];
+    const SERIE_B_2026_INELIGIBLE_TEAM_KEYS = new Set(SERIE_B_2026_INELIGIBLE_TEAMS.map((name) => normalizeNameKey(name)));
+
+    function isSerieB2026IneligibleTeam(teamName) {
+      return SERIE_B_2026_INELIGIBLE_TEAM_KEYS.has(normalizeNameKey(teamName));
+    }
+
+    function buildSerieB2026Projection(competition, maleOverall = []) {
+      const messages = [];
+      if (!maleOverall.length) {
+        return {
+          messages: ['Sem resultados suficientes para projetar a vaga da Série B 2026.'],
+          eligibleTeam: null,
+          threatTeam: null
+        };
+      }
+
+      const eligibleRanking = maleOverall.filter((team) => !isSerieB2026IneligibleTeam(team.name));
+      const eligibleTeam = eligibleRanking[0] || null;
+      const threatTeam = eligibleRanking[1] || null;
+
+      if (!eligibleTeam) {
+        return {
+          messages: ['Nenhuma equipe elegível identificada até o momento para a vaga da Série B 2026.'],
+          eligibleTeam: null,
+          threatTeam: null
+        };
+      }
+
+      messages.push(`${eligibleTeam.name} é hoje a melhor equipe elegível para a Série B.`);
+
+      const firstIneligibleAhead = maleOverall.find((team) => isSerieB2026IneligibleTeam(team.name) && team.rank < eligibleTeam.rank);
+      if (firstIneligibleAhead) {
+        messages.push(`Mesmo atrás de ${firstIneligibleAhead.name}, ${eligibleTeam.name} segue na zona da vaga.`);
+      }
+
+      if (threatTeam) {
+        const pointsGap = eligibleTeam.points - threatTeam.points;
+        if (pointsGap <= 3) {
+          messages.push(`${threatTeam.name} ameaça a vaga da ${eligibleTeam.name}.`);
+        }
+      }
+
+      const finalGame = sortCompetitionSchedule(competition.schedule || []).find((game) => /(^|\s)final(\s|$)/i.test(String(game.phase || '').trim()));
+      if (finalGame) {
+        const finalA = maleOverall.find((team) => normalizeNameKey(team.name) === normalizeNameKey(finalGame.teamA));
+        const finalB = maleOverall.find((team) => normalizeNameKey(team.name) === normalizeNameKey(finalGame.teamB));
+        if (finalA && finalB && !isSerieB2026IneligibleTeam(finalA.name) && !isSerieB2026IneligibleTeam(finalB.name)) {
+          messages.push('Se a final for entre duas equipes elegíveis, a vaga será decidida diretamente nessa partida.');
+        }
+      }
+
+      return {
+        messages: messages.slice(0, 5),
+        eligibleTeam,
+        threatTeam
+      };
+    }
+
     function renderCompetitions() {
       const list = document.getElementById('competitions-list');
       if (!list) return;
@@ -7570,6 +7629,7 @@ function renderHeatmap(optionsOrFilter) {
         const maleStrategy = buildMasculineStrategicSummary(standings.masculino.overall);
         const femaleStrategy = buildFemaleStrategicSummary(femaleGroups.map(([name, rows]) => ({ name, rows })));
         const femaleCrossings = buildFemaleCrossings(standings.feminino.byGroup);
+        const serieBProjection = buildSerieB2026Projection(competition, standings.masculino.overall);
 
         const teams = (competition.teams || []).map((team) => `
           <details class="border border-slate-200 rounded-lg p-2">
@@ -7678,6 +7738,11 @@ function renderHeatmap(optionsOrFilter) {
                   <div>• ${escapeHtml(femaleCrossings.matches[0])}</div>
                   <div>• ${escapeHtml(femaleCrossings.matches[1])}</div>
                 </div>
+              </div>
+              <div class="bg-blue-50 rounded-lg border border-blue-200 p-3">
+                <h5 class="text-xs font-semibold text-blue-800 mb-2">G) Projeção da vaga Série B 2026 (1 vaga)</h5>
+                <div class="text-[11px] text-blue-700 mb-2">Equipes inelegíveis: ${escapeHtml(SERIE_B_2026_INELIGIBLE_TEAMS.join(', '))}.</div>
+                <ul class="text-xs text-slate-700 space-y-1">${serieBProjection.messages.map((item) => `<li>• ${escapeHtml(item)}</li>`).join('')}</ul>
               </div>
             </div>
           </div>
