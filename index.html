@@ -254,7 +254,10 @@
        <div class="mt-4 border border-slate-200 rounded-lg p-3 bg-slate-50 space-y-2">
         <div class="flex items-center justify-between gap-2">
          <h3 class="text-sm font-semibold text-slate-700">Importação em lote (JSON)</h3>
-         <button id="competition-import-btn" class="px-3 py-1.5 rounded-lg btn-primary text-white text-xs">📥 Importar</button>
+         <div class="flex items-center gap-2">
+          <button id="competition-apply-real-teams-btn" class="px-3 py-1.5 rounded-lg border border-indigo-300 text-indigo-700 bg-indigo-50 text-xs">🧩 Aplicar equipes reais 2026</button>
+          <button id="competition-import-btn" class="px-3 py-1.5 rounded-lg btn-primary text-white text-xs">📥 Importar</button>
+         </div>
         </div>
         <p class="text-xs text-slate-500">Aceita dados da competição, equipes, chaves e cronograma. Os nomes são preservados exatamente como enviados.</p>
         <textarea id="competition-import-json" rows="8" class="w-full px-3 py-2 border border-slate-300 rounded-lg font-mono text-xs" placeholder='{"name":"Regional Nordeste 2026","location":"...","cityState":"...","startDate":"2026-04-26","endDate":"2026-05-02","teams":[{"name":"SORTEIO 1"}],"groups":[{"name":"Chave A","teams":["1 Chave A","2 Chave A"]}],"schedule":[{"gameNumber":"1","date":"2026-04-26","time":"08:00","teamA":"SORTEIO 1","teamB":"SORTEIO 2","phase":"Chave A","category":"masculino"}]}'>{
@@ -1198,6 +1201,29 @@
     const DEVICE_ID_STORAGE_KEY = 'scout_goalball_device_id';
     const LOCAL_CACHE_KEY_PREFIX = 'scout_goalball_cache_v2';
     const TEAM_REGISTRY_VERSION = 1;
+    const REGIONAL_NORDESTE_2026_NAME_KEY = 'regional nordeste 2026';
+    const REGIONAL_NORDESTE_2026_REAL_TEAMS = [
+      { shortName: 'ACACE-PE', officialName: 'Associação Caruaruense de Cegos', uf: 'PE', categories: { masculino: { coach: 'BRUNA GABRIELE DO NASCIMENTO CORAGEM', athletes: ['EVERTON ERNANDES PIMENTEL SILVA', 'EDUARDO JOSE DE SOUZA NETO', 'JOABYSON MANOEL DO NASCIMENTO', 'ARTHUR FRANCO SILVA DA COSTA'] } } },
+      { shortName: 'ACSB-BA', officialName: 'Associação de Cegos do Sul da Bahia', uf: 'BA', categories: { masculino: { coach: 'KLEYANDERSON E SOUZA SILVA', athletes: ['JAILTON SILVA DOS ANJOS', 'JOSÉ PEREIRA COSTA JUNIOR', 'ALEX FRANCISCO DOS SANTOS', 'MARCELO FRANCISCO DOS SANTOS', 'ADEVALDO SARMENTO DOS SANTOS', 'WELITON SILVA OLIVEIRA'] } } },
+      { shortName: 'ADESUL-CE', officialName: "Associação D'Eficiência Superando Limites", uf: 'CE', categories: { feminino: { coach: 'VALÉRIA MARIA DE SOUSA MONTEIRO', athletes: ['MARIANA DA SILVA', 'MARIA JÚLIA VALENTIM DOS REIS', 'CARLA CRISTINA NUNES RODRIGUES', 'FRANCISCA RAÍSSA PORFÍRIO DA SILVA', 'KAREN HELLEN DA SILVA NASCIMENTO'] }, masculino: { coach: 'JUCILIANE NOGUEIRA', athletes: ['ANTENOR SOARES DA CUNHA', 'DAVI DO NASCIMENTO DA SILVA', 'HENRIQUE TEIXEIRA DA SILVA BRITO', 'JOSÉ NILSON ALVES DA SILVA', 'PEDRO SALES OLIVEIRA', 'JOSÉ VINÍCIUS MEDEIROS ALVES'] } } },
+      { shortName: 'ADEVIRN-RN', uf: 'RN', categories: { feminino: { coach: 'ARTHUR DISNARD MANGABEIRA BENTES', athletes: ['JAYNE CRISTINA VIEIRA SOARES', 'JOSIELE CRISTINA DA SILVA', 'MAÉLIA GOMES DE SOUZA', 'VILMA LÚCIA ALVES DA SILVA'] }, masculino: { coach: 'ARTHUR DISNARD MANGABEIRA BENTES', athletes: ['CLECIO NASCIMENTO DE LIMA', 'ERMISSON NEVES DE MORAIS', 'JEFFERSON KLEYTON COSTA DE MOURA', 'MARCOS AURELIO FLORENTINO DE ASSIS', 'MARCOS DE OLIVEIRA CARDOSO', 'PATRÍCIO PABLO FINOLI'] } } },
+      { shortName: 'ADEVISE-SE', uf: 'SE', categories: { masculino: { coach: 'ITALO JULLIAN MESSIAS', athletes: ['JHONILTON JOSE SANTOS CONRADO', 'IDELFONSO CARMO SANTOS', 'GIVALDO SOUZA DA CONCEIÇÃO', 'FRANCISCO JOSÉ QUERINO', 'JOSÉ PAULO SANTOS NUNES'] } } },
+      { shortName: 'ADVAMPE-PE', aliases: ['AMPE', 'AMPE / ADVAMPE-PE'], uf: 'PE', categories: { masculino: { coach: 'PEDRO LUCAS SILVA DE ARAUJO', athletes: ['ELIAS FELIPE MIRANDA DE LIMA', 'SEVERINO ANTONIO DA SILVA FILHO', 'JOSÉ RICARDO DE SANTANA OLIVEIRA', 'JEFFERSON MONTEIRO GONÇALVES', 'MANOEL JOSÉ DA SILVA JUNIOR', 'JOSE ALVES DA SILVA'] } } },
+      { shortName: 'AFDV-BA', uf: 'BA', categories: { feminino: { coach: 'TATTIANA CÔRTES FARIAS DE MENDONÇA', athletes: ['LETÍCIA DOS SANTOS SILVA', 'IONE DE JESUS PEREIRA', 'VALDIRENE VIEIRA BONFIM', 'DÉBORA CARVALHO SANTOS', 'STHEFANIE DA SILVA GUIMARÃES'] }, masculino: { coach: 'RENATO FIGLIOLINO FILHO', athletes: ['GABRIEL OLIVEIRA MATIAS SANTOS', 'JAM FERREIRA COSTA', 'ERICK FRANCINO RODRIGUES', 'HELENO ALVES DOS SANTOS JÚNIOR', 'JOSÉ CARLOS SANTOS DE SOUZA', 'WADSON ALVES SOUZA'] } } },
+      { shortName: 'AJECE-BA', uf: 'BA', categories: { feminino: { coach: 'TASSIA PEREIRA ALVES', athletes: ['MARIA DAS DORES LUIZ DA SILVA', 'MARINÉLIA RAMOS SANTANA', 'MARIA CLARA SILVA RIBEIRO', 'KAILANA SANTANA SOUZA'] }, masculino: { coach: 'TASSIA PEREIRA ALVES', athletes: ['GABRIEL SANTOS SOUZA', 'ANANIAS MELO PEIXOTO', 'EDUARDO BISPO DOS SANTOS', 'EVERTON SILVA DE JESUS', 'JOILSON DAS NEVES BAHIA', 'VINICIUS LUCAS DA SILVA JESUS'] } } },
+      { shortName: 'APACE-PB', uf: 'PB', categories: { masculino: { coach: 'ÍTALO HENRIQUE FABIÃO CAVALCANTI LIMA', athletes: ['JOSÉ GOMES BEZERRIL NETO', 'JOÃO VÍTOR DOS SANTOS RODRIGUES', 'LUCAS ARAKEN SILVAN DE ARAÚJO', 'RENAN BEZERRA DA SILVA', 'VICTOR HUGO DA COSTA SOUSA', 'THYAGO DE AGUIAR ALVES'] } } },
+      { shortName: 'APEC-PE', uf: 'PE', categories: { feminino: { coach: 'EDMAR SAMPAIO DOS SANTOS', athletes: ['VERONICA MARIA RODRIGUES DA SILVA', 'MONICA FREIRE', 'GLORIA MARIA CORREIA TAVARES', 'CRISTINA DE MATOS RODRIGUES', 'JOYCE WILCA NEVES DA SILVA'] }, masculino: { coach: 'EDMAR SAMPAIO DOS SANTOS', athletes: ['MARCOS ANTONIO DOS SANTOS CABRAL', 'KIM WAGNER GONÇALVES DE LIMA DA SILVA', 'CLEYBSON DAYVID DA CUNHA SILVA', 'LUCAS JANIEL DE FONTES DA SILVA', 'ELIELSON DOS SANTOS'] } } },
+      { shortName: 'APEDVA-BA', uf: 'BA', categories: { masculino: { coach: 'KLEVERSON PEREIRA ROCHA PITA', athletes: ['ALEAN CRISTIAN SANTOS CRUZ', 'MATHEUS DAS MERCÊS SANTOS', 'MARCOS FILIPE SANTOS DE CARVALHO', 'LUCAS MATHEUS OLIVEIRA BOTELHO', 'MARCOS VINÍCIUS DOS SANTO'] } } },
+      { shortName: 'ASDEV-BA', uf: 'BA', categories: { masculino: { coach: 'EVALDO MUCUGE DUNNINGHAM JUNIOR', athletes: ['CARLOS ALBERTO BARBOSA LOPES', 'CARLOS ALBERTO DOS SANTOS', 'EVALDO MUCUGE DUNNINGHAM JUNIOR', 'WANDERSON MACHADO DOS SANTOS', 'ADILEUSON DE JESUS SANTOS'] } } },
+      { shortName: 'ASSOBECER-PE', uf: 'PE', categories: { masculino: { coach: 'MATHEUS DOS SANTOS NOBREGA', athletes: ['KELVIN NASCIMENTO BARBOSA', 'JOSE FABIANO SILVA BARBOSA', 'WELLINGTON GOMES DA SILVA', 'LUAN LIMA DA SILVA', 'ROBSON FERREIRA DA ROCHA JUNIOR', 'FRANCISCO RAFAEL DE SOUSA BARROSO'] } } },
+      { shortName: 'CEDEMAC-MA', uf: 'MA', categories: { masculino: { coach: 'NÉLIA PEREIRA FERREIRA', athletes: ['IGOR PONTES MEDEIROS', 'MANOEL NASCIMENTO CAMPOS PINHEIRO', 'JOSÉ CARLOS DOS SANTOS', 'DEIBSON PEREIRA DOS SANTOS', 'ROBSON SANTOS DA SILVA'] } } },
+      { shortName: 'CRP-PB', uf: 'PB', categories: { feminino: { coach: 'LEILSON PEDRO FREIRE', athletes: ['ANALICE ERNESTO LOPES', 'AMANDA MONTENEGRO SILVA', 'MARIELA ELIZABETH ALMADA', 'RAMINE NUNES DOS SANTOS', 'BRUNA MARIA GUEDES FERNANDES SANTOS'] }, masculino: { coach: 'LEILSON PEDRO FREIRE', athletes: ['JOÃO BATISTA MEDEIROS', 'FERNANDO ANTONIO MEDEIROS BEZERRA', 'JOSÉ TIAGO OLIVEIRA SANTOS', 'JÔNATAS CERQUEIRA DO ROSÁRIO', 'RAFAEL SANTANA DA SILVA', 'À DEFINIR'] } } },
+      { shortName: 'IAPQ-PE', uf: 'PE', categories: { feminino: { coach: 'NATASHY KELLY MELO BARBOSA', athletes: ['BRUNNA RAYSSA PEREIRA DO NASCIMENTO', 'MICHELLE CAROLINE DA SILVA GOMES', 'NAELY VITORIA FERREIRA DA SILVA', 'ANA PAULA DE ALMEIDA MARTINS', 'ASSIRIA ANGELINA BATISTA DA SILVA', 'BRUNA SANTOS LIMA'] }, masculino: { coach: 'NATASHY KELLY MELO BARBOSA', athletes: ['JOSE ARTHUR ALBUQUERQUE COSTA', 'THALES JULIO SILVA ARAUJO', 'MARCELO LUIS DA SILVA LIMA', 'EVERTON GUILHERME ALVES DE LIMA', 'JEAN CESAR FELIX MOUREIRA', 'MATHEUS LIMA SILVA'] } } },
+      { shortName: 'ICB-BA', uf: 'BA', categories: { feminino: { coach: 'MARCIO PERUNA DA SILVA', athletes: ['BARABARA VITÓRIA DE JESUS OLIVEIRA', 'LORENA DOS SANTOS BATISTA', 'STEPHANY LISBOA SANTA RITA', 'TAINA DA ENCARNAÇÃO CAMPELO', 'SOFIA NICOL ORQUERA'] }, masculino: { coach: 'CARLERRANZY SILVA DE CARVALHO', athletes: ['CLEBERSON DE JESUS TRINDADE', 'SAMUEL SILVA MAIA', 'FRANCISCO DE JESUS', 'ABEL GABRIEL FERREIRA JESUS CONCEIÇÃO', 'RAHEL BINA SANTANA DA SILVA DE SOUZA'] } } },
+      { shortName: 'IEACN-PB', uf: 'PB', categories: { feminino: { coach: 'RENAN BARROS RODRIGUES', athletes: ['MARIA CLARA MORAIS DOS SANTOS', 'MARIA CLARA GALDINO DELFINO', 'DAIANY SABINO DE SOUZA', 'ALÉXIA CATARINE DE LIMA VALENÇA', 'PATRICIA PATRYNE SOUSA DA SILVA', 'RAFAELA PAULINO SILVA'] }, masculino: { coach: 'RENAN BARROS RODRIGUES', athletes: ['GABRIEL DA SILVA FERREIRA', 'CARLOS ALBERTO DE BRITO RODRIGUES', 'LAIRTON GONCALVES DA SILVA', 'ANTONIO ARAUJO DA SILVA', 'THIAGO JOSE DUARTE', 'SEVERINO MARTE DA SILVA'] } } },
+      { shortName: 'IERC-RN', aliases: ['IERC'], uf: 'RN', categories: { feminino: { coach: 'ANA CLÁUDIA ALVES DE SOUZA SANTOS', athletes: ['NAGILA HELLEN PEREIRA DA SILVA', 'LUCIANA FERREIRA DA SILVA', 'MARIA CLARA DINIZ DO NASCIMENTO'] }, masculino: { coach: 'ANA CLÁUDIA ALVES DE SOUZA SANTOS', athletes: ['DANILO NASCIMENTO CUNHA', 'LUAN LOPES DA SILVA', 'FRANCISCO LEÃO DA SILVA JUNIOR', 'HERIBERTO SIMÃO DE ABREU', 'MATEUS GABRIEL SILVA DE PAIVA', 'ERIVAN PEREIRA DA SILVA JUNIOR'] } } }
+    ];
+    let lastRegionalNordesteBulkUpdateReport = null;
     
     // SDK Data
     let sdkEvents = [];
@@ -7017,6 +7043,132 @@ function renderHeatmap(optionsOrFilter) {
       return String(value || '').trim().toLocaleLowerCase('pt-BR');
     }
 
+    function normalizeAliasKey(value) {
+      return String(value || '')
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/\s+/g, ' ')
+        .trim()
+        .toUpperCase();
+    }
+
+    function buildRegionalNordesteTeamLookup() {
+      const lookup = new Map();
+      REGIONAL_NORDESTE_2026_REAL_TEAMS.forEach((item) => {
+        const aliases = [item.shortName, ...(item.aliases || [])];
+        aliases.forEach((alias) => {
+          const key = normalizeAliasKey(alias);
+          if (!key) return;
+          lookup.set(key, item);
+        });
+      });
+      return lookup;
+    }
+
+    function buildTeamCategoryAthletes(categories = {}) {
+      const list = [];
+      ['feminino', 'masculino'].forEach((category) => {
+        const names = Array.isArray(categories?.[category]?.athletes) ? categories[category].athletes : [];
+        names.forEach((name) => {
+          const cleanName = String(name || '').trim();
+          if (!cleanName) return;
+          list.push(normalizeAthlete({ name: cleanName, notes: category }));
+        });
+      });
+      return list;
+    }
+
+    function formatRegionalNordesteTeamNotes(teamData) {
+      const lines = [];
+      if (teamData.officialName) lines.push(`Nome oficial: ${teamData.officialName}`);
+      if (teamData.uf) lines.push(`UF: ${teamData.uf}`);
+      if (teamData.categories?.feminino?.coach) lines.push(`Técnico feminino: ${teamData.categories.feminino.coach}`);
+      if (teamData.categories?.masculino?.coach) lines.push(`Técnico masculino: ${teamData.categories.masculino.coach}`);
+      if (teamData.shortName === 'ICB-BA') lines.push('Ajuste aplicado: primeira lista feminina e segunda masculina (inconsistência do texto original).');
+      return lines.join(' | ');
+    }
+
+    function buildRegionalCoachText(teamData, preferredCategory = '') {
+      const normalizedCategory = normalizeCompetitionCategory(preferredCategory);
+      if (normalizedCategory && teamData?.categories?.[normalizedCategory]?.coach) {
+        return teamData.categories[normalizedCategory].coach;
+      }
+      const femaleCoach = teamData?.categories?.feminino?.coach || '';
+      const maleCoach = teamData?.categories?.masculino?.coach || '';
+      if (femaleCoach && maleCoach && femaleCoach === maleCoach) return femaleCoach;
+      if (femaleCoach && maleCoach) return `Fem: ${femaleCoach} | Masc: ${maleCoach}`;
+      return femaleCoach || maleCoach || '';
+    }
+
+    function findRegionalNordesteCompetition() {
+      return AppState.competitions.find((competition) => normalizeNameKey(competition.name) === REGIONAL_NORDESTE_2026_NAME_KEY) || null;
+    }
+
+    function applyRegionalNordesteRealTeamsData() {
+      const competition = findRegionalNordesteCompetition();
+      if (!competition) {
+        throw new Error('Competição "Regional Nordeste 2026" não encontrada. Importe/abra a competição antes de aplicar os dados reais.');
+      }
+
+      const teamLookup = buildRegionalNordesteTeamLookup();
+      const updatedCompetitionTeams = [];
+      const updatedNameSet = new Set();
+      const untouchedCompetitionTeams = [];
+      const existingTeams = Array.isArray(competition.teams) ? competition.teams : [];
+
+      competition.teams = existingTeams.map((team) => {
+        const normalizedTeam = normalizeCompetitionTeam(team);
+        const sourceData = teamLookup.get(normalizeAliasKey(normalizedTeam.name));
+        if (!sourceData) {
+          untouchedCompetitionTeams.push(normalizedTeam.name);
+          return normalizedTeam;
+        }
+        updatedNameSet.add(sourceData.shortName);
+        updatedCompetitionTeams.push(normalizedTeam.name);
+        return normalizeCompetitionTeam({
+          ...normalizedTeam,
+          cityState: sourceData.uf,
+          coach: buildRegionalCoachText(sourceData, normalizedTeam.category),
+          athletes: buildTeamCategoryAthletes(sourceData.categories),
+          notes: formatRegionalNordesteTeamNotes(sourceData)
+        });
+      });
+      competition.updatedAt = new Date().toISOString();
+
+      const ignoredNotInCompetition = REGIONAL_NORDESTE_2026_REAL_TEAMS
+        .filter((team) => !updatedNameSet.has(team.shortName))
+        .map((team) => team.shortName);
+
+      AppState.teamRegistry = normalizeTeamRegistry(AppState.teamRegistry).map((team) => {
+        const sourceData = teamLookup.get(normalizeAliasKey(team.name));
+        if (!sourceData) return team;
+        return normalizeTeam({
+          ...team,
+          location: sourceData.uf,
+          coach: buildRegionalCoachText(sourceData, team.gender),
+          category: team.category || 'Regional Nordeste 2026',
+          athletes: buildTeamCategoryAthletes(sourceData.categories)
+        });
+      });
+      rebuildGlobalAthleteRegistry();
+      saveToLocalStorage();
+      render();
+
+      lastRegionalNordesteBulkUpdateReport = {
+        competitionName: competition.name,
+        updatedCompetitionTeams,
+        ignoredNotInCompetition,
+        untouchedCompetitionTeams,
+        namingAdjustments: [
+          'AMPE tratado como alias de ADVAMPE-PE para manter compatibilidade com cronograma/classificação.',
+          'IERC tratado como alias de IERC-RN para manter compatibilidade com cronograma/classificação.',
+          'ICB-BA: primeira lista feminina e segunda masculina (correção de rótulo inconsistente no texto de origem).'
+        ]
+      };
+      window.__regionalNordesteBulkUpdateReport = lastRegionalNordesteBulkUpdateReport;
+      return lastRegionalNordesteBulkUpdateReport;
+    }
+
     function mergeCompetitionTeams(existingTeams = [], incomingTeams = []) {
       const merged = [...existingTeams.map(normalizeCompetitionTeam)];
       const makeKey = (team) => `${normalizeNameKey(team.name)}|${normalizeCompetitionCategory(team.category) || '-'}`;
@@ -8487,6 +8639,14 @@ function renderHeatmap(optionsOrFilter) {
         } catch (error) {
           console.error('Importação de competição falhou:', error);
           showToast(`⚠️ Falha na importação: ${error.message || 'JSON inválido.'}`);
+        }
+      });
+      document.getElementById('competition-apply-real-teams-btn').addEventListener('click', () => {
+        try {
+          const report = applyRegionalNordesteRealTeamsData();
+          showToast(`✅ Cadastro real aplicado em ${report.updatedCompetitionTeams.length} equipe(s) de ${report.competitionName}.`);
+        } catch (error) {
+          showToast(`⚠️ ${error.message || 'Falha ao aplicar cadastro real das equipes.'}`);
         }
       });
       document.getElementById('competitions-list').addEventListener('click', (e) => {
