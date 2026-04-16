@@ -233,8 +233,8 @@
     </section><!-- Competições Tab -->
     <section id="tab-competicoes" class="tab-content hidden">
      <div class="max-w-6xl mx-auto space-y-4">
-      <div class="bg-white rounded-xl p-5 card-shadow">
-       <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+      <div class="bg-white rounded-xl p-5 card-shadow space-y-4">
+       <div class="flex flex-wrap items-center justify-between gap-3">
         <h2 class="text-lg font-semibold text-slate-800">🏆 Competições</h2>
         <button id="competition-new-btn" class="px-4 py-2 rounded-lg btn-primary text-white text-sm">+ Nova competição</button>
        </div>
@@ -242,879 +242,22 @@
         <div class="md:col-span-2"><input id="competition-form-name" class="w-full px-3 py-2 border border-slate-300 rounded-lg" placeholder="Nome da competição"></div>
         <div><input id="competition-form-location" class="w-full px-3 py-2 border border-slate-300 rounded-lg" placeholder="Local"></div>
         <div><input id="competition-form-city" class="w-full px-3 py-2 border border-slate-300 rounded-lg" placeholder="Cidade/UF"></div>
-        <div><input id="competition-form-hotel" class="w-full px-3 py-2 border border-slate-300 rounded-lg" placeholder="Hotel (opcional)"></div>
+        <div><input id="competition-form-hotel" class="w-full px-3 py-2 border border-slate-300 rounded-lg" placeholder="Hotel"></div>
         <div><input id="competition-form-start" type="date" class="w-full px-3 py-2 border border-slate-300 rounded-lg"></div>
         <div><input id="competition-form-end" type="date" class="w-full px-3 py-2 border border-slate-300 rounded-lg"></div>
-        <div class="md:col-span-3"><textarea id="competition-form-notes" rows="2" class="w-full px-3 py-2 border border-slate-300 rounded-lg" placeholder="Observações gerais"></textarea></div>
+        <div class="md:col-span-3"><textarea id="competition-form-notes" rows="2" class="w-full px-3 py-2 border border-slate-300 rounded-lg" placeholder="Observações"></textarea></div>
        </div>
-       <div class="flex gap-2 mt-3">
+       <div class="flex gap-2">
         <button id="competition-save-btn" class="px-4 py-2 rounded-lg btn-success text-white text-sm">💾 Salvar competição</button>
         <button id="competition-delete-btn" class="px-4 py-2 rounded-lg btn-danger text-white text-sm hidden">🗑️ Excluir competição</button>
        </div>
-       <div class="mt-4 border border-slate-200 rounded-lg p-3 bg-slate-50 space-y-2">
+       <div class="border border-slate-200 rounded-lg p-3 bg-slate-50 space-y-2">
         <div class="flex items-center justify-between gap-2">
          <h3 class="text-sm font-semibold text-slate-700">Importação em lote (JSON)</h3>
-         <div class="flex items-center gap-2">
-          <button id="competition-apply-real-teams-btn" class="px-3 py-1.5 rounded-lg border border-indigo-300 text-indigo-700 bg-indigo-50 text-xs">🧩 Aplicar equipes reais 2026</button>
-          <button id="competition-import-btn" class="px-3 py-1.5 rounded-lg btn-primary text-white text-xs">📥 Importar</button>
-         </div>
+         <button id="competition-import-btn" class="px-3 py-1.5 rounded-lg btn-primary text-white text-xs">📥 Importar</button>
         </div>
-        <p class="text-xs text-slate-500">Aceita dados da competição, equipes, chaves e cronograma. Os nomes são preservados exatamente como enviados.</p>
-        <textarea id="competition-import-json" rows="8" class="w-full px-3 py-2 border border-slate-300 rounded-lg font-mono text-xs" placeholder='{"name":"Regional Nordeste 2026","location":"...","cityState":"...","startDate":"2026-04-26","endDate":"2026-05-02","teams":[{"name":"SORTEIO 1"}],"groups":[{"name":"Chave A","teams":["1 Chave A","2 Chave A"]}],"schedule":[{"gameNumber":"1","date":"2026-04-26","time":"08:00","teamA":"SORTEIO 1","teamB":"SORTEIO 2","phase":"Chave A","category":"masculino"}]}'>{
-  "name": "Regional Nordeste 2026",
-  "location": "Estadual da Prata - Rua Duque de Caxias, S/N - Prata",
-  "cityState": "Campina Grande/PB",
-  "hotel": "",
-  "startDate": "2026-04-26",
-  "endDate": "2026-05-02",
-  "notes": "Cronograma extraído do PDF interno da CBDV.\n\nEquipes no sorteio (Masculino): AJECE-BA, IEACN-PB, AFDV-BA, ADVAMPE-PE.\nEquipes no sorteio (Feminino): IEACN-PB (Instituto de Educação e Assistência aos Cegos do Nordeste), AFDV-BA (Associação Fênix de Deficientes Visuais).",
-  "teams": [
-    {
-      "name": "APACE",
-      "category": "masculino"
-    },
-    {
-      "name": "ACSB",
-      "category": "masculino"
-    },
-    {
-      "name": "ACACE",
-      "category": "masculino"
-    },
-    {
-      "name": "ADESUL",
-      "category": "masculino"
-    },
-    {
-      "name": "ADEVIRN",
-      "category": "masculino"
-    },
-    {
-      "name": "CEDEMAC",
-      "category": "masculino"
-    },
-    {
-      "name": "ASDEV",
-      "category": "masculino"
-    },
-    {
-      "name": "APEDVA",
-      "category": "masculino"
-    },
-    {
-      "name": "ASSOBECER",
-      "category": "masculino"
-    },
-    {
-      "name": "ICB",
-      "category": "masculino"
-    },
-    {
-      "name": "IERC",
-      "category": "masculino"
-    },
-    {
-      "name": "AMPE",
-      "category": "masculino"
-    },
-    {
-      "name": "CRP",
-      "category": "masculino"
-    },
-    {
-      "name": "APEC",
-      "category": "masculino"
-    },
-    {
-      "name": "ADEVISE",
-      "category": "masculino"
-    },
-    {
-      "name": "IAPQ",
-      "category": "masculino"
-    },
-    {
-      "name": "ICB",
-      "category": "feminino"
-    },
-    {
-      "name": "CRP",
-      "category": "feminino"
-    },
-    {
-      "name": "IAPQ",
-      "category": "feminino"
-    },
-    {
-      "name": "AJECE",
-      "category": "feminino"
-    },
-    {
-      "name": "ADEVIRN",
-      "category": "feminino"
-    },
-    {
-      "name": "IERC",
-      "category": "feminino"
-    },
-    {
-      "name": "APEC",
-      "category": "feminino"
-    },
-    {
-      "name": "ADESUL",
-      "category": "feminino"
-    },
-    {
-      "name": "AJECE-BA",
-      "category": "masculino",
-      "notes": "Equipe confirmada para sorteio"
-    },
-    {
-      "name": "IEACN-PB",
-      "category": "masculino",
-      "notes": "Equipe confirmada para sorteio"
-    },
-    {
-      "name": "AFDV-BA",
-      "category": "masculino",
-      "notes": "Equipe confirmada para sorteio"
-    },
-    {
-      "name": "ADVAMPE-PE",
-      "category": "masculino",
-      "notes": "Equipe confirmada para sorteio"
-    },
-    {
-      "name": "IEACN-PB",
-      "category": "feminino",
-      "notes": "Instituto de Educação e Assistência aos Cegos do Nordeste - equipe confirmada para sorteio"
-    },
-    {
-      "name": "AFDV-BA",
-      "category": "feminino",
-      "notes": "Associação Fênix de Deficientes Visuais - equipe confirmada para sorteio"
-    }
-  ],
-  "groups": [
-    {
-      "name": "Chave A",
-      "category": "masculino",
-      "teams": [
-        "APACE",
-        "ACSB",
-        "ACACE",
-        "ADESUL",
-        "SORTEIO 1"
-      ]
-    },
-    {
-      "name": "Chave B",
-      "category": "masculino",
-      "teams": [
-        "ADEVIRN",
-        "CEDEMAC",
-        "ASDEV",
-        "APEDVA",
-        "SORTEIO 2"
-      ]
-    },
-    {
-      "name": "Chave C",
-      "category": "masculino",
-      "teams": [
-        "ASSOBECER",
-        "ICB",
-        "IERC",
-        "AMPE",
-        "SORTEIO 3"
-      ]
-    },
-    {
-      "name": "Chave D",
-      "category": "masculino",
-      "teams": [
-        "CRP",
-        "APEC",
-        "ADEVISE",
-        "IAPQ",
-        "SORTEIO 4"
-      ]
-    },
-    {
-      "name": "Chave A",
-      "category": "feminino",
-      "teams": [
-        "ICB",
-        "CRP",
-        "IAPQ",
-        "AJECE",
-        "SORTEIO 1"
-      ]
-    },
-    {
-      "name": "Chave B",
-      "category": "feminino",
-      "teams": [
-        "ADEVIRN",
-        "IERC",
-        "APEC",
-        "ADESUL",
-        "SORTEIO 2"
-      ]
-    }
-  ],
-  "schedule": [
-    {
-      "gameNumber": "01",
-      "date": "2026-04-26",
-      "time": "08:30",
-      "teamA": "APACE",
-      "teamB": "SORTEIO 1",
-      "phase": "A",
-      "category": "masculino"
-    },
-    {
-      "gameNumber": "02",
-      "date": "2026-04-26",
-      "time": "09:30",
-      "teamA": "ACSB",
-      "teamB": "ADESUL",
-      "phase": "A",
-      "category": "masculino"
-    },
-    {
-      "gameNumber": "03",
-      "date": "2026-04-26",
-      "time": "10:30",
-      "teamA": "ICB",
-      "teamB": "SORTEIO 1",
-      "phase": "A",
-      "category": "feminino"
-    },
-    {
-      "gameNumber": "04",
-      "date": "2026-04-26",
-      "time": "11:30",
-      "teamA": "CRP",
-      "teamB": "AJECE",
-      "phase": "A",
-      "category": "feminino"
-    },
-    {
-      "gameNumber": "05",
-      "date": "2026-04-26",
-      "time": "12:30",
-      "teamA": "ADEVIRN",
-      "teamB": "SORTEIO 2",
-      "phase": "B",
-      "category": "masculino"
-    },
-    {
-      "gameNumber": "06",
-      "date": "2026-04-26",
-      "time": "13:30",
-      "teamA": "CEDEMAC",
-      "teamB": "APEDVA",
-      "phase": "B",
-      "category": "masculino"
-    },
-    {
-      "gameNumber": "07",
-      "date": "2026-04-26",
-      "time": "14:30",
-      "teamA": "ADEVIRN",
-      "teamB": "SORTEIO 2",
-      "phase": "B",
-      "category": "feminino"
-    },
-    {
-      "gameNumber": "08",
-      "date": "2026-04-26",
-      "time": "15:30",
-      "teamA": "IERC",
-      "teamB": "ADESUL",
-      "phase": "B",
-      "category": "feminino"
-    },
-    {
-      "gameNumber": "09",
-      "date": "2026-04-26",
-      "time": "16:30",
-      "teamA": "ASSOBECER",
-      "teamB": "SORTEIO 3",
-      "phase": "C",
-      "category": "masculino"
-    },
-    {
-      "gameNumber": "10",
-      "date": "2026-04-26",
-      "time": "17:30",
-      "teamA": "ICB",
-      "teamB": "AMPE",
-      "phase": "C",
-      "category": "masculino"
-    },
-    {
-      "gameNumber": "11",
-      "date": "2026-04-26",
-      "time": "18:30",
-      "teamA": "CRP",
-      "teamB": "SORTEIO 4",
-      "phase": "D",
-      "category": "masculino"
-    },
-    {
-      "gameNumber": "12",
-      "date": "2026-04-26",
-      "time": "19:30",
-      "teamA": "APEC",
-      "teamB": "IAPQ",
-      "phase": "D",
-      "category": "masculino"
-    },
-    {
-      "gameNumber": "13",
-      "date": "2026-04-27",
-      "time": "08:30",
-      "teamA": "ADEVIRN",
-      "teamB": "ASDEV",
-      "phase": "B",
-      "category": "masculino"
-    },
-    {
-      "gameNumber": "14",
-      "date": "2026-04-27",
-      "time": "09:30",
-      "teamA": "SORTEIO 2",
-      "teamB": "APEDVA",
-      "phase": "B",
-      "category": "masculino"
-    },
-    {
-      "gameNumber": "15",
-      "date": "2026-04-27",
-      "time": "10:30",
-      "teamA": "ADEVIRN",
-      "teamB": "APEC",
-      "phase": "B",
-      "category": "feminino"
-    },
-    {
-      "gameNumber": "16",
-      "date": "2026-04-27",
-      "time": "11:30",
-      "teamA": "SORTEIO 2",
-      "teamB": "ADESUL",
-      "phase": "B",
-      "category": "feminino"
-    },
-    {
-      "gameNumber": "17",
-      "date": "2026-04-27",
-      "time": "12:30",
-      "teamA": "ASSOBECER",
-      "teamB": "IERC",
-      "phase": "C",
-      "category": "masculino"
-    },
-    {
-      "gameNumber": "18",
-      "date": "2026-04-27",
-      "time": "13:30",
-      "teamA": "SORTEIO 3",
-      "teamB": "AMPE",
-      "phase": "C",
-      "category": "masculino"
-    },
-    {
-      "gameNumber": "19",
-      "date": "2026-04-27",
-      "time": "14:30",
-      "teamA": "ICB",
-      "teamB": "IAPQ",
-      "phase": "A",
-      "category": "feminino"
-    },
-    {
-      "gameNumber": "20",
-      "date": "2026-04-27",
-      "time": "15:30",
-      "teamA": "SORTEIO 1",
-      "teamB": "AJECE",
-      "phase": "A",
-      "category": "feminino"
-    },
-    {
-      "gameNumber": "21",
-      "date": "2026-04-27",
-      "time": "16:30",
-      "teamA": "CRP",
-      "teamB": "ADEVISE",
-      "phase": "D",
-      "category": "masculino"
-    },
-    {
-      "gameNumber": "22",
-      "date": "2026-04-27",
-      "time": "17:30",
-      "teamA": "SORTEIO 4",
-      "teamB": "IAPQ",
-      "phase": "D",
-      "category": "masculino"
-    },
-    {
-      "gameNumber": "23",
-      "date": "2026-04-27",
-      "time": "18:30",
-      "teamA": "APACE",
-      "teamB": "ACACE",
-      "phase": "A",
-      "category": "masculino"
-    },
-    {
-      "gameNumber": "24",
-      "date": "2026-04-27",
-      "time": "19:30",
-      "teamA": "SORTEIO 1",
-      "teamB": "ADESUL",
-      "phase": "A",
-      "category": "masculino"
-    },
-    {
-      "gameNumber": "25",
-      "date": "2026-04-28",
-      "time": "08:30",
-      "teamA": "SORTEIO 3",
-      "teamB": "ICB",
-      "phase": "C",
-      "category": "masculino"
-    },
-    {
-      "gameNumber": "26",
-      "date": "2026-04-28",
-      "time": "09:30",
-      "teamA": "AMPE",
-      "teamB": "IERC",
-      "phase": "C",
-      "category": "masculino"
-    },
-    {
-      "gameNumber": "27",
-      "date": "2026-04-28",
-      "time": "10:30",
-      "teamA": "SORTEIO 1",
-      "teamB": "CRP",
-      "phase": "A",
-      "category": "feminino"
-    },
-    {
-      "gameNumber": "28",
-      "date": "2026-04-28",
-      "time": "11:30",
-      "teamA": "AJECE",
-      "teamB": "IAPQ",
-      "phase": "A",
-      "category": "feminino"
-    },
-    {
-      "gameNumber": "29",
-      "date": "2026-04-28",
-      "time": "12:30",
-      "teamA": "SORTEIO 4",
-      "teamB": "APEC",
-      "phase": "D",
-      "category": "masculino"
-    },
-    {
-      "gameNumber": "30",
-      "date": "2026-04-28",
-      "time": "13:30",
-      "teamA": "IAPQ",
-      "teamB": "ADEVISE",
-      "phase": "D",
-      "category": "masculino"
-    },
-    {
-      "gameNumber": "31",
-      "date": "2026-04-28",
-      "time": "14:30",
-      "teamA": "SORTEIO 2",
-      "teamB": "IERC",
-      "phase": "B",
-      "category": "feminino"
-    },
-    {
-      "gameNumber": "32",
-      "date": "2026-04-28",
-      "time": "15:30",
-      "teamA": "ADESUL",
-      "teamB": "APEC",
-      "phase": "B",
-      "category": "feminino"
-    },
-    {
-      "gameNumber": "33",
-      "date": "2026-04-28",
-      "time": "16:30",
-      "teamA": "SORTEIO 1",
-      "teamB": "ACSB",
-      "phase": "A",
-      "category": "masculino"
-    },
-    {
-      "gameNumber": "34",
-      "date": "2026-04-28",
-      "time": "17:30",
-      "teamA": "ADESUL",
-      "teamB": "ACACE",
-      "phase": "A",
-      "category": "masculino"
-    },
-    {
-      "gameNumber": "35",
-      "date": "2026-04-28",
-      "time": "18:30",
-      "teamA": "SORTEIO 2",
-      "teamB": "CEDEMAC",
-      "phase": "B",
-      "category": "masculino"
-    },
-    {
-      "gameNumber": "36",
-      "date": "2026-04-28",
-      "time": "19:30",
-      "teamA": "APEDVA",
-      "teamB": "ASDEV",
-      "phase": "B",
-      "category": "masculino"
-    },
-    {
-      "gameNumber": "37",
-      "date": "2026-04-29",
-      "time": "08:30",
-      "teamA": "IAPQ",
-      "teamB": "CRP",
-      "phase": "D",
-      "category": "masculino"
-    },
-    {
-      "gameNumber": "38",
-      "date": "2026-04-29",
-      "time": "09:30",
-      "teamA": "ADEVISE",
-      "teamB": "APEC",
-      "phase": "D",
-      "category": "masculino"
-    },
-    {
-      "gameNumber": "39",
-      "date": "2026-04-29",
-      "time": "10:30",
-      "teamA": "ADESUL",
-      "teamB": "ADEVIRN",
-      "phase": "B",
-      "category": "feminino"
-    },
-    {
-      "gameNumber": "40",
-      "date": "2026-04-29",
-      "time": "11:30",
-      "teamA": "APEC",
-      "teamB": "IERC",
-      "phase": "B",
-      "category": "feminino"
-    },
-    {
-      "gameNumber": "41",
-      "date": "2026-04-29",
-      "time": "12:30",
-      "teamA": "ADESUL",
-      "teamB": "APACE",
-      "phase": "A",
-      "category": "masculino"
-    },
-    {
-      "gameNumber": "42",
-      "date": "2026-04-29",
-      "time": "13:30",
-      "teamA": "ACACE",
-      "teamB": "ACSB",
-      "phase": "A",
-      "category": "masculino"
-    },
-    {
-      "gameNumber": "43",
-      "date": "2026-04-29",
-      "time": "14:30",
-      "teamA": "AJECE",
-      "teamB": "ICB",
-      "phase": "A",
-      "category": "feminino"
-    },
-    {
-      "gameNumber": "44",
-      "date": "2026-04-29",
-      "time": "15:30",
-      "teamA": "IAPQ",
-      "teamB": "CRP",
-      "phase": "A",
-      "category": "feminino"
-    },
-    {
-      "gameNumber": "45",
-      "date": "2026-04-29",
-      "time": "16:30",
-      "teamA": "APEDVA",
-      "teamB": "ADEVIRN",
-      "phase": "B",
-      "category": "masculino"
-    },
-    {
-      "gameNumber": "46",
-      "date": "2026-04-29",
-      "time": "17:30",
-      "teamA": "ASDEV",
-      "teamB": "CEDEMAC",
-      "phase": "B",
-      "category": "masculino"
-    },
-    {
-      "gameNumber": "47",
-      "date": "2026-04-29",
-      "time": "18:30",
-      "teamA": "AMPE",
-      "teamB": "ASSOBECER",
-      "phase": "C",
-      "category": "masculino"
-    },
-    {
-      "gameNumber": "48",
-      "date": "2026-04-29",
-      "time": "19:30",
-      "teamA": "IERC",
-      "teamB": "ICB",
-      "phase": "C",
-      "category": "masculino"
-    },
-    {
-      "gameNumber": "49",
-      "date": "2026-04-30",
-      "time": "08:30",
-      "teamA": "ACACE",
-      "teamB": "SORTEIO 1",
-      "phase": "A",
-      "category": "masculino"
-    },
-    {
-      "gameNumber": "50",
-      "date": "2026-04-30",
-      "time": "09:30",
-      "teamA": "ACSB",
-      "teamB": "APACE",
-      "phase": "A",
-      "category": "masculino"
-    },
-    {
-      "gameNumber": "51",
-      "date": "2026-04-30",
-      "time": "10:30",
-      "teamA": "IAPQ",
-      "teamB": "SORTEIO 1",
-      "phase": "A",
-      "category": "feminino"
-    },
-    {
-      "gameNumber": "52",
-      "date": "2026-04-30",
-      "time": "11:30",
-      "teamA": "CRP",
-      "teamB": "ICB",
-      "phase": "A",
-      "category": "feminino"
-    },
-    {
-      "gameNumber": "53",
-      "date": "2026-04-30",
-      "time": "12:30",
-      "teamA": "ASDEV",
-      "teamB": "SORTEIO 2",
-      "phase": "B",
-      "category": "masculino"
-    },
-    {
-      "gameNumber": "54",
-      "date": "2026-04-30",
-      "time": "13:30",
-      "teamA": "CEDEMAC",
-      "teamB": "ADEVIRN",
-      "phase": "B",
-      "category": "masculino"
-    },
-    {
-      "gameNumber": "55",
-      "date": "2026-04-30",
-      "time": "14:30",
-      "teamA": "APEC",
-      "teamB": "SORTEIO 2",
-      "phase": "B",
-      "category": "feminino"
-    },
-    {
-      "gameNumber": "56",
-      "date": "2026-04-30",
-      "time": "15:30",
-      "teamA": "IERC",
-      "teamB": "ADEVIRN",
-      "phase": "B",
-      "category": "feminino"
-    },
-    {
-      "gameNumber": "57",
-      "date": "2026-04-30",
-      "time": "16:30",
-      "teamA": "IERC",
-      "teamB": "SORTEIO 3",
-      "phase": "C",
-      "category": "masculino"
-    },
-    {
-      "gameNumber": "58",
-      "date": "2026-04-30",
-      "time": "17:30",
-      "teamA": "ICB",
-      "teamB": "ASSOBECER",
-      "phase": "C",
-      "category": "masculino"
-    },
-    {
-      "gameNumber": "59",
-      "date": "2026-04-30",
-      "time": "18:30",
-      "teamA": "ADEVISE",
-      "teamB": "SORTEIO 4",
-      "phase": "D",
-      "category": "masculino"
-    },
-    {
-      "gameNumber": "60",
-      "date": "2026-04-30",
-      "time": "19:30",
-      "teamA": "APEC",
-      "teamB": "CRP",
-      "phase": "D",
-      "category": "masculino"
-    },
-    {
-      "gameNumber": "61",
-      "date": "2026-05-01",
-      "time": "09:00",
-      "teamA": "1",
-      "teamB": "Sorteio 1",
-      "phase": "QF1",
-      "category": "masculino"
-    },
-    {
-      "gameNumber": "62",
-      "date": "2026-05-01",
-      "time": "10:00",
-      "teamA": "2",
-      "teamB": "Sorteio 2",
-      "phase": "QF2",
-      "category": "masculino"
-    },
-    {
-      "gameNumber": "63",
-      "date": "2026-05-01",
-      "time": "11:00",
-      "teamA": "3",
-      "teamB": "Sorteio 3",
-      "phase": "QF3",
-      "category": "masculino"
-    },
-    {
-      "gameNumber": "64",
-      "date": "2026-05-01",
-      "time": "12:00",
-      "teamA": "4",
-      "teamB": "Sorteio 4",
-      "phase": "QF4",
-      "category": "masculino"
-    },
-    {
-      "gameNumber": "65",
-      "date": "2026-05-01",
-      "time": "13:00",
-      "teamA": "1 Chave A",
-      "teamB": "2 Chave B",
-      "phase": "Semi 1",
-      "category": "feminino"
-    },
-    {
-      "gameNumber": "66",
-      "date": "2026-05-01",
-      "time": "14:00",
-      "teamA": "1 Chave B",
-      "teamB": "2 Chave A",
-      "phase": "Semi 2",
-      "category": "feminino"
-    },
-    {
-      "gameNumber": "67",
-      "date": "2026-05-01",
-      "time": "15:00",
-      "teamA": "Venc. QF2",
-      "teamB": "Venc. QF3",
-      "phase": "Semi 1",
-      "category": "masculino"
-    },
-    {
-      "gameNumber": "68",
-      "date": "2026-05-01",
-      "time": "16:00",
-      "teamA": "Venc. QF1",
-      "teamB": "Venc. QF2",
-      "phase": "Semi 2",
-      "category": "masculino"
-    },
-    {
-      "gameNumber": "69",
-      "date": "2026-05-02",
-      "time": "07:00",
-      "teamA": "Perd. Semi 1",
-      "teamB": "Perd. Semi 2",
-      "phase": "Bronze",
-      "category": "feminino"
-    },
-    {
-      "gameNumber": "70",
-      "date": "2026-05-02",
-      "time": "08:00",
-      "teamA": "Perd. Semi 1",
-      "teamB": "Perd. Semi 2",
-      "phase": "Bronze",
-      "category": "masculino"
-    },
-    {
-      "gameNumber": "71",
-      "date": "2026-05-02",
-      "time": "09:00",
-      "teamA": "Venc. Semi 1",
-      "teamB": "Venc. Semi 2",
-      "phase": "Final",
-      "category": "feminino"
-    },
-    {
-      "gameNumber": "72",
-      "date": "2026-05-02",
-      "time": "10:00",
-      "teamA": "Venc. Semi 1",
-      "teamB": "Venc. Semi 2",
-      "phase": "Final",
-      "category": "masculino"
-    }
-  ]
-}</textarea>
+        <p class="text-xs text-slate-500">Formato aceito: <code>competition</code> (ou raiz) com <code>name</code>, <code>groups</code> e <code>schedule</code>.</p>
+        <textarea id="competition-import-json" rows="10" class="w-full px-3 py-2 border border-slate-300 rounded-lg font-mono text-xs" placeholder='{"competition":{"name":"Regional Nordeste 2026","location":"Ginásio","cityState":"Campina Grande/PB","hotel":"Hotel X","startDate":"2026-04-26","endDate":"2026-05-02","notes":"Observações","groups":[{"name":"Masculino A","category":"masculino","teams":["APEC","SORTEIO 1"]},{"name":"Feminino A","category":"feminino","teams":["Equipe 1","Equipe 2"]}],"schedule":[{"gameNumber":"1","date":"2026-04-26","time":"08:00","teamA":"APEC","teamB":"SORTEIO 1","phase":"Masculino A","category":"masculino","scoreA":"","scoreB":""}]}}'></textarea>
        </div>
       </div>
       <div id="competitions-list" class="space-y-3"></div>
@@ -7929,8 +7072,8 @@ function renderHeatmap(optionsOrFilter) {
       return 'bg-slate-100 text-slate-600 border-slate-200';
     }
 
-    function getCompetitionLinkedScouts(competitionId) {
-      return getSavedMatchesForManager().filter((match) => match.linkedCompetitionId === competitionId);
+    function normalizeNameKey(value) {
+      return String(value || '').trim().toLocaleLowerCase('pt-BR');
     }
 
     function resetCompetitionForm() {
@@ -7939,208 +7082,6 @@ function renderHeatmap(optionsOrFilter) {
       const saveBtn = document.getElementById('competition-save-btn');
       saveBtn.dataset.editingId = '';
       document.getElementById('competition-delete-btn').classList.add('hidden');
-    }
-
-    function normalizeNameKey(value) {
-      return String(value || '').trim().toLocaleLowerCase('pt-BR');
-    }
-
-    function normalizeAliasKey(value) {
-      return String(value || '')
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '')
-        .replace(/\s+/g, ' ')
-        .trim()
-        .toUpperCase();
-    }
-
-    function buildRegionalNordesteTeamLookup() {
-      const lookup = new Map();
-      REGIONAL_NORDESTE_2026_REAL_TEAMS.forEach((item) => {
-        const aliases = [item.shortName, ...(item.aliases || [])];
-        aliases.forEach((alias) => {
-          const key = normalizeAliasKey(alias);
-          if (!key) return;
-          lookup.set(key, item);
-        });
-      });
-      return lookup;
-    }
-
-    function buildTeamCategoryAthletes(categories = {}) {
-      const list = [];
-      ['feminino', 'masculino'].forEach((category) => {
-        const names = Array.isArray(categories?.[category]?.athletes) ? categories[category].athletes : [];
-        names.forEach((name) => {
-          const cleanName = String(name || '').trim();
-          if (!cleanName) return;
-          list.push(normalizeAthlete({ name: cleanName, notes: category }));
-        });
-      });
-      return list;
-    }
-
-    function formatRegionalNordesteTeamNotes(teamData) {
-      const lines = [];
-      if (teamData.officialName) lines.push(`Nome oficial: ${teamData.officialName}`);
-      if (teamData.uf) lines.push(`UF: ${teamData.uf}`);
-      if (teamData.categories?.feminino?.coach) lines.push(`Técnico feminino: ${teamData.categories.feminino.coach}`);
-      if (teamData.categories?.masculino?.coach) lines.push(`Técnico masculino: ${teamData.categories.masculino.coach}`);
-      if (teamData.shortName === 'ICB-BA') lines.push('Ajuste aplicado: primeira lista feminina e segunda masculina (inconsistência do texto original).');
-      return lines.join(' | ');
-    }
-
-    function buildRegionalCoachText(teamData, preferredCategory = '') {
-      const normalizedCategory = normalizeCompetitionCategory(preferredCategory);
-      if (normalizedCategory && teamData?.categories?.[normalizedCategory]?.coach) {
-        return teamData.categories[normalizedCategory].coach;
-      }
-      const femaleCoach = teamData?.categories?.feminino?.coach || '';
-      const maleCoach = teamData?.categories?.masculino?.coach || '';
-      if (femaleCoach && maleCoach && femaleCoach === maleCoach) return femaleCoach;
-      if (femaleCoach && maleCoach) return `Fem: ${femaleCoach} | Masc: ${maleCoach}`;
-      return femaleCoach || maleCoach || '';
-    }
-
-    function findRegionalNordesteCompetition() {
-      return AppState.competitions.find((competition) => normalizeNameKey(competition.name) === REGIONAL_NORDESTE_2026_NAME_KEY) || null;
-    }
-
-    function applyRegionalNordesteRealTeamsData() {
-      const competition = findRegionalNordesteCompetition();
-      if (!competition) {
-        throw new Error('Competição "Regional Nordeste 2026" não encontrada. Importe/abra a competição antes de aplicar os dados reais.');
-      }
-
-      const teamLookup = buildRegionalNordesteTeamLookup();
-      const updatedCompetitionTeams = [];
-      const updatedNameSet = new Set();
-      const untouchedCompetitionTeams = [];
-      const existingTeams = Array.isArray(competition.teams) ? competition.teams : [];
-
-      competition.teams = existingTeams.map((team) => {
-        const normalizedTeam = normalizeCompetitionTeam(team);
-        const sourceData = teamLookup.get(normalizeAliasKey(normalizedTeam.name));
-        if (!sourceData) {
-          untouchedCompetitionTeams.push(normalizedTeam.name);
-          return normalizedTeam;
-        }
-        updatedNameSet.add(sourceData.shortName);
-        updatedCompetitionTeams.push(normalizedTeam.name);
-        return normalizeCompetitionTeam({
-          ...normalizedTeam,
-          cityState: sourceData.uf,
-          coach: buildRegionalCoachText(sourceData, normalizedTeam.category),
-          athletes: buildTeamCategoryAthletes(sourceData.categories),
-          notes: formatRegionalNordesteTeamNotes(sourceData)
-        });
-      });
-      competition.updatedAt = new Date().toISOString();
-
-      const ignoredNotInCompetition = REGIONAL_NORDESTE_2026_REAL_TEAMS
-        .filter((team) => !updatedNameSet.has(team.shortName))
-        .map((team) => team.shortName);
-
-      AppState.teamRegistry = normalizeTeamRegistry(AppState.teamRegistry).map((team) => {
-        const sourceData = teamLookup.get(normalizeAliasKey(team.name));
-        if (!sourceData) return team;
-        return normalizeTeam({
-          ...team,
-          location: sourceData.uf,
-          coach: buildRegionalCoachText(sourceData, team.gender),
-          category: team.category || 'Regional Nordeste 2026',
-          athletes: buildTeamCategoryAthletes(sourceData.categories)
-        });
-      });
-      rebuildGlobalAthleteRegistry();
-      saveToLocalStorage();
-      render();
-
-      lastRegionalNordesteBulkUpdateReport = {
-        competitionName: competition.name,
-        updatedCompetitionTeams,
-        ignoredNotInCompetition,
-        untouchedCompetitionTeams,
-        namingAdjustments: [
-          'AMPE tratado como alias de ADVAMPE-PE para manter compatibilidade com cronograma/classificação.',
-          'IERC tratado como alias de IERC-RN para manter compatibilidade com cronograma/classificação.',
-          'ICB-BA: primeira lista feminina e segunda masculina (correção de rótulo inconsistente no texto de origem).'
-        ]
-      };
-      window.__regionalNordesteBulkUpdateReport = lastRegionalNordesteBulkUpdateReport;
-      return lastRegionalNordesteBulkUpdateReport;
-    }
-
-    function mergeCompetitionTeams(existingTeams = [], incomingTeams = []) {
-      const merged = [...existingTeams.map(normalizeCompetitionTeam)];
-      const makeKey = (team) => `${normalizeNameKey(team.name)}|${normalizeCompetitionCategory(team.category) || '-'}`;
-      const byName = new Map(merged.map((team) => [makeKey(team), team]));
-      incomingTeams.map(normalizeCompetitionTeam).forEach((team) => {
-        const rawNameKey = normalizeNameKey(team.name);
-        if (!rawNameKey) return;
-        let key = makeKey(team);
-        if (!team.category && !byName.has(key)) {
-          const fallbackKey = `${rawNameKey}|masculino`;
-          if (byName.has(fallbackKey)) key = fallbackKey;
-        }
-        const existing = byName.get(key);
-        if (!existing) {
-          merged.push(team);
-          byName.set(key, team);
-          return;
-        }
-        if (!existing.cityState && team.cityState) existing.cityState = team.cityState;
-        if (!existing.coach && team.coach) existing.coach = team.coach;
-        if (!existing.category && team.category) existing.category = team.category;
-        if (!existing.notes && team.notes) existing.notes = team.notes;
-        if (!existing.athletes.length && team.athletes.length) existing.athletes = team.athletes;
-      });
-      return merged;
-    }
-
-    function mergeCompetitionGroups(existingGroups = [], incomingGroups = []) {
-      const merged = [...existingGroups.map(normalizeCompetitionGroup)];
-      const byName = new Map(merged.map((group) => [normalizeNameKey(group.name), group]));
-      incomingGroups.map(normalizeCompetitionGroup).forEach((group) => {
-        const key = normalizeNameKey(group.name);
-        if (!key) return;
-        const existing = byName.get(key);
-        if (!existing) {
-          merged.push(group);
-          byName.set(key, group);
-          return;
-        }
-        if (!existing.category && group.category) existing.category = group.category;
-        if (!existing.notes && group.notes) existing.notes = group.notes;
-        const seenTeams = new Set((existing.teams || []).map(normalizeNameKey));
-        (group.teams || []).forEach((teamName) => {
-          const teamKey = normalizeNameKey(teamName);
-          if (!teamKey || seenTeams.has(teamKey)) return;
-          existing.teams.push(teamName);
-          seenTeams.add(teamKey);
-        });
-      });
-      return merged;
-    }
-
-    function mergeCompetitionSchedule(existingSchedule = [], incomingSchedule = []) {
-      const merged = [...existingSchedule.map(normalizeCompetitionGame)];
-      const makeKey = (game) => [
-        normalizeNameKey(game.gameNumber),
-        normalizeNameKey(game.date),
-        normalizeNameKey(game.time),
-        normalizeNameKey(game.teamA),
-        normalizeNameKey(game.teamB),
-        normalizeNameKey(game.phase)
-      ].join('|');
-      const keys = new Set(merged.map(makeKey));
-      incomingSchedule.map(normalizeCompetitionGame).forEach((game) => {
-        const key = makeKey(game);
-        if (keys.has(key)) return;
-        merged.push(game);
-        keys.add(key);
-      });
-      return merged;
     }
 
     function getCompetitionGameSortMetrics(game = {}) {
@@ -8172,1295 +7113,380 @@ function renderHeatmap(optionsOrFilter) {
         });
     }
 
-
-
-    function formatCompetitionDateTime(game = {}) {
-      const date = String(game.date || '').trim();
-      const time = String(game.time || '').trim();
-      if (!date && !time) return '-';
-      return [date, time].filter(Boolean).join(' ');
-    }
-
-    function collectCompetitionTeamsFromStructure(groups = [], schedule = []) {
-      const collected = [];
-      const seen = new Set();
-      const pushTeam = (name, category = '') => {
-        const cleanName = String(name || '').trim();
-        if (!cleanName) return;
-        if (isTemporaryCompetitionSlot(cleanName)) return;
-        const cleanCategory = normalizeCompetitionCategory(category);
-        const key = `${normalizeNameKey(cleanName)}|${cleanCategory || '-'}`;
-        if (seen.has(key)) return;
-        seen.add(key);
-        collected.push(normalizeCompetitionTeam({ name: cleanName, category: cleanCategory }));
-      };
-      groups.forEach((group) => {
-        const groupCategory = normalizeCompetitionCategory(group.category);
-        (group.teams || []).forEach((teamName) => pushTeam(teamName, groupCategory));
-      });
-      schedule.forEach((game) => {
-        pushTeam(game.teamA, game.category);
-        pushTeam(game.teamB, game.category);
-      });
-      return collected;
-    }
-
-    function filterRealCompetitionTeams(teams = []) {
-      return (Array.isArray(teams) ? teams : [])
-        .map(normalizeCompetitionTeam)
-        .filter((team) => team.name && !isTemporaryCompetitionSlot(team.name));
-    }
-
-    function purgeTemporaryCompetitionSlotsFromRegistry() {
-      const removed = [];
-      AppState.teamRegistry = normalizeTeamRegistry(AppState.teamRegistry).filter((team) => {
-        const shouldRemove = isTemporaryCompetitionSlot(team.name);
-        if (shouldRemove) removed.push(team.name);
-        return !shouldRemove;
-      });
-      return [...new Set(removed)];
-    }
-
-    function upsertCompetitionTeamInRegistry(team) {
-      const normalizedTeam = normalizeCompetitionTeam(team);
-      if (!normalizedTeam.name) return;
-      if (isTemporaryCompetitionSlot(normalizedTeam.name)) return;
-      const key = normalizeNameKey(normalizedTeam.name);
-      const gender = normalizedTeam.category;
-      const existing = AppState.teamRegistry.find((item) => {
-        if (normalizeNameKey(item.name) !== key) return false;
-        if (gender && item.gender && item.gender !== gender) return false;
-        return true;
-      });
-      if (existing) {
-        if (!existing.location && normalizedTeam.cityState) existing.location = normalizedTeam.cityState;
-        if (!existing.coach && normalizedTeam.coach) existing.coach = normalizedTeam.coach;
-        if (!existing.category && normalizedTeam.category) existing.category = normalizedTeam.category;
-        if (!existing.gender && gender) existing.gender = gender;
-        if (!existing.athletes?.length && normalizedTeam.athletes.length) existing.athletes = normalizedTeam.athletes;
-        existing.updatedAt = new Date().toISOString();
-        return 'reused';
-      }
-      AppState.teamRegistry.unshift(normalizeTeam({
-        name: normalizedTeam.name,
-        location: normalizedTeam.cityState,
-        coach: normalizedTeam.coach,
-        category: normalizedTeam.category,
-        gender,
-        athletes: normalizedTeam.athletes
-      }));
-      return 'created';
-    }
-
     function parseCompetitionImportPayload(rawText) {
       const parsed = JSON.parse(rawText);
       const source = parsed?.competition && typeof parsed.competition === 'object' ? parsed.competition : parsed;
-      const groupsSource = source.groups || source.chaves || source.keys;
-      const groupsRaw = [];
-      if (Array.isArray(groupsSource)) {
-        groupsRaw.push(...groupsSource);
-      } else if (groupsSource && typeof groupsSource === 'object') {
-        Object.entries(groupsSource).forEach(([outerKey, value]) => {
-          if (Array.isArray(value)) {
-            groupsRaw.push({ name: outerKey, teams: value });
-            return;
-          }
-          if (value && typeof value === 'object') {
-            Object.entries(value).forEach(([innerKey, teams]) => {
-              if (!Array.isArray(teams)) return;
-              const maybeCategory = normalizeCompetitionCategory(outerKey);
-              groupsRaw.push({ name: innerKey, category: maybeCategory, teams });
-            });
-          }
-        });
-      }
-      const scheduleRaw = Array.isArray(source.schedule)
-        ? source.schedule
-        : [];
-      const teamsRaw = Array.isArray(source.teams) ? source.teams : [];
-      const teams = filterRealCompetitionTeams(teamsRaw
-        .map((team) => (typeof team === 'string' ? { name: team } : team))
-      );
-      const groups = groupsRaw.map(normalizeCompetitionGroup).filter((group) => group.name);
-      const teamsFromGroups = filterRealCompetitionTeams(groups.flatMap((group) => (group.teams || []).map((name) => ({ name, category: group.category }))));
-      const teamsFromSchedule = scheduleRaw.flatMap((game) => {
-        const category = normalizeCompetitionCategory(game?.category);
-        return [{ name: game?.teamA, category }, { name: game?.teamB, category }];
-      });
+      const name = String(source.name || '').trim();
+      if (!name) throw new Error('JSON sem nome da competição.');
+      if (!Array.isArray(source.groups)) throw new Error('JSON inválido: campo "groups" é obrigatório e deve ser uma lista.');
+      if (!Array.isArray(source.schedule)) throw new Error('JSON inválido: campo "schedule" é obrigatório e deve ser uma lista.');
 
-      return {
-        metadata: {
-          name: String(source.name || '').trim(),
-          location: String(source.location || '').trim(),
-          cityState: String(source.cityState || source.city || '').trim(),
-          hotel: String(source.hotel || '').trim(),
-          startDate: String(source.startDate || '').slice(0, 10),
-          endDate: String(source.endDate || '').slice(0, 10),
-          notes: String(source.notes || '').trim()
-        },
-        providedFields: {
-          location: Object.prototype.hasOwnProperty.call(source, 'location'),
-          cityState: Object.prototype.hasOwnProperty.call(source, 'cityState') || Object.prototype.hasOwnProperty.call(source, 'city'),
-          hotel: Object.prototype.hasOwnProperty.call(source, 'hotel'),
-          startDate: Object.prototype.hasOwnProperty.call(source, 'startDate'),
-          endDate: Object.prototype.hasOwnProperty.call(source, 'endDate'),
-          notes: Object.prototype.hasOwnProperty.call(source, 'notes')
-        },
-        requiredSections: {
-          hasTeamsField: Object.prototype.hasOwnProperty.call(source, 'teams'),
-          hasGroupsField: Object.prototype.hasOwnProperty.call(source, 'groups')
-            || Object.prototype.hasOwnProperty.call(source, 'chaves')
-            || Object.prototype.hasOwnProperty.call(source, 'keys'),
-          hasScheduleField: Object.prototype.hasOwnProperty.call(source, 'schedule')
-        },
-        teams: mergeCompetitionTeams(teams, filterRealCompetitionTeams([...teamsFromGroups, ...teamsFromSchedule])),
-        groups,
-        schedule: scheduleRaw.map(normalizeCompetitionGame)
-      };
-    }
-
-    function validateCompetitionImportPayload(payload) {
-      if (!payload?.metadata?.name) {
-        throw new Error('JSON sem nome da competição.');
-      }
-      const missing = [];
-      if (!payload.requiredSections?.hasTeamsField || !Array.isArray(payload.teams) || payload.teams.length === 0) missing.push('teams');
-      if (!payload.requiredSections?.hasGroupsField || !Array.isArray(payload.groups) || payload.groups.length === 0) missing.push('groups');
-      if (!payload.requiredSections?.hasScheduleField || !Array.isArray(payload.schedule) || payload.schedule.length === 0) missing.push('schedule');
-      if (missing.length) {
-        throw new Error(`JSON incompleto para importação em lote. Inclua ${missing.join(', ')} com dados válidos.`);
-      }
-    }
-
-    function importCompetition(data) {
-      const payload = typeof data === 'string'
-        ? parseCompetitionImportPayload(data)
-        : parseCompetitionImportPayload(JSON.stringify(data || {}));
-      validateCompetitionImportPayload(payload);
-      const structureTeams = collectCompetitionTeamsFromStructure(payload.groups, payload.schedule);
-      payload.teams = mergeCompetitionTeams(payload.teams, structureTeams);
-      const editingId = document.getElementById('competition-save-btn').dataset.editingId || '';
-      const foundById = AppState.competitions.find((competition) => competition.id === editingId);
-      const foundByName = AppState.competitions.find((competition) => normalizeNameKey(competition.name) === normalizeNameKey(payload.metadata.name));
-      const previous = foundById || foundByName || null;
-
-      const importedSchedule = sortCompetitionSchedule(payload.schedule).map((game) => normalizeCompetitionGame({ ...game, source: 'imported' }));
-      const previousSchedule = Array.isArray(previous?.schedule) ? previous.schedule.map(normalizeCompetitionGame) : [];
-      const removedAutomaticGames = previousSchedule.filter((game) => game.source !== 'imported').length;
-      const replacedImportedGames = previousSchedule.filter((game) => game.source === 'imported').length;
-      const removedTemporaryTeams = purgeTemporaryCompetitionSlotsFromRegistry();
+      const groups = source.groups.map(normalizeCompetitionGroup).filter((group) => group.name);
+      const schedule = source.schedule.map(normalizeCompetitionGame);
 
       const competition = normalizeCompetition({
-        id: previous?.id,
-        name: payload.metadata.name,
-        location: payload.providedFields.location ? payload.metadata.location : (previous?.location || ''),
-        cityState: payload.providedFields.cityState ? payload.metadata.cityState : (previous?.cityState || ''),
-        hotel: payload.providedFields.hotel ? payload.metadata.hotel : (previous?.hotel || ''),
-        startDate: payload.providedFields.startDate ? payload.metadata.startDate : (previous?.startDate || ''),
-        endDate: payload.providedFields.endDate ? payload.metadata.endDate : (previous?.endDate || ''),
-        notes: payload.providedFields.notes ? payload.metadata.notes : (previous?.notes || ''),
-        teams: mergeCompetitionTeams(filterRealCompetitionTeams(previous?.teams || []), payload.teams),
-        groups: mergeCompetitionGroups(previous?.groups || [], payload.groups),
-        schedule: importedSchedule,
-        createdAt: previous?.createdAt
+        name,
+        location: source.location || '',
+        cityState: source.cityState || source.city || '',
+        hotel: source.hotel || '',
+        startDate: source.startDate || '',
+        endDate: source.endDate || '',
+        notes: source.notes || '',
+        groups,
+        schedule,
+        teams: []
       });
 
-      let createdTeams = 0;
-      let reusedTeams = 0;
-      const createdTeamNames = [];
-      const reusedTeamNames = [];
-      const failedTeams = [];
-      competition.teams.forEach((team) => {
-        try {
-          const action = upsertCompetitionTeamInRegistry(team);
-          if (action === 'created') {
-            createdTeams += 1;
-            createdTeamNames.push(team.name);
-          }
-          if (action === 'reused') {
-            reusedTeams += 1;
-            reusedTeamNames.push(team.name);
-          }
-          if (!action) failedTeams.push(team.name || '(sem nome)');
-        } catch (error) {
-          failedTeams.push(team.name || '(sem nome)');
-        }
-      });
-      const normalizationResult = normalizeTeamRegistry(AppState.teamRegistry, { withReport: true });
-      AppState.teamRegistry = normalizationResult.teams;
-      rebuildGlobalAthleteRegistry();
-      if (previous) AppState.competitions = AppState.competitions.map((item) => item.id === competition.id ? competition : item);
-      else AppState.competitions.unshift(competition);
-      return {
-        competition,
-        createdTeams,
-        reusedTeams,
-        createdTeamNames,
-        reusedTeamNames,
-        failedTeams,
-        totalImportedTeams: competition.teams.length,
-        totalImportedGames: competition.schedule.length,
-        removedAutomaticGames,
-        replacedImportedGames,
-        removedTemporaryTeams,
-        teamNormalizationReport: normalizationResult.report
-      };
+      return competition;
     }
 
     function importCompetitionFromJson(rawText) {
-      return importCompetition(rawText);
-    }
+      const incoming = parseCompetitionImportPayload(rawText);
+      const editingId = document.getElementById('competition-save-btn').dataset.editingId || '';
+      const foundById = AppState.competitions.find((competition) => competition.id === editingId);
+      const foundByName = AppState.competitions.find((competition) => normalizeNameKey(competition.name) === normalizeNameKey(incoming.name));
+      const previous = foundById || foundByName || null;
 
-    function parseCompetitionScore(value) {
-      const clean = String(value ?? '').trim();
-      if (!/^\d+$/.test(clean)) return null;
-      return Number.parseInt(clean, 10);
+      const competition = normalizeCompetition({
+        ...incoming,
+        id: previous?.id,
+        createdAt: previous?.createdAt,
+        updatedAt: new Date().toISOString()
+      });
+
+      if (previous) AppState.competitions = AppState.competitions.map((item) => item.id === previous.id ? competition : item);
+      else AppState.competitions.unshift(competition);
+
+      return { competition };
     }
 
     function resetCompetitionResults(competition) {
       if (!competition || !Array.isArray(competition.schedule)) return 0;
       let clearedGames = 0;
       competition.schedule.forEach((game) => {
-        const hadScore = String(game.scoreA ?? '').trim() !== '' || String(game.scoreB ?? '').trim() !== '';
+        if (String(game.scoreA || '').trim() || String(game.scoreB || '').trim()) clearedGames += 1;
         game.scoreA = '';
         game.scoreB = '';
-        if (hadScore) clearedGames += 1;
       });
       competition.updatedAt = new Date().toISOString();
       return clearedGames;
     }
 
-    function getCompetitionGroupByName(competition, phaseName) {
-      const key = normalizeNameKey(phaseName);
-      if (!key) return null;
-      return (competition.groups || []).find((group) => normalizeNameKey(group.name) === key) || null;
+    function parseScore(value) {
+      if (value === '' || value === null || value === undefined) return null;
+      const parsed = Number(value);
+      if (!Number.isFinite(parsed) || parsed < 0) return null;
+      return parsed;
     }
 
-    function getCompetitionGamesWithScoreDiagnostics(competition) {
-      if (!Array.isArray(competition?.schedule)) {
-        return {
-          validGames: [],
-          ignoredGames: []
-        };
-      }
-      const validGames = [];
-      const ignoredGames = [];
-      sortCompetitionSchedule(competition.schedule).forEach((game) => {
-        const scoreA = parseCompetitionScore(game.scoreA);
-        const scoreB = parseCompetitionScore(game.scoreB);
-        if (scoreA === null || scoreB === null) {
-          ignoredGames.push({
-            gameId: game.id,
-            gameNumber: game.gameNumber || '',
-            teams: `${game.teamA || '(sem equipe A)'} x ${game.teamB || '(sem equipe B)'}`,
-            reason: `placar inválido ou incompleto (scoreA="${game.scoreA ?? ''}", scoreB="${game.scoreB ?? ''}")`
-          });
-          return;
+    function safeQuotient(goalsFor, goalsAgainst) {
+      if (goalsAgainst === 0) return goalsFor > 0 ? Number.POSITIVE_INFINITY : 0;
+      return goalsFor / goalsAgainst;
+    }
+
+    function directConfrontScore(teamA, teamB, games = []) {
+      let pointsA = 0;
+      let pointsB = 0;
+      games.forEach((game) => {
+        const scoreA = parseScore(game.scoreA);
+        const scoreB = parseScore(game.scoreB);
+        if (scoreA === null || scoreB === null) return;
+        const aIsA = normalizeNameKey(game.teamA) === normalizeNameKey(teamA) && normalizeNameKey(game.teamB) === normalizeNameKey(teamB);
+        const aIsB = normalizeNameKey(game.teamA) === normalizeNameKey(teamB) && normalizeNameKey(game.teamB) === normalizeNameKey(teamA);
+        if (!aIsA && !aIsB) return;
+        const leftGoals = aIsA ? scoreA : scoreB;
+        const rightGoals = aIsA ? scoreB : scoreA;
+        if (leftGoals > rightGoals) pointsA += 3;
+        else if (leftGoals < rightGoals) pointsB += 3;
+        else {
+          pointsA += 1;
+          pointsB += 1;
         }
-        validGames.push({ game, scoreA, scoreB });
       });
-      return { validGames, ignoredGames };
+      return pointsA - pointsB;
     }
 
     function buildCompetitionStandings(competition) {
-      // Classificação oficial da competição:
-      // - usa TODOS os jogos com placar válido
-      // - inclui TODAS as equipes e todos os jogos com placar válido
-      const standingsByCategory = {
-        masculino: { byGroup: new Map(), overall: [] },
-        feminino: { byGroup: new Map(), overall: [] }
-      };
-      const headToHead = new Map();
-      const teams = new Map();
-      const teamCategoriesByName = new Map();
-      const diagnostics = {
-        competitionId: competition?.id || '',
-        competitionName: competition?.name || '',
-        totalGamesInSchedule: Array.isArray(competition?.schedule) ? competition.schedule.length : 0,
-        gamesWithValidScore: 0,
-        gamesUsedInStandings: 0,
-        validScoreGameNumbers: [],
-        usedGameNumbers: [],
-        ignoredGameNumbers: [],
-        maleGamesUsed: 0,
-        femaleGamesUsed: 0,
-        ignoredGames: []
-      };
-
-      const registerTeamCategory = (teamEntry) => {
-        if (!teamEntry?.name) return;
-        const nameKey = normalizeNameKey(teamEntry.name);
-        if (!nameKey || !teamEntry.category) return;
-        if (!teamCategoriesByName.has(nameKey)) teamCategoriesByName.set(nameKey, new Set());
-        teamCategoriesByName.get(nameKey).add(teamEntry.category);
-      };
-
-      const getUniqueKnownCategoryForTeam = (teamName) => {
-        const categories = teamCategoriesByName.get(normalizeNameKey(teamName));
-        if (!categories || categories.size !== 1) return '';
-        return [...categories][0];
-      };
-
-      const ensureTeam = (teamName, category = '', groupName = '') => {
-        const cleanName = String(teamName || '').trim();
-        if (!cleanName || isTemporaryCompetitionSlot(cleanName)) return null;
-        const explicitCategory = normalizeCompetitionCategory(category);
-        const inferredCategory = getUniqueKnownCategoryForTeam(cleanName);
-        const resolvedCategory = explicitCategory || inferredCategory || '';
-        const key = `${normalizeNameKey(cleanName)}|${resolvedCategory}`;
-        if (!teams.has(key)) {
-          teams.set(key, {
-            key,
-            name: cleanName,
-            category: resolvedCategory,
-            groupName: String(groupName || '').trim(),
-            games: 0,
-            wins: 0,
-            draws: 0,
-            losses: 0,
-            goalsFor: 0,
-            goalsAgainst: 0,
-            goalDiff: 0,
-            quotient: 0,
-            points: 0
-          });
-          registerTeamCategory(teams.get(key));
-        }
-        const entry = teams.get(key);
-        if (!entry.category && explicitCategory) {
-          entry.category = explicitCategory;
-          registerTeamCategory(entry);
-        }
-        if (!entry.groupName && groupName) entry.groupName = String(groupName || '').trim();
-        return entry;
-      };
+      const allGames = sortCompetitionSchedule(competition.schedule || []);
+      const groupMap = new Map();
 
       (competition.groups || []).forEach((group) => {
-        const category = normalizeCompetitionCategory(group.category);
-        (group.teams || []).forEach((teamName) => ensureTeam(teamName, category, group.name));
-      });
-      (competition.teams || []).forEach((team) => ensureTeam(team.name, team.category, ''));
-
-      const { validGames: validScoredGames, ignoredGames: invalidScoreGames } = getCompetitionGamesWithScoreDiagnostics(competition);
-      diagnostics.gamesWithValidScore = validScoredGames.length;
-      diagnostics.validScoreGameNumbers = validScoredGames.map(({ game }) => String(game.gameNumber || game.id || '').trim()).filter(Boolean);
-      diagnostics.ignoredGames.push(...invalidScoreGames);
-
-      validScoredGames.forEach(({ game, scoreA, scoreB }) => {
-        const group = getCompetitionGroupByName(competition, game.phase);
-        const categoryFromGame = normalizeCompetitionCategory(game.category);
-        const categoryFromGroup = normalizeCompetitionCategory(group?.category);
-        const categoryFromTeamA = getUniqueKnownCategoryForTeam(game.teamA);
-        const categoryFromTeamB = getUniqueKnownCategoryForTeam(game.teamB);
-        const categoryFromTeams = categoryFromTeamA && categoryFromTeamA === categoryFromTeamB ? categoryFromTeamA : '';
-        const category = categoryFromGame || categoryFromGroup || categoryFromTeams;
-        const groupName = group?.name || '';
-
-        let teamA = ensureTeam(game.teamA, category, groupName);
-        let teamB = ensureTeam(game.teamB, category, groupName);
-        if (!teamA || !teamB) {
-          diagnostics.ignoredGames.push({
-            gameId: game.id,
-            gameNumber: game.gameNumber || '',
-            teams: `${game.teamA || '(sem equipe A)'} x ${game.teamB || '(sem equipe B)'}`,
-            reason: 'equipe inválida, ausente ou marcador temporário',
-            scoreA,
-            scoreB
-          });
-          return;
-        }
-        if (teamA.category !== teamB.category && category) {
-          teamA = ensureTeam(game.teamA, category, groupName);
-          teamB = ensureTeam(game.teamB, category, groupName);
-        }
-        if (!teamA.category || !teamB.category) {
-          diagnostics.ignoredGames.push({
-            gameId: game.id,
-            gameNumber: game.gameNumber || '',
-            teams: `${teamA.name} x ${teamB.name}`,
-            reason: `categoria indefinida (jogo="${game.category || ''}", fase="${game.phase || ''}")`,
-            scoreA,
-            scoreB
-          });
-          return;
-        }
-        if (teamA.category !== teamB.category) {
-          diagnostics.ignoredGames.push({
-            gameId: game.id,
-            gameNumber: game.gameNumber || '',
-            teams: `${teamA.name} (${teamA.category}) x ${teamB.name} (${teamB.category})`,
-            reason: 'categorias divergentes entre as equipes',
-            scoreA,
-            scoreB
-          });
-          return;
-        }
-        diagnostics.gamesUsedInStandings += 1;
-        if (teamA.category === 'masculino') diagnostics.maleGamesUsed += 1;
-        if (teamA.category === 'feminino') diagnostics.femaleGamesUsed += 1;
-        diagnostics.usedGameNumbers.push(String(game.gameNumber || game.id || '').trim());
-
-        teamA.games += 1;
-        teamB.games += 1;
-        teamA.goalsFor += scoreA;
-        teamA.goalsAgainst += scoreB;
-        teamB.goalsFor += scoreB;
-        teamB.goalsAgainst += scoreA;
-
-        const h2hKey = [teamA.key, teamB.key].sort().join('__');
-        if (!headToHead.has(h2hKey)) {
-          headToHead.set(h2hKey, {
-            [teamA.key]: { points: 0, goalDiff: 0, goalsFor: 0 },
-            [teamB.key]: { points: 0, goalDiff: 0, goalsFor: 0 }
-          });
-        }
-        const h2h = headToHead.get(h2hKey);
-        h2h[teamA.key].goalDiff += (scoreA - scoreB);
-        h2h[teamA.key].goalsFor += scoreA;
-        h2h[teamB.key].goalDiff += (scoreB - scoreA);
-        h2h[teamB.key].goalsFor += scoreB;
-
-        if (scoreA > scoreB) {
-          teamA.wins += 1;
-          teamB.losses += 1;
-          teamA.points += 3;
-          h2h[teamA.key].points += 3;
-        } else if (scoreB > scoreA) {
-          teamB.wins += 1;
-          teamA.losses += 1;
-          teamB.points += 3;
-          h2h[teamB.key].points += 3;
-        } else {
-          teamA.draws += 1;
-          teamB.draws += 1;
-          teamA.points += 1;
-          teamB.points += 1;
-          h2h[teamA.key].points += 1;
-          h2h[teamB.key].points += 1;
-        }
-
-        console.debug('[Competições][Cálculo jogo]', {
-          competitionId: competition?.id || '',
-          competitionName: competition?.name || '',
-          gameId: game.id,
-          gameNumber: game.gameNumber || '',
-          category: teamA.category,
-          groupName,
-          officialTableUpdated: `standings.${teamA.category}`,
-          teamA: {
-            name: teamA.name,
-            games: teamA.games,
-            wins: teamA.wins,
-            draws: teamA.draws,
-            losses: teamA.losses,
-            goalsFor: teamA.goalsFor,
-            goalsAgainst: teamA.goalsAgainst,
-            goalDiff: teamA.goalsFor - teamA.goalsAgainst,
-            points: teamA.points
-          },
-          teamB: {
-            name: teamB.name,
-            games: teamB.games,
-            wins: teamB.wins,
-            draws: teamB.draws,
-            losses: teamB.losses,
-            goalsFor: teamB.goalsFor,
-            goalsAgainst: teamB.goalsAgainst,
-            goalDiff: teamB.goalsFor - teamB.goalsAgainst,
-            points: teamB.points
-          }
+        const groupKey = `${normalizeCompetitionCategory(group.category) || 'indefinido'}::${normalizeNameKey(group.name)}`;
+        const teams = (group.teams || []).map((name) => ({
+          team: name,
+          points: 0,
+          wins: 0,
+          draws: 0,
+          losses: 0,
+          goalsFor: 0,
+          goalsAgainst: 0,
+          goalDiff: 0,
+          quotient: 0,
+          drawOrder: 0
+        }));
+        groupMap.set(groupKey, {
+          key: groupKey,
+          category: normalizeCompetitionCategory(group.category) || 'indefinido',
+          name: group.name,
+          teamsByKey: new Map(teams.map((row) => [normalizeNameKey(row.team), row])),
+          games: []
         });
       });
 
-      diagnostics.ignoredGameNumbers = diagnostics.ignoredGames
-        .map((entry) => String(entry.gameNumber || entry.gameId || '').trim())
-        .filter(Boolean);
+      allGames.forEach((game) => {
+        const scoreA = parseScore(game.scoreA);
+        const scoreB = parseScore(game.scoreB);
+        if (scoreA === null || scoreB === null) return;
+        const category = normalizeCompetitionCategory(game.category) || 'indefinido';
+        const phaseKey = normalizeNameKey(game.phase);
+        const groupEntry = [...groupMap.values()].find((group) => group.category === category && normalizeNameKey(group.name) === phaseKey);
+        if (!groupEntry) return;
+        const teamAKey = normalizeNameKey(game.teamA);
+        const teamBKey = normalizeNameKey(game.teamB);
+        const rowA = groupEntry.teamsByKey.get(teamAKey);
+        const rowB = groupEntry.teamsByKey.get(teamBKey);
+        if (!rowA || !rowB) return;
 
-      console.debug('[Competições] Diagnóstico de classificação', {
-        competitionId: diagnostics.competitionId,
-        competition: diagnostics.competitionName,
-        totalGamesInSchedule: diagnostics.totalGamesInSchedule,
-        gamesWithValidScore: diagnostics.gamesWithValidScore,
-        validScoreGameNumbers: diagnostics.validScoreGameNumbers,
-        gamesUsedInStandings: diagnostics.gamesUsedInStandings,
-        usedGameNumbers: diagnostics.usedGameNumbers,
-        ignoredGameNumbers: diagnostics.ignoredGameNumbers,
-        maleGamesUsed: diagnostics.maleGamesUsed,
-        femaleGamesUsed: diagnostics.femaleGamesUsed,
-        ignoredGames: diagnostics.ignoredGames
+        groupEntry.games.push(game);
+        rowA.goalsFor += scoreA;
+        rowA.goalsAgainst += scoreB;
+        rowB.goalsFor += scoreB;
+        rowB.goalsAgainst += scoreA;
+
+        if (scoreA > scoreB) {
+          rowA.points += 3;
+          rowA.wins += 1;
+          rowB.losses += 1;
+        } else if (scoreA < scoreB) {
+          rowB.points += 3;
+          rowB.wins += 1;
+          rowA.losses += 1;
+        } else {
+          rowA.points += 1;
+          rowB.points += 1;
+          rowA.draws += 1;
+          rowB.draws += 1;
+        }
       });
 
-      const compareTeams = (a, b) => {
-        if (b.points !== a.points) return b.points - a.points;
-        if (b.wins !== a.wins) return b.wins - a.wins;
-        if (b.goalDiff !== a.goalDiff) return b.goalDiff - a.goalDiff;
-        if (b.quotient !== a.quotient) return b.quotient - a.quotient;
-        const h2hKey = [a.key, b.key].sort().join('__');
-        const h2h = headToHead.get(h2hKey);
-        if (h2h && h2h[a.key] && h2h[b.key]) {
-          if (h2h[b.key].points !== h2h[a.key].points) return h2h[b.key].points - h2h[a.key].points;
-          if (h2h[b.key].goalDiff !== h2h[a.key].goalDiff) return h2h[b.key].goalDiff - h2h[a.key].goalDiff;
-          if (h2h[b.key].goalsFor !== h2h[a.key].goalsFor) return h2h[b.key].goalsFor - h2h[a.key].goalsFor;
-        }
-        return a.name.localeCompare(b.name, 'pt-BR');
-      };
+      const groups = [...groupMap.values()].map((group) => {
+        const rows = [...group.teamsByKey.values()].map((row) => ({
+          ...row,
+          goalDiff: row.goalsFor - row.goalsAgainst,
+          quotient: safeQuotient(row.goalsFor, row.goalsAgainst),
+          drawOrder: Math.random()
+        }));
 
-      const allTeams = [...teams.values()].map((team) => {
-        const quotient = team.goalsAgainst === 0 ? (team.goalsFor > 0 ? Number.POSITIVE_INFINITY : 0) : (team.goalsFor / team.goalsAgainst);
+        rows.sort((a, b) => {
+          if (b.points !== a.points) return b.points - a.points;
+          if (b.wins !== a.wins) return b.wins - a.wins;
+          if (b.goalDiff !== a.goalDiff) return b.goalDiff - a.goalDiff;
+          if (b.quotient !== a.quotient) return b.quotient - a.quotient;
+          const tiedTeams = rows.filter((row) => row.points === a.points && row.wins === a.wins && row.goalDiff === a.goalDiff && row.quotient === a.quotient);
+          if (tiedTeams.length === 2 && tiedTeams.some((row) => row.team === a.team) && tiedTeams.some((row) => row.team === b.team)) {
+            return -directConfrontScore(a.team, b.team, group.games);
+          }
+          return a.drawOrder - b.drawOrder;
+        });
+
         return {
-          ...team,
-          goalDiff: team.goalsFor - team.goalsAgainst,
-          quotient
+          category: group.category,
+          name: group.name,
+          table: rows.map((row, index) => ({ ...row, rank: index + 1 }))
         };
       });
 
-      allTeams.forEach((team) => {
-        if (!team.category || !standingsByCategory[team.category]) return;
-        if (team.groupName) {
-          if (!standingsByCategory[team.category].byGroup.has(team.groupName)) standingsByCategory[team.category].byGroup.set(team.groupName, []);
-          standingsByCategory[team.category].byGroup.get(team.groupName).push(team);
-        }
-        standingsByCategory[team.category].overall.push(team);
-      });
-
-      ['masculino', 'feminino'].forEach((category) => {
-        standingsByCategory[category].overall.sort(compareTeams);
-        standingsByCategory[category].overall.forEach((team, index) => { team.rank = index + 1; });
-        standingsByCategory[category].byGroup.forEach((groupTeams, groupName) => {
-          groupTeams.sort(compareTeams);
-          groupTeams.forEach((team, index) => { team.groupRank = index + 1; });
-          standingsByCategory[category].byGroup.set(groupName, groupTeams);
-        });
-      });
-
-      return standingsByCategory;
-    }
-
-    function formatQuotient(value) {
-      if (!Number.isFinite(value)) return '∞';
-      return value.toFixed(2);
-    }
-
-    function buildStandingsTableRows(rows, zone = 'default') {
-      if (!rows.length) return '<tr><td colspan="12" class="py-2 text-slate-400">Sem dados suficientes.</td></tr>';
-      return rows.map((team, index) => {
-        let style = '';
-        if (zone === 'maleOverall') {
-          if (index < 4) style = 'bg-emerald-50';
-          else if (index < 8) style = 'bg-amber-50';
-          else style = 'bg-slate-50';
-        }
-        if (zone === 'femaleGroup') {
-          style = index < 2 ? 'bg-emerald-50' : 'bg-slate-50';
-        }
-        return `<tr class="border-b border-slate-100 ${style}">
-          <td class="py-1">${index + 1}</td>
-          <td class="py-1 font-medium">${escapeHtml(team.name)}</td>
-          <td class="py-1">${team.games}</td>
-          <td class="py-1">${team.wins}</td>
-          <td class="py-1">${team.draws}</td>
-          <td class="py-1">${team.losses}</td>
-          <td class="py-1">${team.goalsFor}</td>
-          <td class="py-1">${team.goalsAgainst}</td>
-          <td class="py-1">${team.goalDiff}</td>
-          <td class="py-1">${formatQuotient(team.quotient)}</td>
-          <td class="py-1 font-semibold">${team.points}</td>
-          <td class="py-1 text-[11px] text-slate-500">${team.groupName ? escapeHtml(team.groupName) : '-'}</td>
-        </tr>`;
-      }).join('');
-    }
-
-    function buildMasculineStrategicSummary(maleOverall = []) {
-      if (!maleOverall.length) return ['Classificação masculina parcial: aguarde placares para gerar estratégias.'];
-      const messages = [];
-      maleOverall.slice(0, 4).forEach((team) => {
-        messages.push(`${team.name} está atualmente no Top 4 e fora da zona de sorteio.`);
-      });
-      maleOverall.slice(4, 8).forEach((team) => {
-        messages.push(`${team.name} está na zona de sorteio (5º ao 8º) e segue classificada no momento.`);
-      });
-      if (maleOverall[3] && maleOverall[4]) {
-        const diff = maleOverall[3].points - maleOverall[4].points;
-        if (diff <= 3) {
-          messages.push(`Disputa aberta pela 4ª colocação: ${maleOverall[3].name} e ${maleOverall[4].name} estão separadas por ${diff} ponto(s).`);
-        }
-        if (maleOverall[3].points === maleOverall[4].points) {
-          messages.push('Saldo e quociente podem decidir a permanência no Top 4 masculino.');
-        }
-      }
-      if (maleOverall[7] && maleOverall[8]) {
-        const diff = maleOverall[7].points - maleOverall[8].points;
-        if (diff <= 3) messages.push(`Linha de corte do Top 8 apertada entre ${maleOverall[7].name} e ${maleOverall[8].name}.`);
-      }
-      return messages.slice(0, 8);
-    }
-
-    function buildMaleSerieBProjection(maleOverall = []) {
-      const excludedTeams = maleOverall.filter((team) => isExcludedFromSerieBMaleProjection(team.name));
-      const projectedRows = maleOverall
-        .filter((team) => !isExcludedFromSerieBMaleProjection(team.name))
-        .map((team, index) => ({ ...team, projectionRank: index + 1 }));
-      const messages = projectedRows.length
-        ? buildMasculineStrategicSummary(projectedRows.map((team) => ({ ...team, rank: team.projectionRank })))
-        : ['Sem equipes elegíveis para projeção da vaga da Série B masculina.'];
-      return {
-        rows: projectedRows,
-        messages,
-        excludedTeams
-      };
-    }
-
-    function collectCompetitionPlaceholders(competition) {
-      const placeholders = new Map();
-      const ensure = (name, category = '', source = '') => {
-        const cleanName = String(name || '').trim();
-        if (!cleanName || !isTemporaryCompetitionSlot(cleanName)) return;
-        const key = normalizeNameKey(cleanName);
-        if (!placeholders.has(key)) {
-          placeholders.set(key, {
-            name: cleanName,
-            category: normalizeCompetitionCategory(category),
-            appearances: { schedule: 0, groups: 0 },
-            sourceHints: []
-          });
-        }
-        const entry = placeholders.get(key);
-        if (!entry.category) entry.category = normalizeCompetitionCategory(category);
-        if (source === 'schedule') entry.appearances.schedule += 1;
-        if (source === 'groups') entry.appearances.groups += 1;
-      };
-
-      (competition?.groups || []).forEach((group) => {
-        const groupCategory = normalizeCompetitionCategory(group.category);
-        (group.teams || []).forEach((teamName) => ensure(teamName, groupCategory, 'groups'));
-      });
-      (competition?.schedule || []).forEach((game) => {
-        const gameCategory = normalizeCompetitionCategory(game.category);
-        ensure(game.teamA, gameCategory, 'schedule');
-        ensure(game.teamB, gameCategory, 'schedule');
-      });
-
-      return [...placeholders.values()].sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
-    }
-
-    function parseAthletesFromPrompt(rawValue = '') {
-      return String(rawValue || '')
-        .split(/[,\n;]/)
-        .map((entry) => {
-          const [namePart, numberPart] = entry.split('#');
-          return normalizeAthlete({
-            name: String(namePart || '').trim(),
-            number: String(numberPart || '').trim()
-          });
+      const maleGeneralRanking = groups
+        .filter((group) => group.category === 'masculino')
+        .flatMap((group) => group.table.map((row) => ({ ...row, group: group.name })))
+        .sort((a, b) => {
+          if (b.points !== a.points) return b.points - a.points;
+          if (b.wins !== a.wins) return b.wins - a.wins;
+          if (b.goalDiff !== a.goalDiff) return b.goalDiff - a.goalDiff;
+          if (b.quotient !== a.quotient) return b.quotient - a.quotient;
+          return a.team.localeCompare(b.team, 'pt-BR');
         })
-        .filter((athlete) => athlete.name || athlete.number);
+        .map((row, index) => ({ ...row, rank: index + 1 }));
+
+      return { groups, maleGeneralRanking };
     }
 
-    function pickTeamForPlaceholder(competition, placeholder) {
-      const fromCompetition = (competition.teams || []).map(normalizeCompetitionTeam);
-      const fromRegistry = normalizeTeamRegistry(AppState.teamRegistry).map((team) => normalizeCompetitionTeam({
-        name: team.name,
-        cityState: team.location,
-        coach: team.coach,
-        category: team.gender || team.category,
-        athletes: team.athletes
-      }));
-      const options = mergeCompetitionTeams(fromCompetition, fromRegistry)
-        .filter((team) => team.name && !isTemporaryCompetitionSlot(team.name));
+    function buildStrategySnapshot(standings) {
+      const maleTop4 = standings.maleGeneralRanking.slice(0, 4);
+      const maleDrawZone = standings.maleGeneralRanking.slice(4, 8);
 
-      const optionLines = options
-        .slice(0, 25)
-        .map((team, index) => `${index + 1}) ${team.name}${team.category ? ` (${team.category})` : ''}`)
-        .join('\n');
-      const choice = prompt(
-        `Substituir "${placeholder.name}" por equipe existente ou nova.\nDigite o número da equipe existente ou N para nova equipe.\n\n${optionLines || '(Sem equipes cadastradas)'}`,
-        options.length ? '1' : 'N'
-      );
-      if (choice === null) return null;
-      const trimmedChoice = String(choice).trim().toUpperCase();
-      if (trimmedChoice === 'N') {
-        const name = prompt(`Nome real para substituir ${placeholder.name}:`) || '';
-        if (!name.trim()) return null;
-        const cityState = prompt('Cidade/UF:') || '';
-        const coach = prompt('Treinador:') || '';
-        const categoryPrompt = prompt('Categoria (masculino ou feminino):', placeholder.category || 'masculino') || '';
-        const athletesRaw = prompt('Atletas (Nome#Nº, separados por vírgula):') || '';
-        return normalizeCompetitionTeam({
-          name,
-          cityState,
-          coach,
-          category: categoryPrompt,
-          athletes: parseAthletesFromPrompt(athletesRaw)
-        });
-      }
-      const selectedIndex = Number.parseInt(trimmedChoice, 10) - 1;
-      if (Number.isNaN(selectedIndex) || selectedIndex < 0 || selectedIndex >= options.length) {
-        showToast('⚠️ Opção inválida para substituição do sorteio.');
-        return null;
-      }
-      return normalizeCompetitionTeam(options[selectedIndex]);
+      const femaleGroups = standings.groups.filter((group) => group.category === 'feminino');
+      const femaleA = femaleGroups.find((group) => normalizeNameKey(group.name).includes('a'))?.table || [];
+      const femaleB = femaleGroups.find((group) => normalizeNameKey(group.name).includes('b'))?.table || [];
+      const femaleCrossings = [
+        `${femaleA[0]?.team || '1A'} x ${femaleB[1]?.team || '2B'}`,
+        `${femaleA[1]?.team || '2A'} x ${femaleB[0]?.team || '1B'}`
+      ];
+
+      const serieBProjection = standings.maleGeneralRanking
+        .filter((row) => !isExcludedFromSerieBMaleProjection(row.team))
+        .slice(0, 8)
+        .map((row, index) => ({ ...row, projectionRank: index + 1 }));
+
+      return { maleTop4, maleDrawZone, femaleCrossings, serieBProjection };
     }
 
-    function replacePlaceholderInCompetition(competition, placeholderName, replacementTeam) {
-      const placeholderKey = normalizeNameKey(placeholderName);
-      const replacementName = String(replacementTeam?.name || '').trim();
-      if (!placeholderKey || !replacementName) return { scheduleUpdates: 0, groupUpdates: 0, matchUpdates: 0 };
-      let scheduleUpdates = 0;
-      let groupUpdates = 0;
-      let matchUpdates = 0;
-
-      (competition.schedule || []).forEach((game) => {
-        if (normalizeNameKey(game.teamA) === placeholderKey) {
-          game.teamA = replacementName;
-          scheduleUpdates += 1;
-        }
-        if (normalizeNameKey(game.teamB) === placeholderKey) {
-          game.teamB = replacementName;
-          scheduleUpdates += 1;
-        }
-        if (!game.category && replacementTeam.category) game.category = replacementTeam.category;
-      });
-
-      (competition.groups || []).forEach((group) => {
-        group.teams = (group.teams || []).map((teamName) => {
-          if (normalizeNameKey(teamName) !== placeholderKey) return teamName;
-          groupUpdates += 1;
-          return replacementName;
-        });
-        if (!group.category && replacementTeam.category) group.category = replacementTeam.category;
-      });
-
-      competition.teams = mergeCompetitionTeams(
-        filterRealCompetitionTeams((competition.teams || []).filter((team) => normalizeNameKey(team.name) !== placeholderKey)),
-        [replacementTeam]
-      );
-      upsertCompetitionTeamInRegistry(replacementTeam);
-      rebuildGlobalAthleteRegistry();
-
-      if (AppState.config.linkedCompetitionId === competition.id) {
-        if (normalizeNameKey(AppState.config.myTeam) === placeholderKey) {
-          AppState.config.myTeam = replacementName;
-          matchUpdates += 1;
-        }
-        if (normalizeNameKey(AppState.config.opponentTeam) === placeholderKey) {
-          AppState.config.opponentTeam = replacementName;
-          matchUpdates += 1;
-        }
-      }
-
-      AppState.archivedMatches = (AppState.archivedMatches || []).map((match) => {
-        if (match.linkedCompetitionId !== competition.id) return match;
-        let changed = false;
-        const nextMatch = { ...match };
-        if (normalizeNameKey(nextMatch.myTeam) === placeholderKey) {
-          nextMatch.myTeam = replacementName;
-          changed = true;
-        }
-        if (normalizeNameKey(nextMatch.opponentTeam) === placeholderKey) {
-          nextMatch.opponentTeam = replacementName;
-          changed = true;
-        }
-        if (changed) {
-          nextMatch.updatedAt = Date.now();
-          matchUpdates += 1;
-        }
-        return nextMatch;
-      });
-
-      competition.updatedAt = new Date().toISOString();
-      return { scheduleUpdates, groupUpdates, matchUpdates };
-    }
-
-    function buildFemaleStrategicSummary(femaleGroups) {
-      const messages = [];
-      femaleGroups.forEach(({ name, rows }) => {
-        if (!rows.length) return;
-        const first = rows[0];
-        const second = rows[1];
-        const third = rows[2];
-        if (first) messages.push(`${first.name} lidera ${name} no momento.`);
-        if (second) messages.push(`${second.name} está classificada para a semifinal em ${name}.`);
-        if (third && second) {
-          const diff = second.points - third.points;
-          if (diff <= 3) messages.push(`${third.name} segue brigando por vaga na semifinal em ${name}.`);
-        }
-      });
-      return messages.length ? messages : ['Classificação feminina parcial: aguarde placares para projetar semifinal.'];
-    }
-
-    function buildFemaleCrossings(femaleGroupMap) {
-      const groups = [...femaleGroupMap.entries()].map(([name, rows]) => ({ name, rows }));
-      const groupA = groups.find((group) => /chave\s*a/i.test(group.name)) || groups[0] || { name: 'Chave A', rows: [] };
-      const groupB = groups.find((group) => /chave\s*b/i.test(group.name)) || groups[1] || { name: 'Chave B', rows: [] };
-      const a1 = groupA.rows[0]?.name || 'A definir';
-      const a2 = groupA.rows[1]?.name || 'A definir';
-      const b1 = groupB.rows[0]?.name || 'A definir';
-      const b2 = groupB.rows[1]?.name || 'A definir';
-      return {
-        matches: [
-          `1º ${groupA.name} (${a1}) x 2º ${groupB.name} (${b2})`,
-          `2º ${groupA.name} (${a2}) x 1º ${groupB.name} (${b1})`
-        ],
-        groupA,
-        groupB
-      };
-    }
-
-    const competitionTeamConsultState = {
-      selectedByCompetitionId: {}
-    };
-
-    function getCompetitionGroupCategory(group) {
-      const normalized = normalizeCompetitionCategory(group?.category || '');
-      if (normalized) return normalized;
-      const key = normalizeNameKey(group?.name || '');
-      if (key.includes('femin')) return 'feminino';
-      if (key.includes('mascul')) return 'masculino';
-      return 'masculino';
-    }
-
-    function buildCompetitionGroupsByCategory(competition) {
-      const grouped = { masculino: [], feminino: [] };
-      (competition.groups || []).forEach((group) => {
-        const category = getCompetitionGroupCategory(group);
-        grouped[category].push(group);
-      });
-      return grouped;
-    }
-
-    function renderCompetitionGroupTables(competition) {
-      const grouped = buildCompetitionGroupsByCategory(competition);
-      return ['masculino', 'feminino'].map((category) => {
-        const groups = grouped[category];
-        if (!groups.length) return '';
-        const maxRows = Math.max(...groups.map((group) => (group.teams || []).length), 0);
-        const headerColor = category === 'feminino'
-          ? 'bg-rose-100 border-rose-200 text-rose-900'
-          : 'bg-blue-100 border-blue-200 text-blue-900';
-        const tableRows = Array.from({ length: maxRows }).map((_, rowIndex) => `
-          <tr class="border-b border-slate-100">
-            ${groups.map((group) => {
-              const teamName = group.teams?.[rowIndex] || '';
-              if (!teamName) return '<td class="px-2 py-1 text-[11px] text-slate-300">—</td>';
-              return `<td class="px-2 py-1">
-                <button class="comp-team-consult text-left text-[11px] md:text-xs ${isPlaceholderTeamName(teamName) ? 'text-red-600' : 'text-blue-700 underline'}" data-id="${competition.id}" data-team="${escapeAttribute(teamName)}">
-                  ${escapeHtml(teamName)}
-                </button>
-              </td>`;
-            }).join('')}
-          </tr>
-        `).join('');
-        return `
-          <div class="border border-slate-200 rounded-lg overflow-hidden bg-white">
-            <div class="px-3 py-2 border-b text-sm font-semibold uppercase ${headerColor}">${category}</div>
-            <div class="overflow-auto">
-              <table class="w-full text-xs">
-                <thead>
-                  <tr class="bg-slate-50 border-b border-slate-200">
-                    ${groups.map((group) => `<th class="px-2 py-1 text-left text-slate-700 uppercase tracking-wide">${escapeHtml(group.name)}</th>`).join('')}
-                  </tr>
-                </thead>
-                <tbody>${tableRows}</tbody>
-              </table>
-            </div>
-          </div>
-        `;
-      }).filter(Boolean).join('');
-    }
-
-    function renderCompetitionTeamConsultation(competition) {
-      const selectedTeamName = competitionTeamConsultState.selectedByCompetitionId[competition.id] || '';
-      if (!selectedTeamName) {
-        return '<p class="text-xs text-slate-500">Clique em uma equipe na chave para consultar os detalhes.</p>';
-      }
-      if (isPlaceholderTeamName(selectedTeamName)) {
-        return `<div class="text-xs rounded-lg border border-amber-200 bg-amber-50 p-3 text-amber-800">"${escapeHtml(selectedTeamName)}" é um placeholder de sorteio ainda não resolvido. Use "Resolver sorteios" para atualizar automaticamente.</div>`;
-      }
-      const team = (competition.teams || []).find((item) => normalizeNameKey(item.name) === normalizeNameKey(selectedTeamName));
-      if (!team) {
-        return `<div class="text-xs rounded-lg border border-slate-200 bg-slate-50 p-3 text-slate-600">Não foi possível localizar os dados detalhados de "${escapeHtml(selectedTeamName)}" na competição.</div>`;
-      }
+    function renderStandingsTable(rows, withGroup = false) {
+      if (!rows.length) return '<p class="text-xs text-slate-500">Sem dados suficientes para classificação.</p>';
       return `
-        <div class="rounded-lg border border-slate-200 bg-slate-50 p-3 space-y-2">
-          <div class="flex flex-wrap items-center gap-2">
-            <h5 class="font-semibold text-slate-800">${escapeHtml(team.name)}</h5>
-            <span class="px-2 py-0.5 rounded-full border border-slate-300 text-[11px] text-slate-600">${escapeHtml(team.category || 'categoria não informada')}</span>
-          </div>
-          <div class="text-xs text-slate-600">Cidade/UF: ${escapeHtml(team.cityState || '-')}</div>
-          <div class="text-xs text-slate-600">Treinador: ${escapeHtml(team.coach || '-')}</div>
-          <div class="text-xs text-slate-600">Atletas:</div>
-          <div class="flex flex-wrap gap-1">${team.athletes.length ? team.athletes.map((athlete) => `<span class="inline-block px-2 py-0.5 rounded-full bg-white border border-slate-200 text-[11px]">${escapeHtml(formatAthleteDisplay(athlete))}</span>`).join('') : '<span class="text-[11px] text-slate-500">Sem atletas cadastrados.</span>'}</div>
-          <div class="text-[11px] text-slate-500">Outras informações: ${escapeHtml(team.notes || 'Sem observações adicionais.')}</div>
+        <div class="overflow-auto">
+          <table class="w-full text-xs">
+            <thead>
+              <tr class="text-left text-slate-500 border-b border-slate-200">
+                <th class="py-1 pr-2">#</th>
+                <th class="py-1 pr-2">Equipe</th>
+                ${withGroup ? '<th class="py-1 pr-2">Grupo</th>' : ''}
+                <th class="py-1 pr-2">Pts</th>
+                <th class="py-1 pr-2">V</th>
+                <th class="py-1 pr-2">SG</th>
+                <th class="py-1 pr-2">Q</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rows.map((row) => `
+                <tr class="border-b border-slate-100">
+                  <td class="py-1 pr-2">${row.rank ?? row.projectionRank ?? '-'}</td>
+                  <td class="py-1 pr-2 font-medium">${escapeHtml(row.team)}</td>
+                  ${withGroup ? `<td class="py-1 pr-2">${escapeHtml(row.group || '-')}</td>` : ''}
+                  <td class="py-1 pr-2">${row.points}</td>
+                  <td class="py-1 pr-2">${row.wins}</td>
+                  <td class="py-1 pr-2">${row.goalDiff}</td>
+                  <td class="py-1 pr-2">${Number.isFinite(row.quotient) ? row.quotient.toFixed(2) : '∞'}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
         </div>
       `;
     }
 
+    function renderGroupBoard(groups, category) {
+      const list = groups.filter((group) => group.category === category);
+      if (!list.length) return '<p class="text-xs text-slate-500">Sem chaves cadastradas.</p>';
+      return `<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2">${list.map((group) => `
+        <div class="border border-slate-200 rounded-lg p-2 bg-slate-50">
+          <p class="text-xs font-semibold text-slate-700 mb-1">${escapeHtml(group.name)}</p>
+          <ul class="text-xs text-slate-600 space-y-0.5">${(group.teams || []).map((team) => `<li>• ${escapeHtml(team)}</li>`).join('')}</ul>
+        </div>
+      `).join('')}</div>`;
+    }
+
     function renderCompetitions() {
-      const list = document.getElementById('competitions-list');
-      if (!list) return;
+      const container = document.getElementById('competitions-list');
+      if (!container) return;
       if (!AppState.competitions.length) {
-        list.innerHTML = '<div class="bg-white rounded-xl p-4 text-sm text-slate-500">Nenhuma competição cadastrada.</div>';
+        container.innerHTML = '<div class="bg-white rounded-xl p-4 text-sm text-slate-500">Nenhuma competição cadastrada.</div>';
         return;
       }
-      list.innerHTML = AppState.competitions.map((competition) => {
-        try {
-          const cacheSnapshot = readStateFromCache();
-          const cacheCompetition = cacheSnapshot?.competitions?.find((item) => item.id === competition.id);
-          console.debug('[Competições][Estado/cache]', {
-            competitionId: competition.id,
-            competitionName: competition.name,
-            inMemoryUpdatedAt: competition.updatedAt || '',
-            cacheUpdatedAt: cacheCompetition?.updatedAt || '',
-            inMemoryScheduleGames: Array.isArray(competition.schedule) ? competition.schedule.length : 0,
-            cacheScheduleGames: Array.isArray(cacheCompetition?.schedule) ? cacheCompetition.schedule.length : 0
-          });
-          const linkedScouts = getCompetitionLinkedScouts(competition.id);
-          const standings = buildCompetitionStandings(competition);
-          const maleGroups = [...standings.masculino.byGroup.entries()];
-          const femaleGroups = [...standings.feminino.byGroup.entries()];
-          const maleSerieBProjection = buildMaleSerieBProjection(standings.masculino.overall);
-          const femaleStrategy = buildFemaleStrategicSummary(femaleGroups.map(([name, rows]) => ({ name, rows })));
-          const femaleCrossings = buildFemaleCrossings(standings.feminino.byGroup);
-          const placeholders = collectCompetitionPlaceholders(competition);
 
-          const groups = (competition.groups || []).map((group) => `
-          <details class="border border-slate-200 rounded-lg p-2">
-            <summary class="cursor-pointer list-none flex items-center justify-between gap-2"><span class="font-medium text-sm">${escapeHtml(group.name)}</span><span class="text-xs text-slate-500">${escapeHtml(group.category || '-')}</span></summary>
-            <div class="mt-2 text-xs text-slate-600">
-              <div class="mb-1">${escapeHtml(group.notes || 'Sem observações')}</div>
-              <div>${group.teams.length ? group.teams.map((teamName) => `<span class="inline-block mr-1 mb-1 px-2 py-0.5 rounded-full bg-slate-100 border border-slate-200">${escapeHtml(teamName)}</span>`).join('') : 'Sem equipes na chave'}</div>
-            </div>
-          </details>
-        `).join('') || '<p class="text-xs text-slate-400">Sem chaves cadastradas.</p>';
-
-          const schedule = sortCompetitionSchedule(competition.schedule || []).map((game) => `
-          <tr class="border-b border-slate-100">
-            <td class="py-1">${escapeHtml(game.gameNumber || '-')}</td>
-            <td class="py-1">${escapeHtml(formatCompetitionDateTime(game))}</td>
-            <td class="py-1">${escapeHtml(game.teamA || '?')} x ${escapeHtml(game.teamB || '?')}</td>
-            <td class="py-1">${escapeHtml(game.phase || '-')}</td>
-            <td class="py-1"><span class="px-2 py-0.5 rounded-full border text-[11px] ${competitionCategoryChip(game.category)}">${escapeHtml(game.category || '-')}</span></td>
-            <td class="py-1">${escapeHtml(game.scoreA || '-')} x ${escapeHtml(game.scoreB || '-')}</td>
-            <td class="py-1"><button class="comp-edit-result text-xs underline text-blue-700" data-id="${competition.id}" data-game-id="${game.id}">resultado</button></td>
-          </tr>
-        `).join('') || '<tr><td colspan="7" class="py-2 text-slate-400">Sem jogos no cronograma.</td></tr>';
-
-          const maleGroupTables = maleGroups.map(([groupName, rows]) => `
-          <div class="overflow-auto border border-slate-200 rounded-lg p-2 bg-white">
-            <h5 class="text-xs font-semibold text-slate-700 mb-2">${escapeHtml(groupName)}</h5>
-            <table class="w-full text-xs">
-              <thead><tr class="text-left text-slate-500"><th>#</th><th>Equipe</th><th>J</th><th>V</th><th>E</th><th>D</th><th>GP</th><th>GC</th><th>SG</th><th>Q</th><th>PTS</th><th>Chave</th></tr></thead>
-              <tbody>${buildStandingsTableRows(rows)}</tbody>
-            </table>
-          </div>
-        `).join('') || '<p class="text-xs text-slate-400">Sem grupos masculinos para classificar.</p>';
-
-        const femaleGroupTables = femaleGroups.map(([groupName, rows]) => `
-          <div class="overflow-auto border border-slate-200 rounded-lg p-2 bg-white">
-            <h5 class="text-xs font-semibold text-slate-700 mb-2">${escapeHtml(groupName)}</h5>
-            <table class="w-full text-xs">
-              <thead><tr class="text-left text-slate-500"><th>#</th><th>Equipe</th><th>J</th><th>V</th><th>E</th><th>D</th><th>GP</th><th>GC</th><th>SG</th><th>Q</th><th>PTS</th><th>Chave</th></tr></thead>
-              <tbody>${buildStandingsTableRows(rows, 'femaleGroup')}</tbody>
-            </table>
-          </div>
-        `).join('') || '<p class="text-xs text-slate-400">Sem grupos femininos para classificar.</p>';
-
-          return `
-          <div class="bg-white rounded-xl p-4 card-shadow space-y-3">
-            <div class="flex flex-wrap items-start justify-between gap-2">
+      container.innerHTML = AppState.competitions.map((competition) => {
+        const standings = buildCompetitionStandings(competition);
+        const strategy = buildStrategySnapshot(standings);
+        const scheduleRows = sortCompetitionSchedule(competition.schedule || []);
+        return `
+          <article class="bg-white rounded-xl p-4 card-shadow space-y-4">
+            <div class="flex items-start justify-between gap-3">
               <div>
-                <h3 class="font-semibold text-slate-800">${escapeHtml(competition.name)}</h3>
+                <h3 class="text-lg font-semibold text-slate-800">${escapeHtml(competition.name)}</h3>
                 <p class="text-sm text-slate-500">${escapeHtml(competition.location || '-')} • ${escapeHtml(competition.cityState || '-')} • ${escapeHtml(competition.startDate || '-')} a ${escapeHtml(competition.endDate || '-')}</p>
               </div>
               <div class="flex gap-2">
                 <button class="comp-edit px-2 py-1 text-xs rounded border border-slate-300" data-id="${competition.id}">Editar</button>
-                <button class="comp-add-team px-2 py-1 text-xs rounded border border-slate-300" data-id="${competition.id}">+ Equipe</button>
-                <button class="comp-add-game px-2 py-1 text-xs rounded border border-slate-300" data-id="${competition.id}">+ Jogo</button>
-                <button class="comp-resolve-placeholders px-2 py-1 text-xs rounded border border-indigo-300 text-indigo-700" data-id="${competition.id}">Resolver sorteios</button>
                 <button class="comp-reset-results px-2 py-1 text-xs rounded border border-red-300 text-red-700" data-id="${competition.id}">Resetar resultados</button>
               </div>
             </div>
-            <div class="bg-indigo-50 border border-indigo-200 rounded-lg p-2">
-              <h4 class="text-xs font-semibold text-indigo-800 mb-2">🎲 Placeholders de sorteio</h4>
-              <div class="flex flex-wrap gap-2">
-                ${placeholders.length
-                  ? placeholders.map((placeholder) => `<button class="comp-resolve-placeholder px-2 py-1 text-xs rounded border border-indigo-300 bg-white text-indigo-700" data-id="${competition.id}" data-placeholder="${escapeAttribute(placeholder.name)}">${escapeHtml(placeholder.name)} (${placeholder.appearances.schedule} jogo(s), ${placeholder.appearances.groups} chave(s))</button>`).join('')
-                  : '<span class="text-xs text-indigo-700">Nenhum placeholder pendente.</span>'}
+
+            <section class="border border-slate-200 rounded-lg p-3">
+              <h4 class="text-xs font-semibold text-slate-600 mb-2">A) Dados da competição</h4>
+              <p class="text-xs text-slate-600">Hotel: ${escapeHtml(competition.hotel || '-')}</p>
+              <p class="text-xs text-slate-600">Observações: ${escapeHtml(competition.notes || '-')}</p>
+            </section>
+
+            <section class="border border-slate-200 rounded-lg p-3 space-y-2">
+              <h4 class="text-xs font-semibold text-slate-600">B) Quadro de chaves</h4>
+              <div>
+                <p class="text-xs font-medium text-blue-700 mb-1">Masculino</p>
+                ${renderGroupBoard(competition.groups || [], 'masculino')}
               </div>
-            </div>
-            <div class="grid lg:grid-cols-2 gap-3">
-              <div class="space-y-2">
-                <h4 class="text-xs font-semibold text-slate-600 mb-1">Chaves da competição (consulta rápida)</h4>
-                ${renderCompetitionGroupTables(competition) || '<p class="text-xs text-slate-400">Sem chaves cadastradas.</p>'}
+              <div>
+                <p class="text-xs font-medium text-pink-700 mb-1">Feminino</p>
+                ${renderGroupBoard(competition.groups || [], 'feminino')}
               </div>
-              <div class="space-y-2">
-                <h4 class="text-xs font-semibold text-slate-600 mb-1">Detalhes da equipe selecionada</h4>
-                ${renderCompetitionTeamConsultation(competition)}
-                <h4 class="text-xs font-semibold text-slate-600 mb-1 mt-3">Scouts vinculados (${linkedScouts.length})</h4>
-                <div class="text-xs text-slate-600 space-y-1">${linkedScouts.map((match) => `<div>• ${escapeHtml(formatMatchLabel(match))} ${match.matchRecordType ? `(${escapeHtml(match.matchRecordType)})` : ''}</div>`).join('') || 'Nenhum scout vinculado.'}</div>
-              </div>
-            </div>
-            <div><h4 class="text-xs font-semibold text-slate-600 mb-1">Chaves (${(competition.groups || []).length})</h4><div class="space-y-2">${groups}</div></div>
-            <div class="overflow-auto">
-              <table class="w-full text-xs">
-                <thead><tr class="text-left text-slate-500"><th>#</th><th>Data/Hora</th><th>Jogo</th><th>Fase</th><th>Categoria</th><th>Placar</th><th></th></tr></thead>
-                <tbody>${schedule}</tbody>
-              </table>
-            </div>
-            <div class="bg-slate-50 rounded-xl p-3 border border-slate-200 space-y-3">
-              <h4 class="font-semibold text-slate-700 text-sm">📊 Classificação e estratégia</h4>
-              <div class="grid lg:grid-cols-2 gap-3">
-                <div class="space-y-2"><h5 class="text-xs font-semibold text-blue-700">A) Tabela masculina por grupo</h5>${maleGroupTables}</div>
-                <div class="space-y-2 overflow-auto border border-slate-200 rounded-lg p-2 bg-white"><h5 class="text-xs font-semibold text-blue-700 mb-2">B) Ranking geral masculino</h5>
-                  <table class="w-full text-xs">
-                    <thead><tr class="text-left text-slate-500"><th>#</th><th>Equipe</th><th>J</th><th>V</th><th>E</th><th>D</th><th>GP</th><th>GC</th><th>SG</th><th>Q</th><th>PTS</th><th>Chave</th></tr></thead>
-                    <tbody>${buildStandingsTableRows(standings.masculino.overall, 'maleOverall')}</tbody>
-                  </table>
-                  <div class="mt-2 text-[11px] text-slate-600"><span class="inline-block px-2 py-0.5 rounded bg-emerald-100 mr-2">Top 4 (fora do sorteio)</span><span class="inline-block px-2 py-0.5 rounded bg-amber-100">5º ao 8º (zona de sorteio)</span></div>
-                </div>
-              </div>
-              <div class="space-y-2 overflow-auto border border-slate-200 rounded-lg p-2 bg-white">
-                <h5 class="text-xs font-semibold text-blue-700 mb-2">B.1) Projeção vaga Série B (masculino)</h5>
-                <p class="text-[11px] text-slate-600 mb-2">Regra ativa: APACE, ADEVIRN e FUNAD entram na tabela oficial, mas ficam fora apenas desta projeção.</p>
+            </section>
+
+            <section class="border border-slate-200 rounded-lg p-3">
+              <h4 class="text-xs font-semibold text-slate-600 mb-2">C) Cronograma</h4>
+              <div class="overflow-auto">
                 <table class="w-full text-xs">
-                  <thead><tr class="text-left text-slate-500"><th>#</th><th>Equipe</th><th>J</th><th>V</th><th>E</th><th>D</th><th>GP</th><th>GC</th><th>SG</th><th>Q</th><th>PTS</th><th>Chave</th></tr></thead>
-                  <tbody>${buildStandingsTableRows(maleSerieBProjection.rows, 'maleOverall')}</tbody>
+                  <thead>
+                    <tr class="text-left text-slate-500 border-b border-slate-200">
+                      <th class="py-1">#</th>
+                      <th class="py-1">Data/Hora</th>
+                      <th class="py-1">Jogo</th>
+                      <th class="py-1">Fase</th>
+                      <th class="py-1">Categoria</th>
+                      <th class="py-1">Placar</th>
+                      <th class="py-1"></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${scheduleRows.map((game) => `
+                      <tr class="border-b border-slate-100">
+                        <td class="py-1">${escapeHtml(game.gameNumber || '-')}</td>
+                        <td class="py-1">${escapeHtml([game.date, game.time].filter(Boolean).join(' ') || '-')}</td>
+                        <td class="py-1">${escapeHtml(game.teamA || '-')} x ${escapeHtml(game.teamB || '-')}</td>
+                        <td class="py-1">${escapeHtml(game.phase || '-')}</td>
+                        <td class="py-1"><span class="px-2 py-0.5 rounded-full border ${competitionCategoryChip(game.category)}">${escapeHtml(game.category || '-')}</span></td>
+                        <td class="py-1">${game.scoreA === '' && game.scoreB === '' ? '-' : `${escapeHtml(String(game.scoreA))} x ${escapeHtml(String(game.scoreB))}`}</td>
+                        <td class="py-1"><button class="comp-edit-result text-blue-700 underline" data-id="${competition.id}" data-game-id="${game.id}">resultado</button></td>
+                      </tr>
+                    `).join('')}
+                  </tbody>
                 </table>
-                <div class="mt-2 text-[11px] text-slate-600">${maleSerieBProjection.excludedTeams.length ? `Excluídas da projeção: ${escapeHtml(maleSerieBProjection.excludedTeams.map((team) => team.name).join(', '))}.` : 'Nenhuma equipe excluída da projeção no momento.'}</div>
               </div>
-              <div class="space-y-2"><h5 class="text-xs font-semibold text-pink-700">C) Tabelas femininas por grupo</h5>${femaleGroupTables}</div>
-              <div class="grid lg:grid-cols-2 gap-3">
-                <div class="bg-white rounded-lg border border-slate-200 p-3">
-                  <h5 class="text-xs font-semibold text-blue-700 mb-2">D) Resumo estratégico masculino</h5>
-                  <ul class="text-xs text-slate-700 space-y-1">${maleSerieBProjection.messages.map((item) => `<li>• ${escapeHtml(item)}</li>`).join('')}</ul>
-                </div>
-                <div class="bg-white rounded-lg border border-slate-200 p-3">
-                  <h5 class="text-xs font-semibold text-pink-700 mb-2">E) Resumo estratégico feminino</h5>
-                  <ul class="text-xs text-slate-700 space-y-1">${femaleStrategy.map((item) => `<li>• ${escapeHtml(item)}</li>`).join('')}</ul>
-                </div>
+            </section>
+
+            <section class="border border-slate-200 rounded-lg p-3 space-y-2">
+              <h4 class="text-xs font-semibold text-slate-600">D) Classificação</h4>
+              <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
+                ${standings.groups.filter((group) => group.category === 'masculino').map((group) => `
+                  <div class="border border-slate-100 rounded p-2">
+                    <p class="text-xs font-medium text-blue-700 mb-1">Masculino ${escapeHtml(group.name)}</p>
+                    ${renderStandingsTable(group.table)}
+                  </div>
+                `).join('') || '<p class="text-xs text-slate-500">Sem grupos masculinos.</p>'}
               </div>
-              <div class="bg-white rounded-lg border border-slate-200 p-3">
-                <h5 class="text-xs font-semibold text-slate-700 mb-2">F) Cruzamentos prováveis</h5>
-                <div class="text-xs text-slate-700 space-y-1">
-                  <div><strong>Masculino:</strong> foco no Top 4 geral para ficar fora da zona de sorteio; do 5º ao 8º entram na zona de sorteio.</div>
-                  <div><strong>Feminino:</strong></div>
-                  <div>• ${escapeHtml(femaleCrossings.matches[0])}</div>
-                  <div>• ${escapeHtml(femaleCrossings.matches[1])}</div>
-                </div>
+              <div>
+                <p class="text-xs font-medium text-blue-700 mb-1">Ranking geral masculino</p>
+                ${renderStandingsTable(standings.maleGeneralRanking, true)}
               </div>
-            </div>
-          </div>
-          `;
-        } catch (error) {
-          console.error('[Competições] Falha ao renderizar competição', { competitionId: competition?.id, error });
-          return `
-            <div class="bg-white rounded-xl p-4 border border-red-200">
-              <h3 class="font-semibold text-red-700">${escapeHtml(competition?.name || 'Competição')}</h3>
-              <p class="text-sm text-red-600 mt-1">Não foi possível renderizar esta competição. Verifique os dados importados e tente importar novamente com teams, groups e schedule completos.</p>
-            </div>
-          `;
-        }
+              <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
+                ${standings.groups.filter((group) => group.category === 'feminino').map((group) => `
+                  <div class="border border-slate-100 rounded p-2">
+                    <p class="text-xs font-medium text-pink-700 mb-1">Feminino ${escapeHtml(group.name)}</p>
+                    ${renderStandingsTable(group.table)}
+                  </div>
+                `).join('') || '<p class="text-xs text-slate-500">Sem grupos femininos.</p>'}
+              </div>
+            </section>
+
+            <section class="border border-slate-200 rounded-lg p-3 space-y-2">
+              <h4 class="text-xs font-semibold text-slate-600">E) Estratégia</h4>
+              <p class="text-xs"><strong>Top 4 masculino:</strong> ${strategy.maleTop4.map((row) => row.team).join(', ') || '-'}</p>
+              <p class="text-xs"><strong>5º ao 8º masculino (zona de sorteio):</strong> ${strategy.maleDrawZone.map((row) => row.team).join(', ') || '-'}</p>
+              <p class="text-xs"><strong>Cruzamentos prováveis feminino:</strong> ${strategy.femaleCrossings.join(' • ')}</p>
+              <p class="text-xs"><strong>Projeção vaga Série B masculina</strong> (exclui APACE, ADEVIRN, FUNAD):</p>
+              ${renderStandingsTable(strategy.serieBProjection, true)}
+            </section>
+          </article>
+        `;
       }).join('');
     }
-
-    // =====================================================
-    // EVENT LISTENERS
-    // =====================================================
-    
-    function initializeEventListeners() {
-      // Tab navigation
-      document.querySelectorAll('.tab-btn').forEach(btn => {
-        btn.addEventListener('click', () => switchTab(btn.dataset.tab));
-      });
-      
-      // Config tab
-      document.getElementById('opponent-toggle').addEventListener('change', (e) => {
-        AppState.config.showOpponent = e.target.checked;
-        document.getElementById('opponent-section').classList.toggle('hidden', !e.target.checked);
-        saveToLocalStorage();
-      });
-
-      document.getElementById('saved-my-team-select').addEventListener('change', (e) => {
-        if (!e.target.value) {
-          clearSavedTeamSelection('my');
-          return;
-        }
-        applySavedTeamToConfig(e.target.value, 'my');
-      });
-
-      document.getElementById('saved-opponent-team-select').addEventListener('change', (e) => {
-        if (!e.target.value) {
-          clearSavedTeamSelection('opponent');
-          return;
-        }
-        applySavedTeamToConfig(e.target.value, 'opponent');
-      });
-
-      document.getElementById('clear-my-team-selection').addEventListener('click', () => clearSavedTeamSelection('my'));
-      document.getElementById('clear-opponent-team-selection').addEventListener('click', () => clearSavedTeamSelection('opponent'));
-      document.getElementById('new-team-btn').addEventListener('click', resetTeamEditor);
-      document.getElementById('cancel-team-edit').addEventListener('click', resetTeamEditor);
-      document.getElementById('save-team-btn').addEventListener('click', saveTeamEditor);
-      document.getElementById('delete-team-btn').addEventListener('click', () => deleteTeamFromRegistry(teamEditorState.id));
-      document.getElementById('add-team-athlete').addEventListener('click', () => {
-        teamEditorState.athletes.push(createEmptyAthleteDraft());
-        renderTeamEditor();
-      });
-
-      document.getElementById('teams-management-list').addEventListener('click', (e) => {
-        const expandBtn = e.target.closest('.team-expand-btn');
-        const editBtn = e.target.closest('.team-edit-btn');
-        const useBtn = e.target.closest('.team-use-btn');
-        if (expandBtn) {
-          const teamId = expandBtn.dataset.teamId;
-          if (expandedTeamIds.has(teamId)) expandedTeamIds.delete(teamId);
-          else expandedTeamIds.add(teamId);
-          renderTeamManagement();
-          return;
-        }
-        if (editBtn) loadTeamIntoEditor(editBtn.dataset.teamId);
-        if (useBtn) applySavedTeamToConfig(useBtn.dataset.teamId, useBtn.dataset.side);
-      });
-
-      document.getElementById('team-athletes-form-list').addEventListener('click', (e) => {
-        const removeBtn = e.target.closest('.remove-team-athlete');
-        if (!removeBtn) return;
-        const index = Number(removeBtn.dataset.index);
-        teamEditorState.athletes.splice(index, 1);
-        if (!teamEditorState.athletes.length) teamEditorState.athletes.push(createEmptyAthleteDraft());
-        renderTeamEditor();
-      });
-
-      document.getElementById('team-athletes-form-list').addEventListener('input', () => {
-        refreshTeamEditorValidationFromDom();
-      });
-
-      ['team-form-name', 'team-form-location', 'team-form-category', 'team-form-coach', 'team-form-gender'].forEach(id => {
-        document.getElementById(id).addEventListener('input', () => {
-          teamEditorState = collectTeamEditorData();
-          if (id === 'team-form-gender') renderTeamEditor();
-        });
-      });
-      
-      document.getElementById('save-config').addEventListener('click', saveConfig);
-      document.getElementById('config-competition-link').addEventListener('change', (e) => {
-        AppState.config.linkedCompetitionId = e.target.value || '';
-        AppState.config.linkedScheduleGameId = '';
-        renderCompetitionSelectors();
-      });
-      document.getElementById('config-schedule-link').addEventListener('change', (e) => {
-        AppState.config.linkedScheduleGameId = e.target.value || '';
-      });
-      document.addEventListener('input', (e) => {
-        if (e.target.closest('.my-athlete-name, .my-athlete-number, .opp-athlete-name, .opp-athlete-number')) {
-          updateConfigAthleteValidationHighlights();
-        }
-      });
-
-      document.getElementById('training-group-select').addEventListener('change', (e) => {
-        ensureTrainingGroupsState();
-        AppState.config.selectedTrainingGroupId = e.target.value || AppState.trainingGroups[0]?.id || '';
-        renderTrainingModule();
-        saveToLocalStorage();
-      });
-      document.getElementById('add-training-group-btn').addEventListener('click', () => {
-        const newGroup = createEmptyTrainingGroup();
-        AppState.trainingGroups.push(newGroup);
-        AppState.config.selectedTrainingGroupId = newGroup.id;
-        renderTrainingModule();
-        saveToLocalStorage();
-      });
-      document.getElementById('delete-training-group-btn').addEventListener('click', () => {
-        ensureTrainingGroupsState();
-        if (AppState.trainingGroups.length <= 1) {
-          showToast('⚠️ É necessário manter pelo menos um grupo de treino.');
-          return;
-        }
-        AppState.trainingGroups = AppState.trainingGroups.filter(group => group.id !== AppState.config.selectedTrainingGroupId);
-        AppState.config.selectedTrainingGroupId = AppState.trainingGroups[0]?.id || '';
-        renderTrainingModule();
-        saveToLocalStorage();
-      });
-      document.getElementById('training-group-name').addEventListener('input', (e) => {
-        const selectedGroup = getSelectedTrainingGroup();
-        if (!selectedGroup) return;
-        selectedGroup.name = String(e.target.value || '').trim() || 'Grupo de treino';
-        renderTrainingGroupManagement();
-        saveToLocalStorage();
-      });
-      document.getElementById('add-training-athlete-btn').addEventListener('click', () => {
-        const selectedGroup = getSelectedTrainingGroup();
-        if (!selectedGroup) return;
-        selectedGroup.athletes.push(createEmptyAthleteDraft());
-        renderTrainingModule();
-        saveToLocalStorage();
-      });
-      document.getElementById('training-group-athletes-list').addEventListener('input', (e) => {
-        const idx = Number(e.target.dataset.index);
-        const selectedGroup = getSelectedTrainingGroup();
-        if (!selectedGroup || Number.isNaN(idx) || !selectedGroup.athletes[idx]) return;
-        if (e.target.classList.contains('training-group-athlete-name')) selectedGroup.athletes[idx].name = e.target.value;
-        if (e.target.classList.contains('training-group-athlete-number')) selectedGroup.athletes[idx].number = e.target.value;
-        renderTrainingResultsGrid();
-        renderTrainingAnalysis();
-        saveToLocalStorage();
-      });
-      document.getElementById('training-group-athletes-list').addEventListener('click', (e) => {
-        const btn = e.target.closest('.remove-training-athlete-btn');
-        if (!btn) return;
-        const idx = Number(btn.dataset.index);
-        const selectedGroup = getSelectedTrainingGroup();
-        if (!selectedGroup || Number.isNaN(idx)) return;
-        selectedGroup.athletes.splice(idx, 1);
-        renderTrainingModule();
-        saveToLocalStorage();
-      });
-
-      document.getElementById('add-training-activity').addEventListener('click', () => {
-        if (!trainingDraftState) trainingDraftState = createEmptyTrainingDraft();
-        trainingDraftState.activities.push(createEmptyTrainingActivity());
-        renderTrainingModule();
-      });
-      document.getElementById('training-activities-list').addEventListener('input', (e) => {
-        const idx = Number(e.target.dataset.index);
-        if (Number.isNaN(idx) || !trainingDraftState?.activities[idx]) return;
-        if (e.target.classList.contains('training-activity-name')) trainingDraftState.activities[idx].name = e.target.value;
-        if (e.target.classList.contains('training-activity-measure')) trainingDraftState.activities[idx].measureType = e.target.value;
-        renderTrainingResultsGrid();
-      });
-      document.getElementById('training-activities-list').addEventListener('click', (e) => {
-        const btn = e.target.closest('.remove-training-activity');
-        if (!btn || !trainingDraftState) return;
-        const idx = Number(btn.dataset.index);
-        trainingDraftState.activities.splice(idx, 1);
-        if (!trainingDraftState.activities.length) trainingDraftState.activities.push(createEmptyTrainingActivity());
-        renderTrainingModule();
-      });
-      document.getElementById('training-results-grid').addEventListener('input', (e) => {
-        if (!e.target.classList.contains('training-result-input') || !trainingDraftState) return;
-        const key = `${e.target.dataset.activityId}::${e.target.dataset.athleteId}`;
-        trainingDraftState.results[key] = e.target.value;
-      });
-      ['training-date', 'training-type', 'training-notes'].forEach((id) => {
-        document.getElementById(id).addEventListener('input', (e) => {
-          if (!trainingDraftState) trainingDraftState = createEmptyTrainingDraft();
-          if (id === 'training-date') trainingDraftState.date = e.target.value;
-          if (id === 'training-type') trainingDraftState.type = e.target.value;
-          if (id === 'training-notes') trainingDraftState.notes = e.target.value;
-        });
-      });
-      document.getElementById('save-training-btn').addEventListener('click', saveTraining);
-      document.getElementById('training-history-list').addEventListener('click', (e) => {
-        const btn = e.target.closest('.delete-training-btn');
-        if (!btn) return;
-        const trainingId = btn.dataset.trainingId;
-        AppState.trainings = AppState.trainings.filter(training => training.id !== trainingId);
-        saveToLocalStorage();
-        renderTrainingModule();
-        showToast('🗑️ Treino removido.');
-      });
-      document.getElementById('training-analysis-activity').addEventListener('change', renderTrainingAnalysis);
-      document.getElementById('training-athlete-compare').addEventListener('change', renderTrainingAnalysis);
 
       document.getElementById('competition-new-btn').addEventListener('click', resetCompetitionForm);
       document.getElementById('competition-save-btn').addEventListener('click', () => {
@@ -9513,18 +7539,7 @@ function renderHeatmap(optionsOrFilter) {
           return;
         }
         try {
-          const {
-            competition,
-            createdTeams,
-            reusedTeams,
-            totalImportedTeams,
-            totalImportedGames,
-            removedAutomaticGames,
-            replacedImportedGames,
-            failedTeams,
-            removedTemporaryTeams,
-            teamNormalizationReport
-          } = importCompetitionFromJson(rawText);
+          const { competition } = importCompetitionFromJson(rawText);
           document.getElementById('competition-form-name').value = competition.name || '';
           document.getElementById('competition-form-location').value = competition.location || '';
           document.getElementById('competition-form-city').value = competition.cityState || '';
@@ -9534,88 +7549,19 @@ function renderHeatmap(optionsOrFilter) {
           document.getElementById('competition-form-notes').value = competition.notes || '';
           document.getElementById('competition-save-btn').dataset.editingId = competition.id;
           document.getElementById('competition-delete-btn').classList.remove('hidden');
-          renderTeamManagement();
-          renderSavedTeamSelectors();
           renderCompetitions();
           renderCompetitionSelectors();
           saveToLocalStorage();
-          const failedCount = Array.isArray(failedTeams) ? failedTeams.length : 0;
-          const removedSlotsCount = Array.isArray(removedTemporaryTeams) ? removedTemporaryTeams.length : 0;
-          const correctedTeams = Array.isArray(teamNormalizationReport?.correctedTeams) ? teamNormalizationReport.correctedTeams : [];
-          const correctedCount = Number(teamNormalizationReport?.correctedCount || 0);
-          const correctedPreview = correctedTeams.slice(0, 6).join(', ');
-          const correctedSuffix = correctedTeams.length > 6 ? ` e +${correctedTeams.length - 6}` : '';
-          const correctedLabel = correctedCount
-            ? `normalização de equipes: ${correctedCount}${correctedPreview ? ` (${correctedPreview}${correctedSuffix})` : ''}`
-            : 'normalização de equipes: 0';
-          showToast(`✅ Importação concluída: ${competition.name}. Equipes: ${totalImportedTeams} (criadas: ${createdTeams}; reaproveitadas: ${reusedTeams}); jogos importados: ${totalImportedGames}; jogos antigos removidos: ${removedAutomaticGames + replacedImportedGames}; marcadores removidos do cadastro: ${removedSlotsCount}; ${correctedLabel}; falhas: ${failedCount}.`);
+          showToast(`✅ Importação concluída: ${competition.name}.`);
         } catch (error) {
           console.error('Importação de competição falhou:', error);
           showToast(`⚠️ Falha na importação: ${error.message || 'JSON inválido.'}`);
         }
       });
-      document.getElementById('competition-apply-real-teams-btn').addEventListener('click', () => {
-        try {
-          const report = applyRegionalNordesteRealTeamsData();
-          showToast(`✅ Cadastro real aplicado em ${report.updatedCompetitionTeams.length} equipe(s) de ${report.competitionName}.`);
-        } catch (error) {
-          showToast(`⚠️ ${error.message || 'Falha ao aplicar cadastro real das equipes.'}`);
-        }
-      });
       document.getElementById('competitions-list').addEventListener('click', (e) => {
         const editBtn = e.target.closest('.comp-edit');
-        const teamConsultBtn = e.target.closest('.comp-team-consult');
-        const addTeamBtn = e.target.closest('.comp-add-team');
-        const addGameBtn = e.target.closest('.comp-add-game');
-        const resolveAllPlaceholdersBtn = e.target.closest('.comp-resolve-placeholders');
-        const resolvePlaceholderBtn = e.target.closest('.comp-resolve-placeholder');
         const resetResultsBtn = e.target.closest('.comp-reset-results');
         const resultBtn = e.target.closest('.comp-edit-result');
-        if (teamConsultBtn) {
-          const competition = AppState.competitions.find((item) => item.id === teamConsultBtn.dataset.id);
-          if (!competition) return;
-          const teamName = teamConsultBtn.dataset.team || '';
-          competitionTeamConsultState.selectedByCompetitionId[competition.id] = teamName;
-          if (isPlaceholderTeamName(teamName)) {
-            showToast(`ℹ️ ${teamName} é um placeholder pendente.`);
-          }
-          renderCompetitions();
-          return;
-        }
-        if (resolveAllPlaceholdersBtn || resolvePlaceholderBtn) {
-          const competitionId = resolveAllPlaceholdersBtn?.dataset.id || resolvePlaceholderBtn?.dataset.id || '';
-          const competition = AppState.competitions.find((item) => item.id === competitionId);
-          if (!competition) return;
-          const placeholders = collectCompetitionPlaceholders(competition);
-          if (!placeholders.length) {
-            showToast('ℹ️ Não há placeholders pendentes nesta competição.');
-            return;
-          }
-          const selectedPlaceholder = resolvePlaceholderBtn
-            ? placeholders.find((item) => normalizeNameKey(item.name) === normalizeNameKey(resolvePlaceholderBtn.dataset.placeholder))
-            : null;
-          const queue = selectedPlaceholder ? [selectedPlaceholder] : placeholders;
-          let resolvedCount = 0;
-          let scheduleUpdates = 0;
-          let groupUpdates = 0;
-          let matchUpdates = 0;
-          for (const placeholder of queue) {
-            const replacementTeam = pickTeamForPlaceholder(competition, placeholder);
-            if (!replacementTeam?.name) continue;
-            const result = replacePlaceholderInCompetition(competition, placeholder.name, replacementTeam);
-            resolvedCount += 1;
-            scheduleUpdates += result.scheduleUpdates;
-            groupUpdates += result.groupUpdates;
-            matchUpdates += result.matchUpdates;
-          }
-          if (!resolvedCount) return;
-          renderCompetitions();
-          renderCompetitionSelectors();
-          renderConfig();
-          saveToLocalStorage();
-          showToast(`✅ Sorteios resolvidos: ${resolvedCount}. Cronograma atualizado: ${scheduleUpdates}; chaves atualizadas: ${groupUpdates}; referências atualizadas: ${matchUpdates}.`);
-          return;
-        }
         if (editBtn) {
           const competition = AppState.competitions.find((item) => item.id === editBtn.dataset.id);
           if (!competition) return;
@@ -9630,47 +7576,10 @@ function renderHeatmap(optionsOrFilter) {
           document.getElementById('competition-delete-btn').classList.remove('hidden');
           return;
         }
-        if (addTeamBtn) {
-          const competition = AppState.competitions.find((item) => item.id === addTeamBtn.dataset.id);
-          if (!competition) return;
-          const name = prompt('Nome da equipe:');
-          if (!name) return;
-          const cityState = prompt('Cidade/UF:') || '';
-          const coach = prompt('Treinador (consulta):') || '';
-          const category = normalizeCompetitionCategory(prompt('Categoria: masculino ou feminino') || '');
-          const athletesRaw = prompt('Atletas (separados por vírgula):') || '';
-          const athletes = athletesRaw.split(',').map((entry, index) => normalizeAthlete({ id: `a-${index}`, name: entry.trim() })).filter((athlete) => athlete.name);
-          competition.teams.push(normalizeCompetitionTeam({ name, cityState, coach, category, athletes }));
-          competition.updatedAt = new Date().toISOString();
-          renderCompetitions();
-          saveToLocalStorage();
-          return;
-        }
-        if (addGameBtn) {
-          const competition = AppState.competitions.find((item) => item.id === addGameBtn.dataset.id);
-          if (!competition) return;
-          const game = normalizeCompetitionGame({
-            source: 'manual',
-            gameNumber: prompt('Número do jogo:') || '',
-            date: prompt('Data (AAAA-MM-DD):') || '',
-            time: prompt('Horário (HH:MM):') || '',
-            teamA: prompt('Equipe A:') || '',
-            teamB: prompt('Equipe B:') || '',
-            phase: prompt('Chave/Fase:') || '',
-            category: prompt('Categoria: masculino ou feminino') || ''
-          });
-          competition.schedule.push(game);
-          competition.updatedAt = new Date().toISOString();
-          renderCompetitions();
-          renderCompetitionSelectors();
-          saveToLocalStorage();
-          return;
-        }
         if (resetResultsBtn) {
           const competition = AppState.competitions.find((item) => item.id === resetResultsBtn.dataset.id);
           if (!competition) return;
-          const confirmed = window.confirm('Tem certeza que deseja apagar todos os placares desta competição?');
-          if (!confirmed) return;
+          if (!window.confirm('Tem certeza que deseja apagar todos os placares desta competição?')) return;
           const clearedGames = resetCompetitionResults(competition);
           renderCompetitions();
           saveToLocalStorage();
@@ -9680,54 +7589,19 @@ function renderHeatmap(optionsOrFilter) {
         if (resultBtn) {
           const competition = AppState.competitions.find((item) => item.id === resultBtn.dataset.id);
           const game = competition?.schedule.find((item) => item.id === resultBtn.dataset.gameId);
-          if (!game) return;
+          if (!competition || !game) return;
           const nextScoreA = prompt('Placar equipe A:', game.scoreA || '');
+          if (nextScoreA === null) return;
           const nextScoreB = prompt('Placar equipe B:', game.scoreB || '');
-          game.scoreA = nextScoreA ?? '';
-          game.scoreB = nextScoreB ?? '';
+          if (nextScoreB === null) return;
+          game.scoreA = String(nextScoreA).trim();
+          game.scoreB = String(nextScoreB).trim();
           competition.updatedAt = new Date().toISOString();
-          console.debug('[Competições][Salvar resultado] payload antes de persistir', {
-            competitionId: competition.id,
-            competitionName: competition.name,
-            gameId: game.id,
-            gameNumber: game.gameNumber || '',
-            teamA: game.teamA || '',
-            teamB: game.teamB || '',
-            category: game.category || '',
-            goalsA: game.scoreA,
-            goalsB: game.scoreB
-          });
           renderCompetitions();
           saveToLocalStorage();
-          const persistedCompetition = AppState.competitions.find((item) => item.id === competition.id);
-          const persistedGame = persistedCompetition?.schedule?.find((item) => item.id === game.id);
-          const cacheSnapshot = readStateFromCache();
-          const cacheGame = cacheSnapshot?.competitions
-            ?.find((item) => item.id === competition.id)
-            ?.schedule?.find((item) => item.id === game.id);
-          console.debug('[Competições][Salvar resultado] confirmação de persistência', {
-            inMemory: persistedGame
-              ? {
-                competitionId: persistedCompetition.id,
-                gameId: persistedGame.id,
-                gameNumber: persistedGame.gameNumber || '',
-                goalsA: persistedGame.scoreA ?? '',
-                goalsB: persistedGame.scoreB ?? ''
-              }
-              : null,
-            localCache: cacheGame
-              ? {
-                competitionId: competition.id,
-                gameId: cacheGame.id,
-                gameNumber: cacheGame.gameNumber || '',
-                goalsA: cacheGame.scoreA ?? '',
-                goalsB: cacheGame.scoreB ?? ''
-              }
-              : null
-          });
         }
       });
-      
+
       // Escalação tab
       document.querySelectorAll('.phase-btn').forEach(btn => {
         btn.addEventListener('click', () => {
