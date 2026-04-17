@@ -4191,6 +4191,18 @@ function purgeTemporaryCompetitionSlotsFromRegistry() {
         });
       }
     }
+
+    function initializePrimaryUiListeners() {
+      document.querySelectorAll('.tab-btn').forEach((btn) => {
+        if (btn.dataset.listenerBound === 'true') return;
+        btn.addEventListener('click', () => {
+          const tabId = btn.dataset.tab;
+          if (!tabId) return;
+          switchTab(tabId);
+        });
+        btn.dataset.listenerBound = 'true';
+      });
+    }
     
     // =====================================================
     // CONFIG TAB FUNCTIONS
@@ -8654,6 +8666,7 @@ populateHeatmapAthletes();
       ensureTrainingGroupsState();
       rebuildGlobalAthleteRegistry();
       trainingDraftState = createEmptyTrainingDraft();
+      initializePrimaryUiListeners();
       loadConfigToForm();
       renderAthleteInputs();
       renderSavedTeamSelectors();
