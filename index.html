@@ -1475,7 +1475,7 @@
       return {
         id: String(group.id || `comp-group-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`),
         name: String(group.name || group.key || group.chave || '').trim(),
-        category: normalizeCompetitionCategory(group.category),
+        category: normalizeCompetitionCategory(group.category || group.name),
         teams: sourceTeams.map((team) => String(typeof team === 'string' ? team : team?.name || '').trim()).filter(Boolean),
         notes: String(group.notes || '').trim()
       };
@@ -4643,6 +4643,106 @@ function purgeTemporaryCompetitionSlotsFromRegistry() {
       resetTeamEditor();
       showToast('🗑️ Equipe excluída.');
     }
+
+    function initializeConfigTabListeners() {
+      const bindOnce = (element, key, eventName, handler) => {
+        if (!element) return;
+        if (element.dataset[key] === 'true') return;
+        element.addEventListener(eventName, handler);
+        element.dataset[key] = 'true';
+      };
+
+      bindOnce(document.getElementById('save-config'), 'listenerBound', 'click', saveConfig);
+
+      bindOnce(document.getElementById('opponent-toggle'), 'listenerBound', 'change', (e) => {
+        AppState.config.showOpponent = e.target.checked;
+        document.getElementById('opponent-section').classList.toggle('hidden', !AppState.config.showOpponent);
+        saveToLocalStorage();
+      });
+
+      bindOnce(document.getElementById('saved-my-team-select'), 'listenerBound', 'change', (e) => {
+        const teamId = e.target.value || '';
+        if (!teamId) return clearSavedTeamSelection('my');
+        applySavedTeamToConfig(teamId, 'my');
+      });
+
+      bindOnce(document.getElementById('saved-opponent-team-select'), 'listenerBound', 'change', (e) => {
+        const teamId = e.target.value || '';
+        if (!teamId) return clearSavedTeamSelection('opponent');
+        applySavedTeamToConfig(teamId, 'opponent');
+      });
+
+      bindOnce(document.getElementById('clear-my-team-selection'), 'listenerBound', 'click', () => clearSavedTeamSelection('my'));
+      bindOnce(document.getElementById('clear-opponent-team-selection'), 'listenerBound', 'click', () => clearSavedTeamSelection('opponent'));
+
+      bindOnce(document.getElementById('new-team-btn'), 'listenerBound', 'click', resetTeamEditor);
+      bindOnce(document.getElementById('cancel-team-edit'), 'listenerBound', 'click', resetTeamEditor);
+      bindOnce(document.getElementById('save-team-btn'), 'listenerBound', 'click', saveTeamEditor);
+      bindOnce(document.getElementById('delete-team-btn'), 'listenerBound', 'click', () => {
+        if (!teamEditorState.id) return;
+        deleteTeamFromRegistry(teamEditorState.id);
+      });
+
+      bindOnce(document.getElementById('add-team-athlete'), 'listenerBound', 'click', () => {
+        const draft = collectTeamEditorData();
+        teamEditorState = { ...draft, athletes: [...draft.athletes, createEmptyAthleteDraft()] };
+        renderTeamEditor();
+      });
+
+      bindOnce(document.getElementById('team-athletes-form-list'), 'listenerBound', 'click', (e) => {
+        const removeBtn = e.target.closest('.remove-team-athlete');
+        if (!removeBtn) return;
+        const index = Number.parseInt(removeBtn.dataset.index || '-1', 10);
+        if (!Number.isInteger(index) || index < 0) return;
+        const draft = collectTeamEditorData();
+        const nextAthletes = draft.athletes.filter((_, idx) => idx !== index);
+        teamEditorState = { ...draft, athletes: nextAthletes.length ? nextAthletes : [createEmptyAthleteDraft()] };
+        renderTeamEditor();
+      });
+
+      bindOnce(document.getElementById('team-athletes-form-list'), 'listenerInputBound', 'input', refreshTeamEditorValidationFromDom);
+
+      ['team-form-name', 'team-form-location', 'team-form-category', 'team-form-coach', 'team-form-gender'].forEach((id) => {
+        bindOnce(document.getElementById(id), 'listenerBound', 'input', refreshTeamEditorValidationFromDom);
+      });
+
+      bindOnce(document.getElementById('config-competition-link'), 'listenerBound', 'change', (e) => {
+        AppState.config.linkedCompetitionId = e.target.value || '';
+        AppState.config.linkedScheduleGameId = '';
+        renderCompetitionSelectors();
+        saveToLocalStorage();
+      });
+
+      bindOnce(document.getElementById('teams-management-list'), 'listenerBound', 'click', (e) => {
+        const expandBtn = e.target.closest('.team-expand-btn');
+        if (expandBtn) {
+          const teamId = expandBtn.dataset.teamId || '';
+          if (!teamId) return;
+          if (expandedTeamIds.has(teamId)) expandedTeamIds.delete(teamId);
+          else expandedTeamIds.add(teamId);
+          renderTeamManagement();
+          return;
+        }
+
+        const useBtn = e.target.closest('.team-use-btn');
+        if (useBtn) {
+          const teamId = useBtn.dataset.teamId || '';
+          const side = useBtn.dataset.side === 'opponent' ? 'opponent' : 'my';
+          if (!teamId) return;
+          applySavedTeamToConfig(teamId, side);
+          return;
+        }
+
+        const editBtn = e.target.closest('.team-edit-btn');
+        if (editBtn) {
+          const teamId = editBtn.dataset.teamId || '';
+          if (!teamId) return;
+          expandedTeamIds.add(teamId);
+          loadTeamIntoEditor(teamId);
+          renderTeamManagement();
+        }
+      });
+    }
     
     // =====================================================
     // ESCALAÇÃO TAB FUNCTIONS
@@ -7382,7 +7482,21 @@ function renderHeatmap(optionsOrFilter) {
     }
 
     function renderGroupBoard(groups, category) {
-      const list = groups.filter((group) => group.category === category);
+      const seenKeys = new Set();
+      const list = groups
+        .map((group) => ({
+          ...group,
+          category: normalizeCompetitionCategory(group.category || group.name),
+          teams: [...new Set((group.teams || []).map((team) => String(team || '').trim()).filter(Boolean))]
+        }))
+        .filter((group) => group.category === category)
+        .filter((group) => {
+          const keyName = normalizeNameKey(group.name);
+          const dedupeKey = `${group.category}::${keyName}`;
+          if (!keyName || seenKeys.has(dedupeKey)) return false;
+          seenKeys.add(dedupeKey);
+          return true;
+        });
       if (!list.length) return '<p class="text-xs text-slate-500">Sem chaves cadastradas.</p>';
       return `<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2">${list.map((group) => `
         <div class="border border-slate-200 rounded-lg p-2 bg-slate-50">
@@ -8667,6 +8781,7 @@ populateHeatmapAthletes();
       rebuildGlobalAthleteRegistry();
       trainingDraftState = createEmptyTrainingDraft();
       initializePrimaryUiListeners();
+      initializeConfigTabListeners();
       loadConfigToForm();
       renderAthleteInputs();
       renderSavedTeamSelectors();
