@@ -1561,7 +1561,10 @@
       const groups = dedupeCompetitionGroups(competition.groups || []);
       const resolvedGroups = groups.map((group) => ({
         ...group,
-        teams: (group.teams || []).map((teamName) => resolveCompetitionDrawTeamName(competition, group.category, teamName))
+        teams: (group.teams || [])
+          .map((teamName) => resolveCompetitionDrawTeamName(competition, group.category, teamName))
+          .map((teamName) => String(teamName || '').trim())
+          .filter(Boolean)
       }));
       const resolvedSchedule = (competition.schedule || []).map((game) => {
         const category = resolveCompetitionGameCategory(game, groups);
@@ -1577,6 +1580,68 @@
         groups: resolvedGroups,
         schedule: resolvedSchedule
       };
+    }
+
+    function dedupeCompetitionTeams(teamNames = []) {
+      const seen = new Set();
+      return (teamNames || [])
+        .map((teamName) => String(teamName || '').trim())
+        .filter(Boolean)
+        .filter((teamName) => {
+          const teamKey = normalizeTeamReferenceKey(teamName);
+          if (!teamKey || seen.has(teamKey)) return false;
+          seen.add(teamKey);
+          return true;
+        });
+    }
+
+    function buildCompetitionPhaseKey(value = '') {
+      return String(value || '')
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, ' ')
+        .trim();
+    }
+
+    function rebuildCompetitionGroups(competition = {}) {
+      const sourceGroups = dedupeCompetitionGroups(competition.groups || []);
+      const groups = sourceGroups.map((group) => ({
+        ...group,
+        category: normalizeCompetitionCategory(group.category || group.name),
+        teams: dedupeCompetitionTeams(group.teams || [])
+      }));
+      const groupsByKey = new Map(groups.map((group) => [`${group.category || 'indefinido'}::${normalizeNameKey(group.name)}`, group]));
+
+      (competition.schedule || []).forEach((game) => {
+        const gameCategory = normalizeCompetitionCategory(game.category);
+        const phaseKey = normalizeNameKey(game.phase);
+        if (!gameCategory || !phaseKey) return;
+        const targetKey = `${gameCategory}::${phaseKey}`;
+        const group = groupsByKey.get(targetKey);
+        if (!group) return;
+        group.teams = dedupeCompetitionTeams([...(group.teams || []), game.teamA, game.teamB]);
+      });
+
+      return [...groupsByKey.values()]
+        .filter((group) => group.name && group.category)
+        .map((group) => ({ ...group, teams: dedupeCompetitionTeams(group.teams) }));
+    }
+
+    function rebuildCompetitionSchedule(competition = {}) {
+      const seenGames = new Set();
+      return sortCompetitionSchedule(competition.schedule || [])
+        .map(normalizeCompetitionGame)
+        .map((game) => {
+          const mappedCategory = resolveCompetitionGameCategory(game, competition.groups || []);
+          return { ...game, category: mappedCategory || normalizeCompetitionCategory(game.category) };
+        })
+        .filter((game) => {
+          const dedupeKey = `${String(game.gameNumber || '').trim()}|${String(game.date || '').trim()}|${String(game.time || '').trim()}|${normalizeTeamReferenceKey(game.teamA)}|${normalizeTeamReferenceKey(game.teamB)}|${normalizeNameKey(game.phase)}|${game.category}`;
+          if (seenGames.has(dedupeKey)) return false;
+          seenGames.add(dedupeKey);
+          return true;
+        });
     }
 
     function normalizeCompetitionTeam(team = {}) {
@@ -7449,7 +7514,7 @@ function renderHeatmap(optionsOrFilter) {
     function buildCompetitionStandings(competition) {
       const allGames = sortCompetitionSchedule(competition.schedule || []);
       const groupMap = new Map();
-      const normalizedGroups = dedupeCompetitionGroups(competition.groups || []);
+      const normalizedGroups = rebuildCompetitionGroups(competition);
 
       normalizedGroups.forEach((group) => {
         const groupKey = `${normalizeCompetitionCategory(group.category) || 'indefinido'}::${normalizeNameKey(group.name)}`;
@@ -7469,6 +7534,7 @@ function renderHeatmap(optionsOrFilter) {
           key: groupKey,
           category: normalizeCompetitionCategory(group.category) || 'indefinido',
           name: group.name,
+          phaseKey: buildCompetitionPhaseKey(group.name),
           teamsByKey: new Map(teams.map((row) => [normalizeNameKey(row.team), row])),
           games: []
         });
@@ -7479,11 +7545,16 @@ function renderHeatmap(optionsOrFilter) {
         const scoreB = parseScore(game.scoreB);
         if (scoreA === null || scoreB === null) return;
         const category = normalizeCompetitionCategory(game.category) || 'indefinido';
-        const phaseKey = normalizeNameKey(game.phase);
-        const groupEntry = [...groupMap.values()].find((group) => group.category === category && normalizeNameKey(group.name) === phaseKey);
-        if (!groupEntry) return;
+        const phaseNameKey = normalizeNameKey(game.phase);
+        const phaseKey = buildCompetitionPhaseKey(game.phase);
         const teamAKey = normalizeNameKey(game.teamA);
         const teamBKey = normalizeNameKey(game.teamB);
+        const groupEntry = [...groupMap.values()].find((group) => {
+          if (group.category !== category) return false;
+          if (normalizeNameKey(group.name) === phaseNameKey || group.phaseKey === phaseKey) return true;
+          return group.teamsByKey.has(teamAKey) && group.teamsByKey.has(teamBKey);
+        });
+        if (!groupEntry) return;
         const rowA = groupEntry.teamsByKey.get(teamAKey);
         const rowB = groupEntry.teamsByKey.get(teamBKey);
         if (!rowA || !rowB) return;
@@ -7515,7 +7586,7 @@ function renderHeatmap(optionsOrFilter) {
           ...row,
           goalDiff: row.goalsFor - row.goalsAgainst,
           quotient: safeQuotient(row.goalsFor, row.goalsAgainst),
-          drawOrder: Math.random()
+          drawOrder: normalizeTeamReferenceKey(row.team)
         }));
 
         rows.sort((a, b) => {
@@ -7527,7 +7598,7 @@ function renderHeatmap(optionsOrFilter) {
           if (tiedTeams.length === 2 && tiedTeams.some((row) => row.team === a.team) && tiedTeams.some((row) => row.team === b.team)) {
             return -directConfrontScore(a.team, b.team, group.games);
           }
-          return a.drawOrder - b.drawOrder;
+          return a.drawOrder.localeCompare(b.drawOrder, 'pt-BR');
         });
 
         return {
@@ -7547,6 +7618,7 @@ function renderHeatmap(optionsOrFilter) {
           if (b.quotient !== a.quotient) return b.quotient - a.quotient;
           return a.team.localeCompare(b.team, 'pt-BR');
         })
+        .filter((row, index, list) => list.findIndex((item) => normalizeTeamReferenceKey(item.team) === normalizeTeamReferenceKey(row.team)) === index)
         .map((row, index) => ({ ...row, rank: index + 1 }));
 
       return { groups, maleGeneralRanking };
@@ -7556,12 +7628,13 @@ function renderHeatmap(optionsOrFilter) {
       const maleTop4 = standings.maleGeneralRanking.slice(0, 4);
       const maleDrawZone = standings.maleGeneralRanking.slice(4, 8);
 
-      const femaleGroups = standings.groups.filter((group) => group.category === 'feminino');
-      const femaleA = femaleGroups.find((group) => normalizeNameKey(group.name).includes('a'))?.table || [];
-      const femaleB = femaleGroups.find((group) => normalizeNameKey(group.name).includes('b'))?.table || [];
+      const femaleGroups = standings.groups
+        .filter((group) => group.category === 'feminino')
+        .slice(0, 2);
+      const [femaleA = { table: [] }, femaleB = { table: [] }] = femaleGroups;
       const femaleCrossings = [
-        `${femaleA[0]?.team || '1A'} x ${femaleB[1]?.team || '2B'}`,
-        `${femaleA[1]?.team || '2A'} x ${femaleB[0]?.team || '1B'}`
+        `${femaleA.table[0]?.team || '1A'} x ${femaleB.table[1]?.team || '2B'}`,
+        `${femaleA.table[1]?.team || '2A'} x ${femaleB.table[0]?.team || '1B'}`
       ];
 
       const serieBProjection = standings.maleGeneralRanking
@@ -7658,7 +7731,9 @@ function renderHeatmap(optionsOrFilter) {
       }
 
       container.innerHTML = AppState.competitions.map((competition) => {
-        const resolvedCompetition = buildResolvedCompetition(competition);
+        const resolvedCompetition = buildResolvedCompetition(normalizeCompetition(competition));
+        resolvedCompetition.groups = rebuildCompetitionGroups(resolvedCompetition);
+        resolvedCompetition.schedule = rebuildCompetitionSchedule(resolvedCompetition);
         const standings = buildCompetitionStandings(resolvedCompetition);
         const strategy = buildStrategySnapshot(standings);
         const scheduleRows = sortCompetitionSchedule(resolvedCompetition.schedule || []);
@@ -7745,7 +7820,7 @@ function renderHeatmap(optionsOrFilter) {
                 ${renderStandingsTable(standings.maleGeneralRanking, true)}
               </div>
               <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
-                ${standings.groups.filter((group) => group.category === 'feminino').map((group) => `
+                ${standings.groups.filter((group) => group.category === 'feminino').slice(0, 2).map((group) => `
                   <div class="border border-slate-100 rounded p-2">
                     <p class="text-xs font-medium text-pink-700 mb-1">Feminino ${escapeHtml(group.name)}</p>
                     ${renderStandingsTable(group.table)}
@@ -7870,6 +7945,8 @@ function renderHeatmap(optionsOrFilter) {
           }
           competition.drawAssignments = normalizeCompetitionDrawAssignments(nextAssignments, competition);
           competition.updatedAt = new Date().toISOString();
+          const cleanedCompetition = normalizeCompetition(competition);
+          AppState.competitions = AppState.competitions.map((item) => item.id === cleanedCompetition.id ? cleanedCompetition : item);
           renderCompetitions();
           renderCompetitionSelectors();
           saveToLocalStorage();
@@ -7895,6 +7972,8 @@ function renderHeatmap(optionsOrFilter) {
           if (!competition) return;
           if (!window.confirm('Tem certeza que deseja apagar todos os placares desta competição?')) return;
           const clearedGames = resetCompetitionResults(competition);
+          const cleanedCompetition = normalizeCompetition(competition);
+          AppState.competitions = AppState.competitions.map((item) => item.id === cleanedCompetition.id ? cleanedCompetition : item);
           renderCompetitions();
           saveToLocalStorage();
           showToast(`✅ Resultados resetados. ${clearedGames} jogo(s) tiveram placares removidos.`);
@@ -7911,6 +7990,8 @@ function renderHeatmap(optionsOrFilter) {
           game.scoreA = String(nextScoreA).trim();
           game.scoreB = String(nextScoreB).trim();
           competition.updatedAt = new Date().toISOString();
+          const cleanedCompetition = normalizeCompetition(competition);
+          AppState.competitions = AppState.competitions.map((item) => item.id === cleanedCompetition.id ? cleanedCompetition : item);
           renderCompetitions();
           saveToLocalStorage();
         }
