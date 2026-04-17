@@ -1441,6 +1441,11 @@
     }
 
     const SERIE_B_MALE_PROJECTION_EXCLUDED = new Set(['APACE', 'ADEVIRN', 'FUNAD']);
+    const COMPETITION_DRAW_FIXED_OPTIONS = Object.freeze({
+      feminino: Object.freeze(['IEACN-PB', 'AFDV-BA']),
+      masculino: Object.freeze(['AJECE-BA', 'IEACN-PB', 'AFDV-BA', 'ADVAMPE-PE'])
+    });
+    const COMPETITION_DRAW_PLACEHOLDER_LABELS = Object.freeze(['SORTEIO 1', 'SORTEIO 2', 'SORTEIO 3', 'SORTEIO 4']);
 
     function isExcludedFromSerieBMaleProjection(teamName = '') {
       const normalized = normalizeTeamReferenceKey(teamName);
@@ -1456,6 +1461,122 @@
       if (/\bCHAVE\b/.test(normalized)) return true;
       if (/^\d+$/.test(normalized)) return true;
       return false;
+    }
+
+    function normalizeCompetitionDrawPlaceholder(value = '') {
+      const normalized = normalizeTeamReferenceKey(value);
+      if (!normalized.startsWith('SORTEIO')) return '';
+      const match = normalized.match(/^SORTEIO\s*(\d+)$/);
+      if (!match) return '';
+      return `SORTEIO ${match[1]}`;
+    }
+
+    function buildCompetitionDrawKey(category, placeholder) {
+      const normalizedCategory = normalizeCompetitionCategory(category) || 'indefinido';
+      const normalizedPlaceholder = normalizeCompetitionDrawPlaceholder(placeholder);
+      if (!normalizedPlaceholder) return '';
+      return `${normalizedCategory}::${normalizedPlaceholder}`;
+    }
+
+    function getCompetitionFixedDrawOptions(category) {
+      return COMPETITION_DRAW_FIXED_OPTIONS[normalizeCompetitionCategory(category)] || [];
+    }
+
+    function dedupeCompetitionGroups(groups = []) {
+      const seenKeys = new Set();
+      return groups
+        .map(normalizeCompetitionGroup)
+        .filter((group) => group.name)
+        .filter((group) => {
+          const dedupeKey = `${normalizeCompetitionCategory(group.category) || 'indefinido'}::${normalizeNameKey(group.name)}`;
+          if (seenKeys.has(dedupeKey)) return false;
+          seenKeys.add(dedupeKey);
+          return true;
+        });
+    }
+
+    function resolveCompetitionGameCategory(game = {}, groups = []) {
+      const direct = normalizeCompetitionCategory(game.category);
+      if (direct) return direct;
+      const phaseKey = normalizeNameKey(game.phase);
+      const matchedGroup = groups.find((group) => normalizeNameKey(group.name) === phaseKey);
+      return normalizeCompetitionCategory(matchedGroup?.category) || '';
+    }
+
+    function extractCompetitionDrawSlots(competition = {}) {
+      const slotsByKey = new Map();
+      const groups = dedupeCompetitionGroups(competition.groups || []);
+      const registerSlot = (category, rawValue) => {
+        const placeholder = normalizeCompetitionDrawPlaceholder(rawValue);
+        if (!placeholder) return;
+        const normalizedCategory = normalizeCompetitionCategory(category);
+        if (!normalizedCategory) return;
+        const key = buildCompetitionDrawKey(normalizedCategory, placeholder);
+        if (!key || slotsByKey.has(key)) return;
+        slotsByKey.set(key, { key, placeholder, category: normalizedCategory });
+      };
+
+      groups.forEach((group) => {
+        (group.teams || []).forEach((team) => registerSlot(group.category, team));
+      });
+      (competition.schedule || []).forEach((game) => {
+        const gameCategory = resolveCompetitionGameCategory(game, groups);
+        registerSlot(gameCategory, game.teamA);
+        registerSlot(gameCategory, game.teamB);
+      });
+
+      return [...slotsByKey.values()].sort((a, b) => {
+        if (a.category !== b.category) return a.category.localeCompare(b.category, 'pt-BR');
+        const indexA = COMPETITION_DRAW_PLACEHOLDER_LABELS.indexOf(a.placeholder);
+        const indexB = COMPETITION_DRAW_PLACEHOLDER_LABELS.indexOf(b.placeholder);
+        if (indexA !== -1 || indexB !== -1) return (indexA === -1 ? 999 : indexA) - (indexB === -1 ? 999 : indexB);
+        return a.placeholder.localeCompare(b.placeholder, 'pt-BR');
+      });
+    }
+
+    function normalizeCompetitionDrawAssignments(rawAssignments = {}, competition = {}) {
+      const normalized = {};
+      const slots = extractCompetitionDrawSlots(competition);
+      const allowedSlotKeys = new Set(slots.map((slot) => slot.key));
+      Object.entries(rawAssignments || {}).forEach(([slotKey, teamName]) => {
+        const safeSlotKey = String(slotKey || '').trim();
+        const safeTeamName = String(teamName || '').trim();
+        if (!safeSlotKey || !safeTeamName || !allowedSlotKeys.has(safeSlotKey)) return;
+        const [category = ''] = safeSlotKey.split('::');
+        const allowedTeams = getCompetitionFixedDrawOptions(category);
+        if (!allowedTeams.includes(safeTeamName)) return;
+        normalized[safeSlotKey] = safeTeamName;
+      });
+      return normalized;
+    }
+
+    function resolveCompetitionDrawTeamName(competition, category, rawTeamName) {
+      const placeholder = normalizeCompetitionDrawPlaceholder(rawTeamName);
+      if (!placeholder) return String(rawTeamName || '').trim();
+      const slotKey = buildCompetitionDrawKey(category, placeholder);
+      return competition?.drawAssignments?.[slotKey] || placeholder;
+    }
+
+    function buildResolvedCompetition(competition = {}) {
+      const groups = dedupeCompetitionGroups(competition.groups || []);
+      const resolvedGroups = groups.map((group) => ({
+        ...group,
+        teams: (group.teams || []).map((teamName) => resolveCompetitionDrawTeamName(competition, group.category, teamName))
+      }));
+      const resolvedSchedule = (competition.schedule || []).map((game) => {
+        const category = resolveCompetitionGameCategory(game, groups);
+        return {
+          ...normalizeCompetitionGame(game),
+          category: category || normalizeCompetitionCategory(game.category),
+          teamA: resolveCompetitionDrawTeamName(competition, category, game.teamA),
+          teamB: resolveCompetitionDrawTeamName(competition, category, game.teamB)
+        };
+      });
+      return {
+        ...competition,
+        groups: resolvedGroups,
+        schedule: resolvedSchedule
+      };
     }
 
     function normalizeCompetitionTeam(team = {}) {
@@ -1498,7 +1619,7 @@
     }
 
     function normalizeCompetition(item = {}) {
-      return {
+      const normalizedCompetition = {
         id: String(item.id || `competition-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`),
         name: String(item.name || '').trim(),
         location: String(item.location || '').trim(),
@@ -1511,12 +1632,14 @@
           ? item.teams.map(normalizeCompetitionTeam).filter((team) => team.name && !isTemporaryCompetitionSlot(team.name))
           : [],
         groups: Array.isArray(item.groups || item.chaves || item.keys)
-          ? (item.groups || item.chaves || item.keys).map(normalizeCompetitionGroup).filter((group) => group.name)
+          ? dedupeCompetitionGroups(item.groups || item.chaves || item.keys)
           : [],
         schedule: Array.isArray(item.schedule) ? item.schedule.map(normalizeCompetitionGame) : [],
         createdAt: item.createdAt || new Date().toISOString(),
         updatedAt: item.updatedAt || new Date().toISOString()
       };
+      normalizedCompetition.drawAssignments = normalizeCompetitionDrawAssignments(item.drawAssignments || {}, normalizedCompetition);
+      return normalizedCompetition;
     }
 
     function normalizeCompetitions(list) {
@@ -7266,6 +7389,7 @@ function renderHeatmap(optionsOrFilter) {
       const competition = normalizeCompetition({
         ...incoming,
         id: previous?.id,
+        drawAssignments: previous?.drawAssignments || incoming.drawAssignments || {},
         createdAt: previous?.createdAt,
         updatedAt: new Date().toISOString()
       });
@@ -7325,8 +7449,9 @@ function renderHeatmap(optionsOrFilter) {
     function buildCompetitionStandings(competition) {
       const allGames = sortCompetitionSchedule(competition.schedule || []);
       const groupMap = new Map();
+      const normalizedGroups = dedupeCompetitionGroups(competition.groups || []);
 
-      (competition.groups || []).forEach((group) => {
+      normalizedGroups.forEach((group) => {
         const groupKey = `${normalizeCompetitionCategory(group.category) || 'indefinido'}::${normalizeNameKey(group.name)}`;
         const teams = (group.teams || []).map((name) => ({
           team: name,
@@ -7482,21 +7607,13 @@ function renderHeatmap(optionsOrFilter) {
     }
 
     function renderGroupBoard(groups, category) {
-      const seenKeys = new Set();
-      const list = groups
+      const list = dedupeCompetitionGroups(groups || [])
         .map((group) => ({
           ...group,
           category: normalizeCompetitionCategory(group.category || group.name),
           teams: [...new Set((group.teams || []).map((team) => String(team || '').trim()).filter(Boolean))]
         }))
-        .filter((group) => group.category === category)
-        .filter((group) => {
-          const keyName = normalizeNameKey(group.name);
-          const dedupeKey = `${group.category}::${keyName}`;
-          if (!keyName || seenKeys.has(dedupeKey)) return false;
-          seenKeys.add(dedupeKey);
-          return true;
-        });
+        .filter((group) => group.category === category);
       if (!list.length) return '<p class="text-xs text-slate-500">Sem chaves cadastradas.</p>';
       return `<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2">${list.map((group) => `
         <div class="border border-slate-200 rounded-lg p-2 bg-slate-50">
@@ -7504,6 +7621,32 @@ function renderHeatmap(optionsOrFilter) {
           <ul class="text-xs text-slate-600 space-y-0.5">${(group.teams || []).map((team) => `<li>• ${escapeHtml(team)}</li>`).join('')}</ul>
         </div>
       `).join('')}</div>`;
+    }
+
+    function renderCompetitionDrawResolver(competition) {
+      const slots = extractCompetitionDrawSlots(competition);
+      if (!slots.length) return '<p class="text-xs text-slate-500">Sem placeholders de sorteio para definir.</p>';
+      return `
+        <div class="space-y-2">
+          ${slots.map((slot) => {
+            const currentValue = competition.drawAssignments?.[slot.key] || '';
+            const options = getCompetitionFixedDrawOptions(slot.category);
+            return `
+              <div class="grid grid-cols-1 md:grid-cols-[1.1fr_0.8fr_1.4fr] gap-2 items-center border border-slate-100 rounded-lg p-2">
+                <div class="text-xs font-semibold text-slate-700">${escapeHtml(slot.placeholder)}</div>
+                <div class="text-xs ${slot.category === 'masculino' ? 'text-blue-700' : 'text-pink-700'}">${escapeHtml(slot.category)}</div>
+                <select class="competition-draw-select w-full px-2 py-1 border border-slate-300 rounded text-xs" data-competition-id="${competition.id}" data-slot-key="${slot.key}" data-category="${slot.category}">
+                  <option value="">Não definido</option>
+                  ${options.map((team) => `<option value="${escapeHtml(team)}" ${currentValue === team ? 'selected' : ''}>${escapeHtml(team)}</option>`).join('')}
+                </select>
+              </div>
+            `;
+          }).join('')}
+          <div class="flex justify-end">
+            <button class="comp-save-draws px-3 py-1.5 text-xs rounded-lg btn-primary text-white" data-id="${competition.id}">Salvar sorteios</button>
+          </div>
+        </div>
+      `;
     }
 
     function renderCompetitions() {
@@ -7515,9 +7658,10 @@ function renderHeatmap(optionsOrFilter) {
       }
 
       container.innerHTML = AppState.competitions.map((competition) => {
-        const standings = buildCompetitionStandings(competition);
+        const resolvedCompetition = buildResolvedCompetition(competition);
+        const standings = buildCompetitionStandings(resolvedCompetition);
         const strategy = buildStrategySnapshot(standings);
-        const scheduleRows = sortCompetitionSchedule(competition.schedule || []);
+        const scheduleRows = sortCompetitionSchedule(resolvedCompetition.schedule || []);
         return `
           <article class="bg-white rounded-xl p-4 card-shadow space-y-4">
             <div class="flex items-start justify-between gap-3">
@@ -7538,19 +7682,24 @@ function renderHeatmap(optionsOrFilter) {
             </section>
 
             <section class="border border-slate-200 rounded-lg p-3 space-y-2">
-              <h4 class="text-xs font-semibold text-slate-600">B) Quadro de chaves</h4>
+              <h4 class="text-xs font-semibold text-slate-600">B) Definir sorteios</h4>
+              ${renderCompetitionDrawResolver(competition)}
+            </section>
+
+            <section class="border border-slate-200 rounded-lg p-3 space-y-2">
+              <h4 class="text-xs font-semibold text-slate-600">C) Quadro de chaves</h4>
               <div>
                 <p class="text-xs font-medium text-blue-700 mb-1">Masculino</p>
-                ${renderGroupBoard(competition.groups || [], 'masculino')}
+                ${renderGroupBoard(resolvedCompetition.groups || [], 'masculino')}
               </div>
               <div>
                 <p class="text-xs font-medium text-pink-700 mb-1">Feminino</p>
-                ${renderGroupBoard(competition.groups || [], 'feminino')}
+                ${renderGroupBoard(resolvedCompetition.groups || [], 'feminino')}
               </div>
             </section>
 
             <section class="border border-slate-200 rounded-lg p-3">
-              <h4 class="text-xs font-semibold text-slate-600 mb-2">C) Cronograma</h4>
+              <h4 class="text-xs font-semibold text-slate-600 mb-2">D) Cronograma</h4>
               <div class="overflow-auto">
                 <table class="w-full text-xs">
                   <thead>
@@ -7582,7 +7731,7 @@ function renderHeatmap(optionsOrFilter) {
             </section>
 
             <section class="border border-slate-200 rounded-lg p-3 space-y-2">
-              <h4 class="text-xs font-semibold text-slate-600">D) Classificação</h4>
+              <h4 class="text-xs font-semibold text-slate-600">E) Classificação</h4>
               <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
                 ${standings.groups.filter((group) => group.category === 'masculino').map((group) => `
                   <div class="border border-slate-100 rounded p-2">
@@ -7606,7 +7755,7 @@ function renderHeatmap(optionsOrFilter) {
             </section>
 
             <section class="border border-slate-200 rounded-lg p-3 space-y-2">
-              <h4 class="text-xs font-semibold text-slate-600">E) Estratégia</h4>
+              <h4 class="text-xs font-semibold text-slate-600">F) Estratégia</h4>
               <p class="text-xs"><strong>Top 4 masculino:</strong> ${strategy.maleTop4.map((row) => row.team).join(', ') || '-'}</p>
               <p class="text-xs"><strong>5º ao 8º masculino (zona de sorteio):</strong> ${strategy.maleDrawZone.map((row) => row.team).join(', ') || '-'}</p>
               <p class="text-xs"><strong>Cruzamentos prováveis feminino:</strong> ${strategy.femaleCrossings.join(' • ')}</p>
@@ -7635,6 +7784,7 @@ function renderHeatmap(optionsOrFilter) {
           teams: previous?.teams || [],
           groups: previous?.groups || [],
           schedule: previous?.schedule || [],
+          drawAssignments: previous?.drawAssignments || {},
           createdAt: previous?.createdAt
         });
         if (!competition.name) {
@@ -7692,6 +7842,40 @@ function renderHeatmap(optionsOrFilter) {
         const editBtn = e.target.closest('.comp-edit');
         const resetResultsBtn = e.target.closest('.comp-reset-results');
         const resultBtn = e.target.closest('.comp-edit-result');
+        const saveDrawsBtn = e.target.closest('.comp-save-draws');
+        if (saveDrawsBtn) {
+          const competition = AppState.competitions.find((item) => item.id === saveDrawsBtn.dataset.id);
+          if (!competition) return;
+          const drawSelectors = [...document.querySelectorAll(`.competition-draw-select[data-competition-id="${competition.id}"]`)];
+          const nextAssignments = {};
+          const categorySelections = new Map();
+          for (const select of drawSelectors) {
+            const slotKey = String(select.dataset.slotKey || '').trim();
+            const category = normalizeCompetitionCategory(select.dataset.category || '');
+            const selectedTeam = String(select.value || '').trim();
+            if (!slotKey || !category || !selectedTeam) continue;
+            const validOptions = getCompetitionFixedDrawOptions(category);
+            if (!validOptions.includes(selectedTeam)) {
+              showToast(`⚠️ Opção inválida para ${slotKey}.`);
+              return;
+            }
+            const selectedInCategory = categorySelections.get(category) || new Set();
+            if (selectedInCategory.has(selectedTeam)) {
+              showToast(`⚠️ Equipe repetida no ${category}: ${selectedTeam}.`);
+              return;
+            }
+            selectedInCategory.add(selectedTeam);
+            categorySelections.set(category, selectedInCategory);
+            nextAssignments[slotKey] = selectedTeam;
+          }
+          competition.drawAssignments = normalizeCompetitionDrawAssignments(nextAssignments, competition);
+          competition.updatedAt = new Date().toISOString();
+          renderCompetitions();
+          renderCompetitionSelectors();
+          saveToLocalStorage();
+          showToast('✅ Sorteios aplicados com sucesso.');
+          return;
+        }
         if (editBtn) {
           const competition = AppState.competitions.find((item) => item.id === editBtn.dataset.id);
           if (!competition) return;
