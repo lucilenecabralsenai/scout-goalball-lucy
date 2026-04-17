@@ -1440,6 +1440,43 @@
         .toUpperCase();
     }
 
+    const COMPETITION_TEAM_NAME_NORMALIZATION_MAP = Object.freeze({
+      AJECE: 'AJECE-BA',
+      IEACN: 'IEACN-PB',
+      AFDV: 'AFDV-BA',
+      ADVAMPE: 'ADVAMPE-PE'
+    });
+
+    function normalizeCompetitionTeamName(value = '') {
+      const rawName = String(value || '').trim();
+      if (!rawName) return '';
+      const normalizedKey = normalizeTeamReferenceKey(rawName);
+      return COMPETITION_TEAM_NAME_NORMALIZATION_MAP[normalizedKey] || rawName;
+    }
+
+    function extractCompetitionGroupLetter(value = '') {
+      const normalized = String(value || '')
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toUpperCase()
+        .replace(/[^A-Z0-9]+/g, ' ')
+        .trim();
+      if (!normalized) return '';
+      const chaveMatch = normalized.match(/(?:^|\s)CHAVE\s*([A-Z0-9])(?:\s|$)/);
+      if (chaveMatch) return chaveMatch[1];
+      const tokenMatch = normalized.match(/^([A-Z0-9])$/);
+      if (tokenMatch) return tokenMatch[1];
+      return '';
+    }
+
+    function normalizeCompetitionGroupName(value = '', fallbackCategory = '') {
+      const normalizedCategory = normalizeCompetitionCategory(fallbackCategory || value) || 'masculino';
+      const letter = extractCompetitionGroupLetter(value) || extractCompetitionGroupLetter(fallbackCategory);
+      if (!letter) return String(value || '').trim();
+      const categoryLabel = normalizedCategory === 'feminino' ? 'Feminino' : 'Masculino';
+      return `${categoryLabel} - Chave ${letter}`;
+    }
+
     const SERIE_B_MALE_PROJECTION_EXCLUDED = new Set(['APACE', 'ADEVIRN', 'FUNAD']);
     const COMPETITION_DRAW_FIXED_OPTIONS = Object.freeze({
       feminino: Object.freeze(['IEACN-PB', 'AFDV-BA']),
@@ -1585,7 +1622,7 @@
     function dedupeCompetitionTeams(teamNames = []) {
       const seen = new Set();
       return (teamNames || [])
-        .map((teamName) => String(teamName || '').trim())
+        .map((teamName) => normalizeCompetitionTeamName(teamName))
         .filter(Boolean)
         .filter((teamName) => {
           const teamKey = normalizeTeamReferenceKey(teamName);
@@ -1658,25 +1695,29 @@
 
     function normalizeCompetitionGroup(group = {}) {
       const sourceTeams = Array.isArray(group.teams) ? group.teams : [];
+      const normalizedCategory = normalizeCompetitionCategory(group.category || group.name);
+      const normalizedName = normalizeCompetitionGroupName(group.name || group.key || group.chave || '', normalizedCategory);
       return {
         id: String(group.id || `comp-group-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`),
-        name: String(group.name || group.key || group.chave || '').trim(),
-        category: normalizeCompetitionCategory(group.category || group.name),
-        teams: sourceTeams.map((team) => String(typeof team === 'string' ? team : team?.name || '').trim()).filter(Boolean),
+        name: normalizedName,
+        category: normalizedCategory,
+        teams: dedupeCompetitionTeams(sourceTeams.map((team) => String(typeof team === 'string' ? team : team?.name || '').trim()).filter(Boolean)),
         notes: String(group.notes || '').trim()
       };
     }
 
     function normalizeCompetitionGame(game = {}) {
+      const normalizedCategory = normalizeCompetitionCategory(game.category || game.phase);
+      const normalizedPhase = normalizeCompetitionGroupName(game.phase, normalizedCategory);
       return {
         id: String(game.id || `comp-game-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`),
         gameNumber: String(game.gameNumber || '').trim(),
         date: String(game.date || '').slice(0, 10),
         time: String(game.time || '').slice(0, 5),
-        teamA: String(game.teamA || '').trim(),
-        teamB: String(game.teamB || '').trim(),
-        phase: String(game.phase || '').trim(),
-        category: normalizeCompetitionCategory(game.category),
+        teamA: normalizeCompetitionTeamName(game.teamA),
+        teamB: normalizeCompetitionTeamName(game.teamB),
+        phase: normalizedPhase,
+        category: normalizedCategory,
         scoreA: String(game.scoreA ?? '').trim(),
         scoreB: String(game.scoreB ?? '').trim(),
         source: String(game.source || 'imported').trim() || 'imported'
@@ -1694,7 +1735,7 @@
         endDate: String(item.endDate || '').slice(0, 10),
         notes: String(item.notes || '').trim(),
         teams: Array.isArray(item.teams)
-          ? item.teams.map(normalizeCompetitionTeam).filter((team) => team.name && !isTemporaryCompetitionSlot(team.name))
+          ? item.teams.map(normalizeCompetitionTeam).map((team) => ({ ...team, name: normalizeCompetitionTeamName(team.name) })).filter((team) => team.name && !isTemporaryCompetitionSlot(team.name))
           : [],
         groups: Array.isArray(item.groups || item.chaves || item.keys)
           ? dedupeCompetitionGroups(item.groups || item.chaves || item.keys)
@@ -1703,6 +1744,8 @@
         createdAt: item.createdAt || new Date().toISOString(),
         updatedAt: item.updatedAt || new Date().toISOString()
       };
+      normalizedCompetition.groups = rebuildCompetitionGroups(normalizedCompetition);
+      normalizedCompetition.schedule = rebuildCompetitionSchedule(normalizedCompetition);
       normalizedCompetition.drawAssignments = normalizeCompetitionDrawAssignments(item.drawAssignments || {}, normalizedCompetition);
       return normalizedCompetition;
     }
@@ -7589,17 +7632,37 @@ function renderHeatmap(optionsOrFilter) {
       const groups = [...groupMap.values()].map((group) => {
         const rows = [...group.teamsByKey.values()].map((row) => ({
           ...row,
+          team: normalizeCompetitionTeamName(row.team),
           goalDiff: row.goalsFor - row.goalsAgainst,
           quotient: safeQuotient(row.goalsFor, row.goalsAgainst),
           drawOrder: normalizeTeamReferenceKey(row.team)
         }));
+        const consolidatedRows = [...rows.reduce((acc, row) => {
+          const teamKey = normalizeTeamReferenceKey(row.team);
+          if (!teamKey) return acc;
+          const existing = acc.get(teamKey);
+          if (!existing) {
+            acc.set(teamKey, { ...row, drawOrder: teamKey });
+            return acc;
+          }
+          existing.gamesPlayed += row.gamesPlayed;
+          existing.points += row.points;
+          existing.wins += row.wins;
+          existing.draws += row.draws;
+          existing.losses += row.losses;
+          existing.goalsFor += row.goalsFor;
+          existing.goalsAgainst += row.goalsAgainst;
+          existing.goalDiff = existing.goalsFor - existing.goalsAgainst;
+          existing.quotient = safeQuotient(existing.goalsFor, existing.goalsAgainst);
+          return acc;
+        }, new Map()).values()];
 
-        rows.sort((a, b) => {
+        consolidatedRows.sort((a, b) => {
           if (b.points !== a.points) return b.points - a.points;
           if (b.wins !== a.wins) return b.wins - a.wins;
           if (b.goalDiff !== a.goalDiff) return b.goalDiff - a.goalDiff;
           if (b.quotient !== a.quotient) return b.quotient - a.quotient;
-          const tiedTeams = rows.filter((row) => row.points === a.points && row.wins === a.wins && row.goalDiff === a.goalDiff && row.quotient === a.quotient);
+          const tiedTeams = consolidatedRows.filter((row) => row.points === a.points && row.wins === a.wins && row.goalDiff === a.goalDiff && row.quotient === a.quotient);
           if (tiedTeams.length === 2 && tiedTeams.some((row) => row.team === a.team) && tiedTeams.some((row) => row.team === b.team)) {
             return -directConfrontScore(a.team, b.team, group.games);
           }
@@ -7609,13 +7672,38 @@ function renderHeatmap(optionsOrFilter) {
         return {
           category: group.category,
           name: group.name,
-          table: rows.map((row, index) => ({ ...row, rank: index + 1 }))
+          table: consolidatedRows.map((row, index) => ({ ...row, rank: index + 1 }))
         };
       });
 
-      const maleGeneralRanking = groups
+      const maleRows = groups
         .filter((group) => group.category === 'masculino')
-        .flatMap((group) => group.table.map((row) => ({ ...row, group: group.name })))
+        .flatMap((group) => group.table.map((row) => ({ ...row, team: normalizeCompetitionTeamName(row.team), group: group.name })));
+      const maleMergedByTeam = maleRows.reduce((acc, row) => {
+        const teamKey = normalizeTeamReferenceKey(row.team);
+        if (!teamKey) return acc;
+        const existing = acc.get(teamKey);
+        if (!existing) {
+          acc.set(teamKey, { ...row, groupSet: new Set([row.group]) });
+          return acc;
+        }
+        existing.gamesPlayed += row.gamesPlayed;
+        existing.points += row.points;
+        existing.wins += row.wins;
+        existing.draws += row.draws;
+        existing.losses += row.losses;
+        existing.goalsFor += row.goalsFor;
+        existing.goalsAgainst += row.goalsAgainst;
+        existing.goalDiff = existing.goalsFor - existing.goalsAgainst;
+        existing.quotient = safeQuotient(existing.goalsFor, existing.goalsAgainst);
+        if (row.group) existing.groupSet.add(row.group);
+        return acc;
+      }, new Map());
+      const maleGeneralRanking = [...maleMergedByTeam.values()]
+        .map((row) => {
+          const { groupSet, ...rest } = row;
+          return { ...rest, group: [...(groupSet || [])].join(' • ') };
+        })
         .sort((a, b) => {
           if (b.points !== a.points) return b.points - a.points;
           if (b.wins !== a.wins) return b.wins - a.wins;
@@ -7623,7 +7711,6 @@ function renderHeatmap(optionsOrFilter) {
           if (b.quotient !== a.quotient) return b.quotient - a.quotient;
           return a.team.localeCompare(b.team, 'pt-BR');
         })
-        .filter((row, index, list) => list.findIndex((item) => normalizeTeamReferenceKey(item.team) === normalizeTeamReferenceKey(row.team)) === index)
         .map((row, index) => ({ ...row, rank: index + 1 }));
 
       return { groups, maleGeneralRanking };
