@@ -2305,6 +2305,10 @@
       return Boolean(AppState.matchId);
     }
 
+    function isLiveMatchStatus(status) {
+      return status === 'live' || status === 'draft' || status === 'in-progress';
+    }
+
     function getDeviceId() {
       const existing = localStorage.getItem(DEVICE_ID_STORAGE_KEY);
       if (existing) return existing;
@@ -2602,6 +2606,9 @@
       if (isMatchMarkedAsFinishedLocally(AppState.matchId)) {
         AppState.matchId = null;
       }
+      if (AppState.matchControl?.phase === 'finished') {
+        AppState.matchId = null;
+      }
       AppState.events = [...sdkEvents];
       if (!AppState.matchId) {
         resetCurrentMatchState();
@@ -2793,18 +2800,23 @@
         console.info('[SYNC] Snapshot de partidas do usuário atualizado', { source: sourceLabel, total: remoteMatches.length, fromCache: snap.metadata.fromCache });
         if (!remoteMatches.length) return;
 
-        const hasCurrentMatchRemotely = remoteMatches.some((match) => match.id === AppState.matchId);
+        const currentRemoteMatch = remoteMatches.find((match) => match.id === AppState.matchId) || null;
+        const hasCurrentMatchRemotely = Boolean(currentRemoteMatch);
+        const currentRemoteIsLive = isLiveMatchStatus(currentRemoteMatch?.status);
         const pendingFinalizations = getPendingFinalizationSet();
         const liveMatch = remoteMatches.find((m) => (
-          (m.status === 'live' || m.status === 'draft')
+          isLiveMatchStatus(m.status)
           && !pendingFinalizations.has(m.id)
           && !isMatchMarkedAsFinishedLocally(m.id)
         )) || null;
-        if (!hasCurrentMatchRemotely && liveMatch?.id && liveMatch.id !== AppState.matchId) {
+        if ((!hasCurrentMatchRemotely || !currentRemoteIsLive) && liveMatch?.id && liveMatch.id !== AppState.matchId) {
           AppState.matchId = liveMatch.id;
           subscribeToCurrentMatch();
-        } else if (!liveMatch && !hasCurrentMatchRemotely) {
-          AppState.matchId = null;
+        } else if (!liveMatch && (!hasCurrentMatchRemotely || !currentRemoteIsLive)) {
+          clearActiveMatchReferenceLocally({ resetOperationalTabs: true });
+          clearActiveMatchReferenceInCloud().catch((error) => {
+            console.warn('[SYNC] Falha ao limpar ponteiro remoto de partida ativa', error);
+          });
         }
 
         const archived = remoteMatches
@@ -3866,6 +3878,23 @@ function purgeTemporaryCompetitionSlotsFromRegistry() {
       updateScore();
     }
 
+    function clearActiveMatchReferenceLocally({ resetOperationalTabs = false } = {}) {
+      unsubscribeMatchDoc?.();
+      unsubscribeMatchDoc = null;
+      unsubscribeMatchEvents?.();
+      unsubscribeMatchEvents = null;
+      AppState.matchId = null;
+      if (resetOperationalTabs) {
+        resetOperationalTabsAfterMatchFinalization();
+      } else {
+        resetCurrentMatchState();
+      }
+      const historySelect = document.getElementById('history-match-select');
+      if (historySelect) historySelect.value = 'current';
+      const reportSelect = document.getElementById('report-match-select');
+      if (reportSelect) reportSelect.value = 'current';
+    }
+
     async function startNewMatch() {
       const previousMatchId = AppState.matchId;
       unsubscribeMatchDoc?.();
@@ -4138,6 +4167,22 @@ function purgeTemporaryCompetitionSlotsFromRegistry() {
         showToast('⚠️ Partida não encontrada.');
         return;
       }
+      if (!isLiveMatchStatus(selected.status)) {
+        const historySelect = document.getElementById('history-match-select');
+        if (historySelect && [...historySelect.options].some((opt) => opt.value === matchId)) {
+          historySelect.value = matchId;
+        }
+        const reportSelect = document.getElementById('report-match-select');
+        if (reportSelect && [...reportSelect.options].some((opt) => opt.value === matchId)) {
+          reportSelect.value = matchId;
+        }
+        renderHistoryMeta();
+        renderHistory();
+        updateAllStats();
+        renderRecentEvents();
+        showToast('📚 Partida finalizada aberta somente para consulta.');
+        return;
+      }
       AppState.matchId = matchId;
       applyMatchMetadataToCurrentState(selected);
       loadConfigToForm();
@@ -4316,18 +4361,11 @@ function purgeTemporaryCompetitionSlotsFromRegistry() {
         showToast('⚠️ Partida encerrada e salva localmente. Firebase indisponível no momento.');
       }
 
-      AppState.matchId = null;
-      resetOperationalTabsAfterMatchFinalization();
+      clearActiveMatchReferenceLocally({ resetOperationalTabs: true });
       saveToLocalStorage();
       renderHistoryMatchSelector();
       renderReportMatchSelector();
-
-      const select = document.getElementById('history-match-select');
-      if (select) {
-        select.value = previousMatchId;
-        renderHistoryMeta();
-      }
-
+      renderHistoryMeta();
       renderHistory();
       updateAllStats();
       renderRecentEvents();
