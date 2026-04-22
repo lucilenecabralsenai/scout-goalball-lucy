@@ -2295,6 +2295,67 @@
     let suppressCloudSync = false;
     let matchIdSequence = 0;
     let lastCloudSyncErrorAt = 0;
+    const localInputDrafts = {
+      values: {},
+      suppressTracking: false
+    };
+
+    function getInputDraftKey(el) {
+      if (!el || !el.tagName) return '';
+      const tag = el.tagName.toLowerCase();
+      if (!['input', 'textarea', 'select'].includes(tag)) return '';
+      if (el.type === 'hidden' || el.type === 'file') return '';
+      if (el.id) return `#${el.id}`;
+      if (el.name) return `${tag}[name="${el.name}"]`;
+      return '';
+    }
+
+    function trackLocalInputDraft(el) {
+      if (localInputDrafts.suppressTracking) return;
+      const key = getInputDraftKey(el);
+      if (!key) return;
+      if (el.type === 'checkbox' || el.type === 'radio') {
+        localInputDrafts.values[key] = { kind: 'checked', value: Boolean(el.checked) };
+        return;
+      }
+      localInputDrafts.values[key] = { kind: 'value', value: el.value };
+    }
+
+    function clearLocalInputDrafts() {
+      localInputDrafts.values = {};
+    }
+
+    function applyDraftValueToField(el) {
+      const key = getInputDraftKey(el);
+      if (!key) return false;
+      const draft = localInputDrafts.values[key];
+      if (!draft) return false;
+      localInputDrafts.suppressTracking = true;
+      if (draft.kind === 'checked') {
+        el.checked = Boolean(draft.value);
+      } else {
+        el.value = draft.value ?? '';
+      }
+      localInputDrafts.suppressTracking = false;
+      return true;
+    }
+
+    function applyFormControlValue(el, value) {
+      if (!el) return;
+      if (applyDraftValueToField(el)) return;
+      localInputDrafts.suppressTracking = true;
+      if (el.type === 'checkbox' || el.type === 'radio') {
+        el.checked = Boolean(value);
+      } else {
+        el.value = value ?? '';
+      }
+      localInputDrafts.suppressTracking = false;
+    }
+
+    function restoreDraftValuesInDom(root = document) {
+      const controls = root.querySelectorAll('input, textarea, select');
+      controls.forEach((field) => applyDraftValueToField(field));
+    }
 
     function generateMatchId() {
       matchIdSequence += 1;
@@ -2641,6 +2702,7 @@
       renderRecentEvents();
       renderTrainingModule();
       renderCompetitions();
+      restoreDraftValuesInDom();
     }
 
     function resolveConflictByUpdatedAt(remoteMatch, localCache) {
@@ -3864,6 +3926,7 @@ function purgeTemporaryCompetitionSlotsFromRegistry() {
     }
 
     function resetOperationalTabsAfterMatchFinalization() {
+      clearLocalInputDrafts();
       resetActiveMatchConfiguration();
       resetCurrentMatchState();
       normalizeConfigAthletes();
@@ -3896,6 +3959,7 @@ function purgeTemporaryCompetitionSlotsFromRegistry() {
     }
 
     async function startNewMatch() {
+      clearLocalInputDrafts();
       const previousMatchId = AppState.matchId;
       unsubscribeMatchDoc?.();
       unsubscribeMatchDoc = null;
@@ -4373,7 +4437,17 @@ function purgeTemporaryCompetitionSlotsFromRegistry() {
       enqueueCloudSync('end-match');
     }
 
-    function handleMatchControlAction(actionId) {
+    function enterBreakAndOpenReport({ phase, reportLabel, startedAtField }) {
+      setMatchPhase(phase, { persist: false });
+      if (startedAtField) {
+        AppState.matchControl[startedAtField] = new Date().toISOString();
+      }
+      saveToLocalStorage();
+      updateAllStats();
+      openHalftimeReport({ phaseLabel: reportLabel });
+    }
+
+    async function handleMatchControlAction(actionId) {
       if (!hasActiveMatch() && actionId !== 'btn-start-first-half') {
         showToast('⚠️ Não existe partida ativa.');
         return;
@@ -4390,11 +4464,11 @@ function purgeTemporaryCompetitionSlotsFromRegistry() {
         return;
       }
       if (actionId === 'btn-start-halftime') {
-        setMatchPhase('halftime', { persist: false });
-        AppState.matchControl.halftimeStartedAt = new Date().toISOString();
-        saveToLocalStorage();
-        updateAllStats();
-        openHalftimeReport({ phaseLabel: 'Intervalo' });
+        enterBreakAndOpenReport({
+          phase: 'halftime',
+          reportLabel: 'Intervalo',
+          startedAtField: 'halftimeStartedAt'
+        });
         return;
       }
       if (actionId === 'btn-start-second-half') {
@@ -4414,11 +4488,11 @@ function purgeTemporaryCompetitionSlotsFromRegistry() {
         return;
       }
       if (actionId === 'btn-start-overtime-break') {
-        setMatchPhase('overtime_break', { persist: false });
-        AppState.matchControl.overtimeBreakStartedAt = new Date().toISOString();
-        saveToLocalStorage();
-        updateAllStats();
-        openHalftimeReport({ phaseLabel: 'Intervalo da prorrogação' });
+        enterBreakAndOpenReport({
+          phase: 'overtime_break',
+          reportLabel: 'Intervalo da prorrogação',
+          startedAtField: 'overtimeBreakStartedAt'
+        });
         return;
       }
       if (actionId === 'btn-start-overtime-second') {
@@ -4442,7 +4516,7 @@ function purgeTemporaryCompetitionSlotsFromRegistry() {
         if (!confirm(`Deseja finalizar a partida atual?${reasonText}`)) return;
         AppState.matchControl.rawTimerStoppedAt = new Date().toISOString();
         setMatchPhase('finished', { persist: false });
-        endMatch();
+        await endMatch();
       }
     }
 
@@ -4817,14 +4891,14 @@ function purgeTemporaryCompetitionSlotsFromRegistry() {
     function loadConfigToForm() {
       normalizeConfigAthletes();
       rebuildGlobalAthleteRegistry();
-      document.getElementById('config-competition').value = AppState.config.competition || '';
-      document.getElementById('config-location').value = AppState.config.location || '';
-      document.getElementById('config-date').value = AppState.config.date || '';
-      document.getElementById('config-my-initial-side').value = normalizeCourtSide(AppState.lineup.myInitialSide || 'left');
-      document.getElementById('config-my-team').value = AppState.config.myTeam || '';
-      document.getElementById('config-opponent-team').value = AppState.config.opponentTeam || '';
-      document.getElementById('config-match-record-type').value = AppState.config.matchRecordType || '';
-      document.getElementById('opponent-toggle').checked = AppState.config.showOpponent;
+      applyFormControlValue(document.getElementById('config-competition'), AppState.config.competition || '');
+      applyFormControlValue(document.getElementById('config-location'), AppState.config.location || '');
+      applyFormControlValue(document.getElementById('config-date'), AppState.config.date || '');
+      applyFormControlValue(document.getElementById('config-my-initial-side'), normalizeCourtSide(AppState.lineup.myInitialSide || 'left'));
+      applyFormControlValue(document.getElementById('config-my-team'), AppState.config.myTeam || '');
+      applyFormControlValue(document.getElementById('config-opponent-team'), AppState.config.opponentTeam || '');
+      applyFormControlValue(document.getElementById('config-match-record-type'), AppState.config.matchRecordType || '');
+      applyFormControlValue(document.getElementById('opponent-toggle'), AppState.config.showOpponent);
       
       if (AppState.config.showOpponent) {
         document.getElementById('opponent-section').classList.remove('hidden');
@@ -4842,13 +4916,13 @@ function purgeTemporaryCompetitionSlotsFromRegistry() {
       const gameSelect = document.getElementById('config-schedule-link');
       if (!competitionSelect || !gameSelect) return;
       competitionSelect.innerHTML = '<option value="">Sem vínculo</option>' + AppState.competitions.map((competition) => `<option value="${competition.id}">${escapeHtml(competition.name)}</option>`).join('');
-      competitionSelect.value = AppState.config.linkedCompetitionId || '';
+      applyFormControlValue(competitionSelect, AppState.config.linkedCompetitionId || '');
       const selectedCompetition = AppState.competitions.find((competition) => competition.id === AppState.config.linkedCompetitionId);
       gameSelect.innerHTML = '<option value="">Sem vínculo</option>' + sortCompetitionSchedule(selectedCompetition?.schedule || []).map((game) => {
         const label = `${game.gameNumber || '-'} • ${game.date || '-'} ${game.time || ''} • ${game.teamA || '?'} x ${game.teamB || '?'}`;
         return `<option value="${game.id}">${escapeHtml(label)}</option>`;
       }).join('');
-      gameSelect.value = AppState.config.linkedScheduleGameId || '';
+      applyFormControlValue(gameSelect, AppState.config.linkedScheduleGameId || '');
     }
     
     function saveConfig() {
@@ -8325,7 +8399,10 @@ function renderHeatmap(optionsOrFilter) {
       document.getElementById('match-control-buttons').addEventListener('click', (e) => {
         const btn = e.target.closest('button[id]');
         if (!btn) return;
-        handleMatchControlAction(btn.id);
+        handleMatchControlAction(btn.id).catch((error) => {
+          console.error('Falha ao executar ação de controle da partida:', error);
+          showToast('⚠️ Não foi possível concluir a ação agora.');
+        });
       });
       document.getElementById('btn-new-match').addEventListener('click', () => {
         if (!confirm('Deseja iniciar nova partida agora?')) return;
@@ -9259,6 +9336,16 @@ populateHeatmapAthletes();
       trainingDraftState = createEmptyTrainingDraft();
       initializePrimaryUiListeners();
       initializeConfigTabListeners();
+      document.addEventListener('input', (e) => {
+        const target = e.target;
+        if (!(target instanceof HTMLElement)) return;
+        trackLocalInputDraft(target);
+      });
+      document.addEventListener('change', (e) => {
+        const target = e.target;
+        if (!(target instanceof HTMLElement)) return;
+        trackLocalInputDraft(target);
+      });
       loadConfigToForm();
       renderAthleteInputs();
       renderSavedTeamSelectors();
