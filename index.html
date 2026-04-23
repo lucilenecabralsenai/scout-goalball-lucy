@@ -2655,7 +2655,7 @@
       AppState.targetPlans = payload.targetPlans || AppState.targetPlans;
       AppState.currentTargets = payload.currentTargets || AppState.currentTargets;
       AppState.matchRules = payload.matchRules || AppState.matchRules;
-      AppState.archivedMatches = payload.archivedMatches || AppState.archivedMatches;
+      AppState.archivedMatches = mergeSavedMatchesById(AppState.archivedMatches, payload.archivedMatches || []);
       const pendingFinalizations = Array.isArray(payload.sync?.pendingFinalizations)
         ? payload.sync.pendingFinalizations
         : [];
@@ -2663,7 +2663,7 @@
         ...(AppState.sync.pendingFinalizations || []),
         ...pendingFinalizations
       ].filter(Boolean))];
-      sdkEvents = Array.isArray(payload.events) ? payload.events.map(normalizeStoredEvent) : sdkEvents;
+      sdkEvents = Array.isArray(payload.events) ? mergeStoredEventsByIdentity(sdkEvents, payload.events) : sdkEvents;
       if (isMatchMarkedAsFinishedLocally(AppState.matchId)) {
         AppState.matchId = null;
       }
@@ -2712,11 +2712,110 @@
       const localUpdatedAt = toEpochMs(localCache.updatedAt || localCache.savedAt);
       const winner = remoteUpdatedAt >= localUpdatedAt ? 'remote' : 'local';
       console.info('[SYNC] Conflito local/remoto resolvido por updatedAt', { winner, remoteUpdatedAt, localUpdatedAt });
-      return winner === 'remote' ? remoteMatch : localCache;
+      const winnerState = winner === 'remote' ? remoteMatch : localCache;
+      const loserState = winner === 'remote' ? localCache : remoteMatch;
+      return {
+        ...winnerState,
+        archivedMatches: mergeSavedMatchesById(localCache.archivedMatches, remoteMatch.archivedMatches),
+        events: mergeStoredEventsByIdentity(localCache.events, remoteMatch.events),
+        sync: {
+          ...(winnerState.sync || {}),
+          pendingFinalizations: [...new Set([
+            ...((winnerState.sync || {}).pendingFinalizations || []),
+            ...((loserState.sync || {}).pendingFinalizations || [])
+          ])]
+        }
+      };
     }
 
     function sortDocsByUpdatedAtDesc(docs = []) {
       return [...docs].sort((a, b) => toEpochMs(b.data()?.updatedAt) - toEpochMs(a.data()?.updatedAt));
+    }
+
+    function normalizeSavedMatch(match) {
+      if (!match || typeof match !== 'object' || !match.id) return null;
+      const score = getMatchScoreParts(match);
+      const status = match.status === 'ended' ? 'ended' : (match.status || 'in-progress');
+      const updatedAt = toEpochMs(match.updatedAt || match.endedAt || match.savedAt || match.createdAt || match.date);
+      return {
+        ...match,
+        myGoals: score.myGoals,
+        oppGoals: score.oppGoals,
+        score: {
+          my: score.myGoals,
+          opponent: score.oppGoals
+        },
+        status,
+        updatedAt
+      };
+    }
+
+    function chooseMostConsistentMatch(existingMatch, incomingMatch) {
+      if (!existingMatch) return incomingMatch;
+      if (!incomingMatch) return existingMatch;
+      const existingUpdatedAt = toEpochMs(existingMatch.updatedAt || existingMatch.endedAt || existingMatch.savedAt || existingMatch.createdAt || existingMatch.date);
+      const incomingUpdatedAt = toEpochMs(incomingMatch.updatedAt || incomingMatch.endedAt || incomingMatch.savedAt || incomingMatch.createdAt || incomingMatch.date);
+      if (incomingUpdatedAt > existingUpdatedAt) return { ...existingMatch, ...incomingMatch };
+      if (existingUpdatedAt > incomingUpdatedAt) return { ...incomingMatch, ...existingMatch };
+      if (existingMatch.status === 'ended' && incomingMatch.status !== 'ended') return { ...incomingMatch, ...existingMatch };
+      return { ...existingMatch, ...incomingMatch };
+    }
+
+    function mergeSavedMatchesById(...collections) {
+      const merged = new Map();
+      collections.forEach((matches) => {
+        if (!Array.isArray(matches)) return;
+        matches.forEach((rawMatch) => {
+          const normalized = normalizeSavedMatch(rawMatch);
+          if (!normalized?.id) return;
+          const current = merged.get(normalized.id);
+          merged.set(normalized.id, chooseMostConsistentMatch(current, normalized));
+        });
+      });
+      return Array.from(merged.values()).sort((a, b) => (
+        toEpochMs(b.updatedAt || b.endedAt || b.createdAt || b.date) - toEpochMs(a.updatedAt || a.endedAt || a.createdAt || a.date)
+      ));
+    }
+
+    function mergeStoredEventsByIdentity(...collections) {
+      const eventMap = new Map();
+      collections.forEach((events) => {
+        if (!Array.isArray(events)) return;
+        events.forEach((rawEvent, idx) => {
+          const normalized = normalizeStoredEvent(rawEvent);
+          const eventId = getEventId(normalized) || `${normalized.matchId || 'unknown'}-${normalized.timestamp || ''}-${normalized.type || 'event'}-${idx}`;
+          const identity = `${normalized.matchId || 'unknown'}::${eventId}`;
+          const current = eventMap.get(identity);
+          if (!current) {
+            eventMap.set(identity, normalized);
+            return;
+          }
+          const currentUpdatedAt = toEpochMs(current.updatedAt || current.timestamp || current.createdAt);
+          const nextUpdatedAt = toEpochMs(normalized.updatedAt || normalized.timestamp || normalized.createdAt);
+          eventMap.set(identity, nextUpdatedAt >= currentUpdatedAt ? { ...current, ...normalized } : { ...normalized, ...current });
+        });
+      });
+      return Array.from(eventMap.values());
+    }
+
+    function toSavedMatchFromRemote(match) {
+      if (!match?.id) return null;
+      return normalizeSavedMatch({
+        id: match.id,
+        competition: match.competition || '',
+        linkedCompetitionId: match.linkedCompetitionId || '',
+        linkedScheduleGameId: match.linkedScheduleGameId || '',
+        matchRecordType: match.matchRecordType || '',
+        date: match.date || '',
+        location: match.location || '',
+        notes: match.notes || '',
+        myTeam: match.myTeam || 'Minha Equipe',
+        opponentTeam: match.opponentTeam || 'Adversário',
+        score: match.score || { my: 0, opponent: 0 },
+        status: match.status === 'ended' ? 'ended' : 'in-progress',
+        endedAt: match.status === 'ended' ? (toEpochMs(match.updatedAt) || Date.now()) : null,
+        updatedAt: toEpochMs(match.updatedAt)
+      });
     }
 
     function subscribeToCurrentMatch() {
@@ -2754,7 +2853,7 @@
         AppState.targetPlans = data.targetPlans || AppState.targetPlans;
         AppState.currentTargets = data.currentTargets || AppState.currentTargets;
         AppState.matchRules = data.matchRules || AppState.matchRules;
-        AppState.archivedMatches = data.archivedMatches || AppState.archivedMatches;
+        AppState.archivedMatches = mergeSavedMatchesById(AppState.archivedMatches, data.archivedMatches || []);
         validateLineupIndices();
         persistStateToCache();
         suppressCloudSync = false;
@@ -2792,28 +2891,12 @@
 
       const matchDocs = sortDocsByUpdatedAtDesc(matchesSnap.docs);
       const allEvents = [];
-      const archived = [];
+      const remoteSavedMatches = [];
 
       for (const matchDoc of matchDocs) {
         const matchData = matchDoc.data() || {};
-        if (matchData.status === 'ended') {
-          archived.push({
-            id: matchDoc.id,
-            competition: matchData.competition || '',
-            linkedCompetitionId: matchData.linkedCompetitionId || '',
-            linkedScheduleGameId: matchData.linkedScheduleGameId || '',
-            matchRecordType: matchData.matchRecordType || '',
-            date: matchData.date || '',
-            location: matchData.location || '',
-            notes: matchData.notes || '',
-            myTeam: matchData.myTeam || 'Minha Equipe',
-            opponentTeam: matchData.opponentTeam || 'Adversário',
-            score: matchData.score || { my: 0, opponent: 0 },
-            status: 'ended',
-            endedAt: toEpochMs(matchData.updatedAt) || Date.now(),
-            updatedAt: toEpochMs(matchData.updatedAt)
-          });
-        }
+        const normalizedMatch = toSavedMatchFromRemote({ id: matchDoc.id, ...matchData });
+        if (normalizedMatch) remoteSavedMatches.push(normalizedMatch);
         const eventsSnap = await getDocs(collection(firestoreDb, 'matches', matchDoc.id, 'events'));
         eventsSnap.forEach((eventDoc) => {
           allEvents.push(normalizeStoredEvent({ __backendId: eventDoc.id, ...eventDoc.data(), matchId: matchDoc.id }));
@@ -2841,12 +2924,9 @@
         targetPlans: activeData?.targetPlans || AppState.targetPlans,
         currentTargets: activeData?.currentTargets || AppState.currentTargets,
         matchRules: activeData?.matchRules || AppState.matchRules,
-        archivedMatches: archived,
+        archivedMatches: mergeSavedMatchesById(AppState.archivedMatches, remoteSavedMatches),
         events: allEvents
       };
-
-      applyStateFromSource(remoteState, 'firestore');
-      persistStateToCache();
       console.info('[SYNC] Partidas carregadas do Firestore', { matches: matchDocs.length, events: allEvents.length, activeMatchId: AppState.matchId });
       return { loaded: true, remoteState };
     }
@@ -2881,38 +2961,8 @@
           });
         }
 
-        const archived = remoteMatches
-          .filter((match) => match.status === 'ended')
-          .map((match) => ({
-            id: match.id,
-            competition: match.competition || '',
-            linkedCompetitionId: match.linkedCompetitionId || '',
-            linkedScheduleGameId: match.linkedScheduleGameId || '',
-            matchRecordType: match.matchRecordType || '',
-            date: match.date || '',
-            location: match.location || '',
-            notes: match.notes || '',
-            myTeam: match.myTeam || 'Minha Equipe',
-            opponentTeam: match.opponentTeam || 'Adversário',
-            score: match.score || { my: 0, opponent: 0 },
-            status: 'ended',
-            endedAt: toEpochMs(match.updatedAt) || Date.now(),
-            updatedAt: toEpochMs(match.updatedAt)
-          }));
-        const localArchivedById = new Map((AppState.archivedMatches || []).map((match) => [match.id, match]));
-        archived.forEach((match) => {
-          const local = localArchivedById.get(match.id);
-          const localUpdatedAt = toEpochMs(local?.updatedAt || local?.endedAt || local?.date);
-          const remoteUpdatedAt = toEpochMs(match.updatedAt || match.endedAt || match.date);
-          const resolved = remoteUpdatedAt >= localUpdatedAt ? match : { ...match, ...local };
-          localArchivedById.set(match.id, resolved);
-        });
-        localArchivedById.forEach((localMatch, id) => {
-          if (!pendingFinalizations.has(id)) return;
-          if (archived.some((remoteMatch) => remoteMatch.id === id)) return;
-          localArchivedById.set(id, localMatch);
-        });
-        AppState.archivedMatches = Array.from(localArchivedById.values());
+        const remoteSavedMatches = remoteMatches.map(toSavedMatchFromRemote).filter(Boolean);
+        AppState.archivedMatches = mergeSavedMatchesById(AppState.archivedMatches, remoteSavedMatches);
         persistStateToCache();
         renderHistoryMatchSelector();
         renderReportMatchSelector();
@@ -2965,6 +3015,8 @@
             applyStateFromSource(localCache, 'local-fallback-no-remote');
           } else if (loaded && localCache) {
             applyStateFromSource(resolveConflictByUpdatedAt(remoteState, localCache), 'conflict-resolution');
+          } else if (loaded && remoteState) {
+            applyStateFromSource(remoteState, 'firestore');
           }
 
           updateUiAfterStateSync();
@@ -4079,14 +4131,7 @@ function purgeTemporaryCompetitionSlotsFromRegistry() {
           status: isInProgress ? 'in-progress' : (match.status || 'ended')
         };
       });
-      const unique = new Map();
-      if (current?.id) unique.set(current.id, current);
-      archived.forEach((match) => unique.set(match.id, { ...unique.get(match.id), ...match }));
-      return Array.from(unique.values()).sort((a, b) => {
-        const aTime = toEpochMs(a.updatedAt || a.endedAt || a.createdAt || a.date);
-        const bTime = toEpochMs(b.updatedAt || b.endedAt || b.createdAt || b.date);
-        return bTime - aTime;
-      });
+      return mergeSavedMatchesById(archived, current ? [current] : []);
     }
 
     function renderSavedMatchesManager() {
