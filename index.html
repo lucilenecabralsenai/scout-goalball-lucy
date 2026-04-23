@@ -1179,7 +1179,8 @@
       sync: {
         status: 'local',
         deviceId: null,
-        pendingFinalizations: []
+        pendingFinalizations: [],
+        deletedMatchIds: []
       },
       auth: {
         user: null
@@ -2586,13 +2587,18 @@
         archivedMatches: AppState.archivedMatches,
         events: AppState.events,
         sync: {
-          pendingFinalizations: [...new Set(AppState.sync.pendingFinalizations || [])]
+          pendingFinalizations: [...new Set(AppState.sync.pendingFinalizations || [])],
+          deletedMatchIds: [...new Set(AppState.sync.deletedMatchIds || [])]
         }
       };
     }
 
     function getPendingFinalizationSet() {
       return new Set(AppState.sync.pendingFinalizations || []);
+    }
+
+    function getDeletedMatchIdSet() {
+      return new Set(AppState.sync.deletedMatchIds || []);
     }
 
     function isMatchMarkedAsFinishedLocally(matchId) {
@@ -2613,6 +2619,13 @@
       const pending = getPendingFinalizationSet();
       if (!pending.delete(matchId)) return;
       AppState.sync.pendingFinalizations = [...pending];
+    }
+
+    function markMatchDeletedLocally(matchId) {
+      if (!matchId) return;
+      const deleted = getDeletedMatchIdSet();
+      deleted.add(matchId);
+      AppState.sync.deletedMatchIds = [...deleted];
     }
 
     function persistStateToCache() {
@@ -2659,12 +2672,25 @@
       const pendingFinalizations = Array.isArray(payload.sync?.pendingFinalizations)
         ? payload.sync.pendingFinalizations
         : [];
+      const deletedMatchIds = Array.isArray(payload.sync?.deletedMatchIds)
+        ? payload.sync.deletedMatchIds
+        : [];
       AppState.sync.pendingFinalizations = [...new Set([
         ...(AppState.sync.pendingFinalizations || []),
         ...pendingFinalizations
       ].filter(Boolean))];
+      AppState.sync.deletedMatchIds = [...new Set([
+        ...(AppState.sync.deletedMatchIds || []),
+        ...deletedMatchIds
+      ].filter(Boolean))];
       sdkEvents = Array.isArray(payload.events) ? mergeStoredEventsByIdentity(sdkEvents, payload.events) : sdkEvents;
+      const deletedMatches = getDeletedMatchIdSet();
+      AppState.archivedMatches = (AppState.archivedMatches || []).filter((match) => !deletedMatches.has(match.id));
+      sdkEvents = sdkEvents.filter((event) => !deletedMatches.has(event.matchId));
       if (isMatchMarkedAsFinishedLocally(AppState.matchId)) {
+        AppState.matchId = null;
+      }
+      if (deletedMatches.has(AppState.matchId)) {
         AppState.matchId = null;
       }
       if (AppState.matchControl?.phase === 'finished') {
@@ -2723,6 +2749,10 @@
           pendingFinalizations: [...new Set([
             ...((winnerState.sync || {}).pendingFinalizations || []),
             ...((loserState.sync || {}).pendingFinalizations || [])
+          ])],
+          deletedMatchIds: [...new Set([
+            ...((winnerState.sync || {}).deletedMatchIds || []),
+            ...((loserState.sync || {}).deletedMatchIds || [])
           ])]
         }
       };
@@ -2768,6 +2798,7 @@
         matches.forEach((rawMatch) => {
           const normalized = normalizeSavedMatch(rawMatch);
           if (!normalized?.id) return;
+          if (getDeletedMatchIdSet().has(normalized.id)) return;
           const current = merged.get(normalized.id);
           merged.set(normalized.id, chooseMostConsistentMatch(current, normalized));
         });
@@ -2783,6 +2814,7 @@
         if (!Array.isArray(events)) return;
         events.forEach((rawEvent, idx) => {
           const normalized = normalizeStoredEvent(rawEvent);
+          if (getDeletedMatchIdSet().has(normalized.matchId)) return;
           const eventId = getEventId(normalized) || `${normalized.matchId || 'unknown'}-${normalized.timestamp || ''}-${normalized.type || 'event'}-${idx}`;
           const identity = `${normalized.matchId || 'unknown'}::${eventId}`;
           const current = eventMap.get(identity);
@@ -2892,8 +2924,10 @@
       const matchDocs = sortDocsByUpdatedAtDesc(matchesSnap.docs);
       const allEvents = [];
       const remoteSavedMatches = [];
+      const deletedMatches = getDeletedMatchIdSet();
 
       for (const matchDoc of matchDocs) {
+        if (deletedMatches.has(matchDoc.id)) continue;
         const matchData = matchDoc.data() || {};
         const normalizedMatch = toSavedMatchFromRemote({ id: matchDoc.id, ...matchData });
         if (normalizedMatch) remoteSavedMatches.push(normalizedMatch);
@@ -2904,6 +2938,7 @@
       }
 
       const activeMatch = matchDocs.find((d) => {
+        if (deletedMatches.has(d.id)) return false;
         if (isMatchMarkedAsFinishedLocally(d.id)) return false;
         const status = d.data()?.status;
         return status === 'live' || status === 'draft';
@@ -2935,12 +2970,33 @@
       if (!firestoreDb || !user?.uid) return;
       unsubscribeUserMatches?.();
 
-      const knownMatches = new Map();
+      const knownMatchesBySource = {
+        ownerUid: new Map(),
+        ownerId: new Map()
+      };
       const applyMatches = (sourceLabel, snap) => {
-        snap.docs.forEach((matchDoc) => knownMatches.set(matchDoc.id, { id: matchDoc.id, ...matchDoc.data() }));
-        const remoteMatches = Array.from(knownMatches.values()).sort((a, b) => toEpochMs(b.updatedAt) - toEpochMs(a.updatedAt));
+        const sourceMap = knownMatchesBySource[sourceLabel] || new Map();
+        sourceMap.clear();
+        snap.docs.forEach((matchDoc) => sourceMap.set(matchDoc.id, { id: matchDoc.id, ...matchDoc.data() }));
+        knownMatchesBySource[sourceLabel] = sourceMap;
+        const deletedMatches = getDeletedMatchIdSet();
+        const mergedMap = new Map();
+        Object.values(knownMatchesBySource).forEach((mapRef) => {
+          mapRef.forEach((matchData, matchId) => {
+            if (deletedMatches.has(matchId)) return;
+            mergedMap.set(matchId, matchData);
+          });
+        });
+        const remoteMatches = Array.from(mergedMap.values()).sort((a, b) => toEpochMs(b.updatedAt) - toEpochMs(a.updatedAt));
         console.info('[SYNC] Snapshot de partidas do usuário atualizado', { source: sourceLabel, total: remoteMatches.length, fromCache: snap.metadata.fromCache });
-        if (!remoteMatches.length) return;
+        if (!remoteMatches.length) {
+          AppState.archivedMatches = (AppState.archivedMatches || []).filter((match) => !deletedMatches.has(match.id));
+          persistStateToCache();
+          renderHistoryMatchSelector();
+          renderReportMatchSelector();
+          renderHistory();
+          return;
+        }
 
         const currentRemoteMatch = remoteMatches.find((match) => match.id === AppState.matchId) || null;
         const hasCurrentMatchRemotely = Boolean(currentRemoteMatch);
@@ -4160,7 +4216,7 @@ function purgeTemporaryCompetitionSlotsFromRegistry() {
                 <div class="flex flex-wrap gap-2">
                   <button class="open-saved-match-btn px-3 py-2 rounded-lg border border-blue-200 text-blue-700 text-sm" data-match-id="${escapeAttribute(match.id)}">Abrir</button>
                   <button class="edit-saved-match-btn px-3 py-2 rounded-lg border border-slate-300 text-slate-700 text-sm" data-match-id="${escapeAttribute(match.id)}">Editar</button>
-                  <button class="delete-saved-match-btn px-3 py-2 rounded-lg border border-red-200 text-red-700 text-sm ${match.id === AppState.matchId ? 'opacity-50 cursor-not-allowed' : ''}" data-match-id="${escapeAttribute(match.id)}" ${match.id === AppState.matchId ? 'disabled' : ''}>Excluir</button>
+                  <button class="delete-saved-match-btn px-3 py-2 rounded-lg border border-red-200 text-red-700 text-sm" data-match-id="${escapeAttribute(match.id)}">Excluir</button>
                 </div>
               </div>
             </div>
@@ -4391,19 +4447,20 @@ function purgeTemporaryCompetitionSlotsFromRegistry() {
 
     async function deleteSavedMatch(matchId) {
       if (!matchId) return;
-      if (matchId === AppState.matchId) {
-        showToast('⚠️ Não é permitido excluir a partida atualmente carregada.');
-        return;
-      }
       const match = getSavedMatchesForManager().find((item) => item.id === matchId);
       if (!match) return;
       const confirmed = window.confirm(`Excluir a partida "${formatMatchLabel(match)}"? Essa ação não pode ser desfeita.`);
       if (!confirmed) return;
 
+      const deletingActiveMatch = matchId === AppState.matchId;
+      markMatchDeletedLocally(matchId);
       AppState.archivedMatches = AppState.archivedMatches.filter((item) => item.id !== matchId);
       clearPendingFinalization(matchId);
       sdkEvents = sdkEvents.filter((event) => event.matchId !== matchId);
       AppState.events = [...sdkEvents];
+      if (deletingActiveMatch) {
+        clearActiveMatchReferenceLocally({ resetOperationalTabs: true });
+      }
 
       if (AppState.auth.user?.uid && firestoreDb) {
         try {
@@ -4411,6 +4468,9 @@ function purgeTemporaryCompetitionSlotsFromRegistry() {
           const eventsSnap = await getDocs(eventsRef);
           await Promise.all(eventsSnap.docs.map((eventDoc) => deleteDoc(eventDoc.ref)));
           await deleteDoc(doc(collection(firestoreDb, 'matches'), matchId));
+          if (deletingActiveMatch) {
+            await clearActiveMatchReferenceInCloud();
+          }
         } catch (error) {
           console.error('Falha ao excluir partida no Firestore:', error);
           showToast('⚠️ Partida removida localmente. Falha ao remover no Firebase.');
@@ -8554,7 +8614,7 @@ function renderHeatmap(optionsOrFilter) {
           const deleteBtn = e.target.closest('.delete-saved-match-btn');
           if (openBtn) await openSavedMatch(openBtn.dataset.matchId);
           if (editBtn) openMatchMetadataEditModal(editBtn.dataset.matchId);
-          if (deleteBtn && !deleteBtn.disabled) await deleteSavedMatch(deleteBtn.dataset.matchId);
+          if (deleteBtn) await deleteSavedMatch(deleteBtn.dataset.matchId);
         } catch (error) {
           console.error('Falha ao processar ação de partida salva:', error);
           showToast('⚠️ Não foi possível concluir esta ação agora.');
