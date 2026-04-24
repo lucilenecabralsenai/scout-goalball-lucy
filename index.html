@@ -2567,6 +2567,71 @@
       return uid ? `${LOCAL_CACHE_KEY_PREFIX}_${uid}` : `${LOCAL_CACHE_KEY_PREFIX}_guest`;
     }
 
+    function safelyReadCacheByKey(cacheKey) {
+      if (!cacheKey) return null;
+      try {
+        const raw = localStorage.getItem(cacheKey);
+        return raw ? JSON.parse(raw) : null;
+      } catch (error) {
+        console.warn('[SYNC] Falha ao ler cache local por chave', { cacheKey, error });
+        return null;
+      }
+    }
+
+    function listLocalCacheSnapshots() {
+      const snapshots = [];
+      for (let idx = 0; idx < localStorage.length; idx += 1) {
+        const cacheKey = localStorage.key(idx);
+        if (!cacheKey || !cacheKey.startsWith(LOCAL_CACHE_KEY_PREFIX)) continue;
+        const payload = safelyReadCacheByKey(cacheKey);
+        if (!payload || typeof payload !== 'object') continue;
+        snapshots.push({ cacheKey, payload });
+      }
+      return snapshots;
+    }
+
+    function getCatalogCounts(payload) {
+      return {
+        teams: Array.isArray(payload?.teamRegistry) ? payload.teamRegistry.length : 0,
+        competitions: Array.isArray(payload?.competitions) ? payload.competitions.length : 0
+      };
+    }
+
+    function pickBestCatalogFromSnapshots(snapshots = []) {
+      return snapshots
+        .map((entry) => ({ ...entry, counts: getCatalogCounts(entry.payload) }))
+        .sort((a, b) => ((b.counts.teams + b.counts.competitions) - (a.counts.teams + a.counts.competitions)))[0] || null;
+    }
+
+    function firstNonEmptyCatalog(primaryList, fallbackList, normalizer) {
+      const normalizedPrimary = normalizer(primaryList || []);
+      if (normalizedPrimary.length > 0) return normalizedPrimary;
+      const normalizedFallback = normalizer(fallbackList || []);
+      if (normalizedFallback.length > 0) return normalizedFallback;
+      return normalizedPrimary;
+    }
+
+    function logCatalogDiagnostics(contextLabel, details = {}) {
+      const appCounts = getCatalogCounts(AppState);
+      const snapshots = listLocalCacheSnapshots();
+      const localAggregated = snapshots.reduce((acc, entry) => {
+        const counts = getCatalogCounts(entry.payload);
+        return {
+          teams: acc.teams + counts.teams,
+          competitions: acc.competitions + counts.competitions
+        };
+      }, { teams: 0, competitions: 0 });
+      const firestoreCounts = details.firestoreCounts || null;
+      console.info('[DIAG] Catálogo (teams/competitions)', {
+        context: contextLabel,
+        appState: appCounts,
+        localCacheAggregated: localAggregated,
+        localCacheKeys: snapshots.map((entry) => ({ key: entry.cacheKey, ...getCatalogCounts(entry.payload) })),
+        firestore: firestoreCounts,
+        recovery: details.recovery || null
+      });
+    }
+
     function serializeStateForCache() {
       return {
         version: 3,
@@ -2630,7 +2695,21 @@
 
     function persistStateToCache() {
       try {
-        localStorage.setItem(getLocalCacheKey(), JSON.stringify(serializeStateForCache()));
+        const cacheKey = getLocalCacheKey();
+        const payload = serializeStateForCache();
+        const existing = safelyReadCacheByKey(cacheKey);
+        const existingCounts = getCatalogCounts(existing || {});
+        const payloadCounts = getCatalogCounts(payload);
+        if ((payloadCounts.teams + payloadCounts.competitions) === 0 && (existingCounts.teams + existingCounts.competitions) > 0) {
+          payload.teamRegistry = existing.teamRegistry || payload.teamRegistry;
+          payload.competitions = existing.competitions || payload.competitions;
+          console.warn('[SYNC] Proteção de catálogo acionada: bloqueado salvamento vazio sobre cache existente', {
+            cacheKey,
+            existingCounts,
+            payloadCounts
+          });
+        }
+        localStorage.setItem(cacheKey, JSON.stringify(payload));
       } catch (error) {
         console.warn('[SYNC] Falha ao salvar cache local', error);
       }
@@ -2649,15 +2728,28 @@
     function applyStateFromSource(payload, source = 'local') {
       if (!payload || typeof payload !== 'object') return;
       suppressCloudSync = true;
+      const catalogSnapshots = listLocalCacheSnapshots();
+      const bestCatalogSnapshot = pickBestCatalogFromSnapshots(catalogSnapshots);
+      const recoveryCatalog = payload.__catalogRecovery || {};
+      const resolvedTeamRegistry = firstNonEmptyCatalog(
+        payload.teamRegistry,
+        recoveryCatalog.teamRegistry || bestCatalogSnapshot?.payload?.teamRegistry || AppState.teamRegistry,
+        normalizeTeamRegistry
+      );
+      const resolvedCompetitions = firstNonEmptyCatalog(
+        payload.competitions,
+        recoveryCatalog.competitions || bestCatalogSnapshot?.payload?.competitions || AppState.competitions,
+        normalizeCompetitions
+      );
       AppState.matchId = payload.matchId || AppState.matchId || null;
       AppState.config = { ...AppState.config, ...(payload.config || {}) };
       normalizeConfigAthletes();
-      AppState.teamRegistry = normalizeTeamRegistry(payload.teamRegistry || AppState.teamRegistry);
+      AppState.teamRegistry = resolvedTeamRegistry;
       purgeTemporaryCompetitionSlotsFromRegistry();
       AppState.athleteRegistry = normalizeAthleteList(payload.athleteRegistry || AppState.athleteRegistry);
       AppState.trainingGroups = normalizeTrainingGroups(payload.trainingGroups || AppState.trainingGroups);
       AppState.trainings = normalizeTrainings(payload.trainings || AppState.trainings);
-      AppState.competitions = normalizeCompetitions(payload.competitions || AppState.competitions);
+      AppState.competitions = resolvedCompetitions;
       ensureTrainingGroupsState();
       migrateLegacyTeams();
       rebuildGlobalAthleteRegistry();
@@ -2702,6 +2794,15 @@
       }
       validateLineupIndices();
       suppressCloudSync = false;
+      persistStateToCache();
+      logCatalogDiagnostics(`applyStateFromSource:${source}`, {
+        firestoreCounts: recoveryCatalog.firestoreCounts || null,
+        recovery: {
+          usedLocalSnapshotKey: bestCatalogSnapshot?.cacheKey || null,
+          sourceTeamRegistry: getCatalogCounts({ teamRegistry: payload.teamRegistry }).teams,
+          sourceCompetitions: getCatalogCounts({ competitions: payload.competitions }).competitions
+        }
+      });
       console.info(`[SYNC] Estado aplicado da fonte: ${source}`, { matchId: AppState.matchId, events: AppState.events.length });
     }
 
@@ -2925,10 +3026,24 @@
       const allEvents = [];
       const remoteSavedMatches = [];
       const deletedMatches = getDeletedMatchIdSet();
+      let fallbackTeamRegistry = [];
+      let fallbackCompetitions = [];
+      let fallbackTeamRegistryMatchId = '';
+      let fallbackCompetitionsMatchId = '';
 
       for (const matchDoc of matchDocs) {
         if (deletedMatches.has(matchDoc.id)) continue;
         const matchData = matchDoc.data() || {};
+        const normalizedTeams = normalizeTeamRegistry(matchData.teamRegistry || []);
+        const normalizedCompetitions = normalizeCompetitions(matchData.competitions || []);
+        if (!fallbackTeamRegistry.length && normalizedTeams.length) {
+          fallbackTeamRegistry = normalizedTeams;
+          fallbackTeamRegistryMatchId = matchDoc.id;
+        }
+        if (!fallbackCompetitions.length && normalizedCompetitions.length) {
+          fallbackCompetitions = normalizedCompetitions;
+          fallbackCompetitionsMatchId = matchDoc.id;
+        }
         const normalizedMatch = toSavedMatchFromRemote({ id: matchDoc.id, ...matchData });
         if (normalizedMatch) remoteSavedMatches.push(normalizedMatch);
         const eventsSnap = await getDocs(collection(firestoreDb, 'matches', matchDoc.id, 'events'));
@@ -2960,8 +3075,19 @@
         currentTargets: activeData?.currentTargets || AppState.currentTargets,
         matchRules: activeData?.matchRules || AppState.matchRules,
         archivedMatches: mergeSavedMatchesById(AppState.archivedMatches, remoteSavedMatches),
-        events: allEvents
+        events: allEvents,
+        __catalogRecovery: {
+          teamRegistry: fallbackTeamRegistry,
+          competitions: fallbackCompetitions,
+          firestoreCounts: {
+            teams: fallbackTeamRegistry.length,
+            competitions: fallbackCompetitions.length,
+            sourceTeamRegistryMatchId: fallbackTeamRegistryMatchId || null,
+            sourceCompetitionsMatchId: fallbackCompetitionsMatchId || null
+          }
+        }
       };
+      logCatalogDiagnostics('loadMatchesFromFirestore', remoteState.__catalogRecovery || {});
       console.info('[SYNC] Partidas carregadas do Firestore', { matches: matchDocs.length, events: allEvents.length, activeMatchId: AppState.matchId });
       return { loaded: true, remoteState };
     }
@@ -4449,6 +4575,11 @@ function purgeTemporaryCompetitionSlotsFromRegistry() {
       if (!matchId) return;
       const match = getSavedMatchesForManager().find((item) => item.id === matchId);
       if (!match) return;
+      const protectedCatalogSnapshot = {
+        teamRegistry: normalizeTeamRegistry(AppState.teamRegistry),
+        competitions: normalizeCompetitions(AppState.competitions),
+        config: { ...AppState.config }
+      };
       const confirmed = window.confirm(`Excluir a partida "${formatMatchLabel(match)}"? Essa ação não pode ser desfeita.`);
       if (!confirmed) return;
 
@@ -4477,12 +4608,20 @@ function purgeTemporaryCompetitionSlotsFromRegistry() {
         }
       }
 
+      AppState.teamRegistry = normalizeTeamRegistry(protectedCatalogSnapshot.teamRegistry);
+      AppState.competitions = normalizeCompetitions(protectedCatalogSnapshot.competitions);
+      AppState.config = { ...AppState.config, ...protectedCatalogSnapshot.config };
       saveToLocalStorage();
+      renderSavedTeamSelectors();
+      renderTeamManagement();
+      renderCompetitionSelectors();
+      renderCompetitions();
       renderHistoryMatchSelector();
       renderReportMatchSelector();
       renderHistory();
       updateAllStats();
       renderRecentEvents();
+      logCatalogDiagnostics('deleteSavedMatch:after');
       showToast('🗑️ Partida excluída com sucesso.');
     }
 
@@ -9429,6 +9568,7 @@ populateHeatmapAthletes();
     
     async function init() {
       loadFromLocalStorage();
+      logCatalogDiagnostics('init:after-load-local');
       normalizeLineupState();
       normalizeMatchControlState();
       migrateLegacyTeams();
