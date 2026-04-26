@@ -5889,7 +5889,7 @@ function purgeTemporaryCompetitionSlotsFromRegistry() {
       const isPenalty = attackState.result === 'penalidade';
       const noAttack = isPenalty && attackState.noAttackPenalty;
       document.getElementById('penalty-section').classList.toggle('hidden', !isPenalty);
-      document.getElementById('defense-location-section').classList.toggle('hidden', attackState.result !== 'defendida');
+      document.getElementById('defense-location-section').classList.add('hidden');
       document.getElementById('ball-outcome-section').classList.toggle('hidden', !['trave','sem-contato'].includes(attackState.result));
       document.getElementById('attack-offensive-fields').classList.toggle('opacity-40', noAttack);
       renderMiniCourtSelector();
@@ -5958,12 +5958,13 @@ function purgeTemporaryCompetitionSlotsFromRegistry() {
       if (!attackState.result) return showToast('⚠️ Selecione o resultado do lance');
       const noAttackPenalty = attackState.result === 'penalidade' && attackState.noAttackPenalty;
       const quickResult = ['fora','ballover'].includes(attackState.result);
+      const fastDefendedResult = attackState.result === 'defendida';
       const isPenaltyGoal = attackState.result === 'gol-penalti';
       const normalizedResult = isPenaltyGoal ? 'gol' : attackState.result;
-      if (!noAttackPenalty && !quickResult && attackState.result !== 'gol-penalti' && (attackState.athlete === '' || !attackState.ballType || !attackState.target)) {
+      if (!noAttackPenalty && !quickResult && !fastDefendedResult && attackState.result !== 'gol-penalti' && (attackState.athlete === '' || !attackState.ballType || !attackState.target)) {
         return showToast('⚠️ Preencha arremessador, alvo e tipo de bola');
       }
-      if (attackState.result === 'defendida' && !attackState.defenseLocation) return showToast('⚠️ Informe local da defesa');
+      if (fastDefendedResult && (attackState.athlete === '' || !attackState.target)) return showToast('⚠️ Preencha arremessador e alvo');
       if (['trave','sem-contato'].includes(attackState.result) && !attackState.ballOutcome) return showToast('⚠️ Informe o desfecho da bola');
       if (attackState.result === 'penalidade' && !attackState.penaltyType) return showToast('⚠️ Selecione o tipo de penalidade');
 
@@ -5976,7 +5977,7 @@ function purgeTemporaryCompetitionSlotsFromRegistry() {
       const event = {
         type:'event', matchId:AppState.matchId, timestamp:new Date().toISOString(), phase:getLegacyPeriodFromMatchPhase(),
         team: attackState.team, athleteNumber: athlete?.number || '', athleteName: athlete?.name || '',
-        ballType: (noAttackPenalty||quickResult||attackState.result==='gol-penalti') ? '' : normalizeBallType(attackState.ballType),
+        ballType: (noAttackPenalty||quickResult||fastDefendedResult||attackState.result==='gol-penalti') ? '' : normalizeBallType(attackState.ballType),
         target: (noAttackPenalty||quickResult||attackState.result==='gol-penalti') ? '' : attackState.target,
         result: normalizedResult, isPenaltyGoal, penaltyType: normalizePenaltyType(attackState.penaltyType), noAttackPenalty,
         observation: String(attackState.observation||'').trim(), gameSituation: noAttackPenalty ? '' : normalizeGameSituation(attackState.gameSituation),
