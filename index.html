@@ -130,6 +130,7 @@
 <div class="bg-slate-900 text-white px-4 py-2 flex flex-wrap items-center justify-between gap-2">
   <div class="flex items-center gap-2 text-xs md:text-sm">
     <span id="auth-status-label" class="px-2 py-1 rounded bg-slate-700">Não autenticado</span>
+    <span id="connection-status" class="px-2 py-1 rounded bg-emerald-700">Online</span>
     <span id="sync-status" class="px-2 py-1 rounded bg-slate-700">Sync: Local</span>
   </div>
   <div class="flex items-center gap-2">
@@ -2404,6 +2405,14 @@
       el.textContent = `Sync: ${selected.text}${detail ? ` (${detail})` : ''}`;
     }
 
+    function updateConnectionStatus() {
+      const el = document.getElementById('connection-status');
+      if (!el) return;
+      const isOnline = navigator.onLine;
+      el.className = `px-2 py-1 rounded ${isOnline ? 'bg-emerald-700' : 'bg-orange-700'}`;
+      el.textContent = isOnline ? 'Online' : 'Offline';
+    }
+
     function updateAuthStatusLabel(user) {
       const authLabel = document.getElementById('auth-status-label');
       const logoutBtn = document.getElementById('btn-logout');
@@ -3229,8 +3238,14 @@
         }
       });
 
-      window.addEventListener('online', () => enqueueCloudSync('online'));
-      window.addEventListener('offline', () => updateSyncStatus('offline'));
+      window.addEventListener('online', () => {
+        updateConnectionStatus();
+        enqueueCloudSync('online');
+      });
+      window.addEventListener('offline', () => {
+        updateConnectionStatus();
+        updateSyncStatus('offline');
+      });
       window.addEventListener('focus', () => {
         if (AppState.auth.user?.uid) enqueueCloudSync('tab-focus');
       });
@@ -3301,10 +3316,12 @@
       sdkEvents.push(localEvent);
       AppState.events = [...sdkEvents];
       saveToLocalStorage();
-      pushEventToCloud(localEvent).catch((error) => {
-        console.error('Immediate event sync failed:', error);
-        updateSyncStatus(navigator.onLine ? 'error' : 'offline');
-      });
+      if (navigator.onLine && AppState.auth.user?.uid && AppState.matchId) {
+        pushEventToCloud(localEvent).catch((error) => {
+          console.error('Immediate event sync failed:', error);
+          updateSyncStatus(navigator.onLine ? 'error' : 'offline');
+        });
+      }
       updateAllStats();
       renderHistory();
       renderRecentEvents();
@@ -9627,6 +9644,7 @@ populateHeatmapAthletes();
     // =====================================================
     
     async function init() {
+      updateConnectionStatus();
       loadFromLocalStorage();
       logCatalogDiagnostics('init:after-load-local');
       normalizeLineupState();
