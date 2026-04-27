@@ -5848,7 +5848,11 @@ function purgeTemporaryCompetitionSlotsFromRegistry() {
         const active = String(athleteIndex) === String(attackState.athlete) ? 'active' : '';
         return `<button class="quick-btn court-athlete-btn absolute -translate-x-1/2 -translate-y-1/2 w-14 h-14 md:w-16 md:h-16 rounded-full border-2 border-slate-300 bg-cyan-200/80 text-slate-900 font-bold text-xs md:text-sm ${active}" style="left:${originOnLeft ? '13%' : '87%'}; top:${18 + (roleIdx * 32)}%;" data-athlete="${athleteIndex ?? ''}" title="${escapeAttribute(a ? formatAthleteDisplay(a) : '')}"><span>${num}</span><span class="sr-only">${r.label}</span></button>`;
       }).join('');
-      const targetOrder = ['6', '5', '4/5', '4', 'Meio', '3', '2/3', '2', '1'];
+      const targetOrderBySide = {
+        left: ['6', '5', '4/5', '4', 'Meio', '3', '2/3', '2', '1'],
+        right: ['1', '2', '2/3', '3', 'Meio', '4', '4/5', '5', '6']
+      };
+      const targetOrder = targetOrderBySide[orientation.targetSide] || targetOrderBySide.left;
       const targetBtns = targetOrder.map((targetLabel, zoneIndex) => {
         const isActive = attackState.target === targetLabel ? 'active' : '';
         return `<button class="quick-btn court-target-btn absolute -translate-y-1/2 border-2 border-slate-300 bg-white rounded-md text-xs md:text-sm font-medium h-[10.8%] w-9 md:w-10 ${isActive}" style="left:${originOnLeft ? '92%' : '1%'}; top:${6 + zoneIndex * 10.5}%;" data-target="${targetLabel}">${targetLabel === 'Meio' ? 'M' : targetLabel}</button>`;
